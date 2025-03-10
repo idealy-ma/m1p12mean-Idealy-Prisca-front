@@ -4,12 +4,13 @@ import { Observable } from 'rxjs';
 import { ApiConfiguration } from '../api-configuration';
 import { BaseService } from '../base-service';
 import { catchError } from 'rxjs/operators';
+import { TokenService } from '../token/token.service';
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService extends BaseService {
 
-  constructor(config: ApiConfiguration, http: HttpClient) {
+  constructor(config: ApiConfiguration, http: HttpClient,private tokenService : TokenService) {
     super(config, http);
   }
 
@@ -19,6 +20,7 @@ export class AuthService extends BaseService {
       email,
       motDePasse,
     };
+    
 
     return this.http.post<any>(`${this.rootUrl}/users/login`, loginData).pipe(
       catchError((error) => {
@@ -27,19 +29,9 @@ export class AuthService extends BaseService {
     );
   }
 
-  // Stocker le token dans le localStorage
-  setToken(token: string): void {
-    localStorage.setItem('auth_token', token);
-  }
-
-  // Récupérer le token
-  getToken(): string | null {
-    return localStorage.getItem('auth_token');
-  }
-
   // Vérifier si l'utilisateur est connecté
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    return !!this.tokenService.token;
   }
 
   // Se déconnecter

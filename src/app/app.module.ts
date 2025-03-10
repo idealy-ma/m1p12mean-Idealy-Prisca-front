@@ -5,22 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module'; 
 // Importations de Angular Material (si nécessaire)
 import { MAT_DATE_FORMATS, DateAdapter } from '@angular/material/core';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { AccueilComponent } from './page/accueil/accueil.component';
 import { LoginComponent } from './page/login/login.component';
-
-// Format de date personnalisé
-export const MY_DATE_FORMATS = {
-  parse: {
-    dateInput: 'DD/MM/YYYY',
-  },
-  display: {
-    dateInput: 'DD/MM/YYYY',
-    monthYearLabel: 'MMM YYYY',
-    dateA11yLabel: 'LL',
-    monthYearA11yLabel: 'MMMM YYYY',
-  },
-};
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptorService } from './services/interceptor/auth-interceptor.service';
 
 @NgModule({
   declarations: [
@@ -35,7 +24,12 @@ export const MY_DATE_FORMATS = {
     HttpClientModule, // Module pour effectuer des requêtes HTTP
   ],
   providers: [
-    { provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS }, // Fournir le format de date personnalisé
+    HttpClient,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptorService,
+      multi: true
+    },
   ],
   bootstrap: [AppComponent], // Démarrage de l'application avec le composant principal
 })

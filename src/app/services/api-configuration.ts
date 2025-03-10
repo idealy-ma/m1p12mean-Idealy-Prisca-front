@@ -9,7 +9,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class ApiConfiguration {
-  rootUrl: string = 'https://m1p12mean-idealy-prisca-back.onrender.com/api/v1';
+  rootUrl: string = 'http://localhost:3000/api/v1';
 }
 
 /**
