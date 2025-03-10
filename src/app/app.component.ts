@@ -1,12 +1,40 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import {
+  Component,
+  OnInit
+} from '@angular/core';
+import { Router } from '@angular/router';
 
+
+
+interface sideNavToggle{
+  screenWidth:number;
+  collapsed:boolean;
+}
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css'],
+  
 })
-export class AppComponent {
-  title = 'World';
+export class AppComponent implements OnInit {
+  title = 'PARRC';
+  isSuperAdmin:boolean = false;
+  isSideNavCollapsed = false;
+  screenWidth = 0;
+
+  onToggleSideNav(data: sideNavToggle){
+    this.screenWidth = data.screenWidth;
+    this.isSideNavCollapsed = data.collapsed;
+
+  }
+
+  
+
+  ngOnInit(): void {
+   
+  }
+
+  constructor(
+    
+  ) {}
 }
