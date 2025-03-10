@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/authentification/auth.service';
+import { TokenService } from '../../services/token/token.service';
 
 @Component({
   selector: 'app-login',
@@ -12,14 +13,14 @@ export class LoginComponent{
   motDePasse: string = '';
   errorMessage: string = '';
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router, private tokenSevrice: TokenService) {}
 
   // Fonction de soumission du formulaire de connexion
   onSubmit(): void {
     this.authService.login(this.email, this.motDePasse).subscribe(
       (response) => {
         // Enregistrer le token dans le localStorage
-        this.authService.setToken(response.token);
+        this.tokenSevrice.token=response.token;
 
         // Rediriger l'utilisateur vers la page d'accueil ou tableau de bord
         this.router.navigate(['/accueil']);
