@@ -1,0 +1,53 @@
+<div class="register-container">
+    <h1>Inscription</h1>
+  
+    <h2>Informations personnelles</h2>
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div>
+        <label>Nom*</label>
+        <input type="text" formControlName="nom" placeholder="Entrez votre nom">
+      </div>
+  
+      <div>
+        <label>Prénom*</label>
+        <input type="text" formControlName="prenom" placeholder="Entrez votre prénom">
+      </div>
+  
+      <div>
+        <label>Adresse</label>
+        <input type="text" formControlName="adresse" placeholder="Entrez votre adresse">
+      </div>
+  
+      <div>
+        <label>Téléphone</label>
+        <input type="text" formControlName="telephone" placeholder="Entrez votre téléphone">
+      </div>
+  
+      <h2>Vos Identifiants</h2>
+  
+      <div>
+        <label>Email*</label>
+        <input type="email" formControlName="email" placeholder="Entrez votre email">
+      </div>
+  
+      <div>
+        <label>Mot de passe*</label>
+        <input type="password" formControlName="motDePasse" placeholder="Entrez un mot de passe">
+        <small *ngIf="registerForm.get('motDePasse')?.hasError('minlength')">
+          Le mot de passe doit contenir au moins 6 caractères.
+        </small>
+      </div>
+  
+      <div>
+        <label>Confirmez le mot de passe*</label>
+        <input type="password" formControlName="confirmMotDePasse" placeholder="Confirmez le mot de passe">
+        <small *ngIf="registerForm.hasError('notMatching')">
+          Les mots de passe ne correspondent pas.
+        </small>
+      </div>
+  
+      <button type="submit" [disabled]="registerForm.invalid">S'inscrire</button>
+      <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+    </form>
+  </div>
+  
