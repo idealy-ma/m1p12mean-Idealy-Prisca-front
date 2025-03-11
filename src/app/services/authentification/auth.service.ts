@@ -20,7 +20,7 @@ export class AuthService extends BaseService {
       email,
       motDePasse,
     };
-    
+
 
     return this.http.post<any>(`${this.rootUrl}/users/login`, loginData).pipe(
       catchError((error) => {
@@ -38,4 +38,8 @@ export class AuthService extends BaseService {
   logout(): void {
     localStorage.removeItem('auth_token');
   }
+  register(userData: any): Observable<any> {
+    return this.http.post<any>(`${this.rootUrl}/users/register`, userData);
+  }
+  
 }
