@@ -13,6 +13,9 @@
     </div>
 
     <button type="submit">Se connecter</button>
+    <p>Vous n'avez pas encore de compte ?</p>
+  <button (click)="goToRegister()">S'inscrire</button>
+
   </form>
 
   <div *ngIf="errorMessage" class="error-message">
