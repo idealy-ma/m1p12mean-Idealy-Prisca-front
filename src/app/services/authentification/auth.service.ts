@@ -46,7 +46,7 @@ export class AuthService extends BaseService {
   }
 
   // Rediriger l'utilisateur en fonction de son rôle
-  private redirectBasedOnRole(role: string | null): void {
+  redirectBasedOnRole(role: string | null): void {
     if (role === 'client') {
       this.router.navigate(['/']);
     } else if (role === 'manager') {
@@ -63,13 +63,33 @@ export class AuthService extends BaseService {
     return !!this.tokenService.token;
   }
 
+  // Vérifier si l'utilisateur est connecté avec un token valide
+  isLoggedInWithValidToken(): boolean {
+    return this.isLoggedIn() && this.tokenService.isTokenValid();
+  }
+
   // Se déconnecter
   logout(): void {
-    localStorage.removeItem('auth-token');
+    this.tokenService.token = '';
     this.router.navigate(['/login']);
   }
 
   register(userData: any): Observable<any> {
     return this.http.post<any>(`${this.rootUrl}/users/register`, userData);
+  }
+
+  // Vérifier le token et rediriger si nécessaire
+  checkTokenAndRedirect(): void {
+    if (this.isLoggedIn()) {
+      if (this.tokenService.isTokenValid()) {
+        // Token valide, rediriger vers la page d'accueil en fonction du rôle
+        const role = this.tokenService.getUserRole();
+        this.redirectBasedOnRole(role);
+      } else {
+        // Token invalide, rediriger vers la page de login
+        this.tokenService.token = ''; // Effacer le token invalide
+        this.router.navigate(['/login']);
+      }
+    }
   }
 }
