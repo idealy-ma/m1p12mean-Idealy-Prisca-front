@@ -3,11 +3,20 @@ import { RouterModule, Routes } from '@angular/router';
 import { AccueilComponent } from './page/accueil/accueil.component';
 import { InscriptionComponent } from './page/inscription/inscription.component';
 import { LoginComponent } from './page/login/login.component';
+import { ManagerLoginComponent } from './page/manager/login/login.component';
+import { MecanicienLoginComponent } from './page/mecanicien/login/login.component';
+import { UnauthorizedComponent } from './page/unauthorized/unauthorized.component';
 import { RoleGuard } from './services/role.guard';
 
 const routes: Routes = [
+  // Routes publiques
   { path: 'login', component: LoginComponent },
   { path: 'register', component: InscriptionComponent },
+  { path: 'unauthorized', component: UnauthorizedComponent },
+  
+  // Routes spécifiques aux rôles
+  { path: 'manager/login', component: ManagerLoginComponent },
+  { path: 'mecanicien/login', component: MecanicienLoginComponent },
   
   // Route pour les clients (rôle: client)
   { 
