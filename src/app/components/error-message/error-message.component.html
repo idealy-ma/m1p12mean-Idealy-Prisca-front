@@ -1,0 +1,8 @@
+<div *ngIf="(errorState$ | async)?.show" class="error-container">
+  <div class="error-message">
+    <div class="error-content">
+      <span>{{ (errorState$ | async)?.message }}</span>
+      <button class="close-btn" (click)="hideError()">×</button>
+    </div>
+  </div>
+</div> 
