@@ -2,7 +2,8 @@ import {
   Component,
   OnInit
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { AuthService } from './services/authentification/auth.service';
+import { TokenService } from './services/token/token.service';
 
 
 
@@ -31,10 +32,17 @@ export class AppComponent implements OnInit {
   
 
   ngOnInit(): void {
-   
+    // Vérifier si un token existe et s'il est valide
+    if (this.authService.isLoggedIn()) {
+      if (!this.tokenService.isTokenValid()) {
+        // Si le token est invalide, le supprimer
+        this.tokenService.token = '';
+      }
+    }
   }
 
   constructor(
-    
+    private authService: AuthService,
+    private tokenService: TokenService
   ) {}
 }

@@ -1,14 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/authentification/auth.service';
-import { TokenService } from '../../services/token/token.service';
+import { AuthService } from '../../../services/authentification/auth.service';
+import { TokenService } from '../../../services/token/token.service';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-mecanicien-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginComponent implements OnInit {
+export class MecanicienLoginComponent implements OnInit {
   email: string = '';
   motDePasse: string = '';
   errorMessage: string = '';
@@ -22,9 +22,14 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     // Vérifier si l'utilisateur est déjà connecté avec un token valide
     if (this.authService.isLoggedInWithValidToken()) {
-      // Rediriger vers la page d'accueil en fonction du rôle
       const role = this.tokenService.getUserRole();
-      this.authService.redirectBasedOnRole(role);
+      // Si l'utilisateur est un mécanicien, le rediriger vers la page mécanicien
+      if (role === 'mecanicien') {
+        this.router.navigate(['/mecanicien']);
+      } else if (role) {
+        // Sinon, le rediriger vers sa page d'accueil respective
+        this.authService.redirectBasedOnRole(role);
+      }
     }
   }
 
@@ -32,12 +37,16 @@ export class LoginComponent implements OnInit {
   onSubmit(): void {
     this.authService.login(this.email, this.motDePasse).subscribe(
       (response) => {
-        // Enregistrer le token dans le localStorage
-        this.tokenService.token = response.token;
-
-        // Rediriger l'utilisateur vers la page d'accueil ou tableau de bord
+        // Vérifier si l'utilisateur est un mécanicien
         const role = this.tokenService.getUserRole();
-        this.authService.redirectBasedOnRole(role);
+        if (role !== 'mecanicien') {
+          this.errorMessage = 'Vous n\'avez pas les droits de mécanicien. Accès refusé.';
+          this.tokenService.token = ''; // Effacer le token
+          return;
+        }
+
+        // Rediriger l'utilisateur vers la page mécanicien
+        this.router.navigate(['/mecanicien']);
       },
       (error) => {
         // Afficher un message d'erreur
@@ -45,8 +54,4 @@ export class LoginComponent implements OnInit {
       }
     );
   }
-  
-  goToRegister(): void {
-    this.router.navigate(['/register']); // Redirige vers la page d'inscription
-  }
-}
+} 
