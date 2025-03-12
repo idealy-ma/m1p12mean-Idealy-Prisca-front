@@ -7,16 +7,17 @@ import { ManagerLoginComponent } from './page/manager/login/login.component';
 import { MecanicienLoginComponent } from './page/mecanicien/login/login.component';
 import { UnauthorizedComponent } from './page/unauthorized/unauthorized.component';
 import { RoleGuard } from './services/role.guard';
+import { AuthGuard } from './services/auth.guard';
 
 const routes: Routes = [
   // Routes publiques
-  { path: 'login', component: LoginComponent },
+  { path: 'login', component: LoginComponent, canActivate: [AuthGuard] },
   { path: 'register', component: InscriptionComponent },
   { path: 'unauthorized', component: UnauthorizedComponent },
   
   // Routes spécifiques aux rôles
-  { path: 'manager/login', component: ManagerLoginComponent },
-  { path: 'mecanicien/login', component: MecanicienLoginComponent },
+  { path: 'manager/login', component: ManagerLoginComponent, canActivate: [AuthGuard] },
+  { path: 'mecanicien/login', component: MecanicienLoginComponent, canActivate: [AuthGuard] },
   
   // Route pour les clients (rôle: client)
   { 
