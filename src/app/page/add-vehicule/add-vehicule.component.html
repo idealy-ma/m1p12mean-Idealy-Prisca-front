@@ -1,0 +1,48 @@
+<div class="container">
+    <h2>Enregistrer un véhicule</h2>
+    
+    <form [formGroup]="vehiculeForm" (ngSubmit)="onSubmit()">
+      <!-- Immatricule -->
+      <div>
+        <label for="immatricule">Immatricule *</label>
+        <input id="immatricule" type="text" formControlName="immatricule" required />
+        <div *ngIf="vehiculeForm.controls['immatricule'].invalid && vehiculeForm.controls['immatricule'].touched">
+          <small class="error">L'immatricule est obligatoire.</small>
+        </div>
+      </div>
+  
+      <!-- Marque -->
+      <div>
+        <label for="marque">Marque *</label>
+        <input id="marque" type="text" formControlName="marque" required />
+        <div *ngIf="vehiculeForm.controls['marque'].invalid && vehiculeForm.controls['marque'].touched">
+          <small class="error">La marque est obligatoire.</small>
+        </div>
+      </div>
+  
+      <!-- Modèle -->
+      <div>
+        <label for="modele">Modèle *</label>
+        <input id="modele" type="text" formControlName="modele" required />
+        <div *ngIf="vehiculeForm.controls['modele'].invalid && vehiculeForm.controls['modele'].touched">
+          <small class="error">Le modèle est obligatoire.</small>
+        </div>
+      </div>
+  
+      <!-- Date d'ajout (automatique) -->
+      <div>
+        <label>Date d'ajout</label>
+        <input type="text" [value]="todayDate" disabled />
+      </div>
+  
+      <!-- Upload Photos -->
+      <div>
+        <label for="photos">Ajouter des photos</label>
+        <input id="photos" type="file" (change)="onFileSelect($event)" multiple />
+      </div>
+  
+      <!-- Bouton Enregistrer -->
+      <button type="submit" [disabled]="vehiculeForm.invalid">Enregistrer</button>
+    </form>
+  </div>
+  
