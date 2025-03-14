@@ -1,3 +1,21 @@
-<p>accueil works!</p>
-<button (click)="goToAddVehicule()">Ajouter un véhicule</button>
-<button (click)="logout()">Déconnexion</button>
+
+<button class="btn btn-primary" (click)="goToAddVehicule()">Ajouter un véhicule</button>
+<button class="btn btn-secondary" (click)="logout()">Déconnexion</button>
+
+<h2>Liste des véhicules</h2>
+
+<div class="vehicule-container">
+  <div class="vehicule-card" *ngFor="let vehicule of vehicules">
+    <h3>{{ vehicule.marque }} - {{ vehicule.modele }}</h3>
+    <p><strong>Immatricule :</strong> {{ vehicule.immatricule }}</p>
+    <p><strong>Date d'ajout :</strong> {{ vehicule.dateAjout | date:'dd/MM/yyyy' }}</p>
+
+    <div class="photo-grid">
+        <img *ngFor="let photo of vehicule.photos || []" 
+             [src]="'http://localhost:3000/uploads/' + photo" 
+             alt="Photo du véhicule" />
+      </div>      
+
+    <button (click)="voirProblemes(vehicule.immatricule)">Voir problèmes</button>
+  </div>
+</div>
