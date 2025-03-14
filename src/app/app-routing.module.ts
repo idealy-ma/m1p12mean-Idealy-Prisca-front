@@ -8,6 +8,7 @@ import { MecanicienLoginComponent } from './page/mecanicien/login/login.componen
 import { UnauthorizedComponent } from './page/unauthorized/unauthorized.component';
 import { RoleGuard } from './services/role.guard';
 import { AuthGuard } from './services/auth.guard';
+import { AddVehiculeComponent } from './page/add-vehicule/add-vehicule.component';
 
 const routes: Routes = [
   // Routes publiques
@@ -20,6 +21,7 @@ const routes: Routes = [
   { path: 'mecanicien/login', component: MecanicienLoginComponent, canActivate: [AuthGuard] },
   
   // Route pour les clients (rôle: client)
+  { path: 'client/addvehicules', component: AddVehiculeComponent, canActivate: [RoleGuard] },
   { 
     path: '', 
     component: AccueilComponent, 
