@@ -13,7 +13,10 @@ export class VehiculeService extends BaseService {
     super(config, http);
   }
 
-    
+  // Obtenir la liste des véhicules
+  getVehicules(): Observable<Vehicule[]> {
+    return this.http.get<Vehicule[]>(`${this.rootUrl}/client/vehicules`);
+  }
   createVehicule(data: Vehicule): Observable<Vehicule> {
     return this.http.post<Vehicule>(`${this.rootUrl}/client/vehicules`, data);
   }
