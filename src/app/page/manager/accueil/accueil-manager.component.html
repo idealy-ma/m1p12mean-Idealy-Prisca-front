@@ -1,0 +1,51 @@
+<div class="container">
+  <div class="header">
+    <h1>Tableau de bord Manager</h1>
+    <button class="btn btn-secondary" (click)="logout()">Déconnexion</button>
+  </div>
+
+  <div class="dashboard-cards">
+    <div class="dashboard-card" (click)="goToDevisList()">
+      <div class="card-icon">
+        <i class="fas fa-file-invoice"></i>
+      </div>
+      <div class="card-content">
+        <h3>Devis</h3>
+        <p>Gérer les demandes de devis</p>
+      </div>
+    </div>
+
+    <!-- Carte pour les réparations (à implémenter plus tard) -->
+    <div class="dashboard-card disabled">
+      <div class="card-icon">
+        <i class="fas fa-tools"></i>
+      </div>
+      <div class="card-content">
+        <h3>Réparations</h3>
+        <p>Suivre les réparations en cours</p>
+      </div>
+    </div>
+
+    <!-- Carte pour les factures (à implémenter plus tard) -->
+    <div class="dashboard-card disabled">
+      <div class="card-icon">
+        <i class="fas fa-receipt"></i>
+      </div>
+      <div class="card-content">
+        <h3>Factures</h3>
+        <p>Gérer les factures clients</p>
+      </div>
+    </div>
+
+    <!-- Carte pour les statistiques (à implémenter plus tard) -->
+    <div class="dashboard-card disabled">
+      <div class="card-icon">
+        <i class="fas fa-chart-bar"></i>
+      </div>
+      <div class="card-content">
+        <h3>Statistiques</h3>
+        <p>Consulter les statistiques du garage</p>
+      </div>
+    </div>
+  </div>
+</div> 
