@@ -1,0 +1,19 @@
+.sidebar-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar-container {
+  position: fixed;
+  height: 100vh;
+  z-index: 1000;
+}
+
+.content-area {
+  flex: 1;
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* Responsive - sera géré par le composant parent qui définit la largeur */ 
