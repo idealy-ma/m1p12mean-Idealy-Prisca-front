@@ -15,6 +15,8 @@ import { AuthInterceptorService } from './services/interceptor/auth-interceptor.
 import { ErrorInterceptorService } from './services/interceptor/error-interceptor.service';
 import { ErrorMessageComponent } from './components/error-message/error-message.component';
 import { AddVehiculeComponent } from './page/add-vehicule/add-vehicule.component';
+import { DevisListComponent } from './page/manager/devis-list/devis-list.component';
+import { AccueilManagerComponent } from './page/manager/accueil/accueil-manager.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +28,9 @@ import { AddVehiculeComponent } from './page/add-vehicule/add-vehicule.component
     MecanicienLoginComponent,
     UnauthorizedComponent,
     ErrorMessageComponent,
-    AddVehiculeComponent
+    AddVehiculeComponent,
+    DevisListComponent,
+    AccueilManagerComponent
   ],
   imports: [
     BrowserModule,
