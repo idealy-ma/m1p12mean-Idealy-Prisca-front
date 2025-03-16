@@ -11,6 +11,7 @@ import { AuthGuard } from './services/auth.guard';
 import { AddVehiculeComponent } from './page/add-vehicule/add-vehicule.component';
 import { DevisListComponent } from './page/manager/devis-list/devis-list.component';
 import { AccueilManagerComponent } from './page/manager/accueil/accueil-manager.component';
+import { ManagerLayoutComponent } from './components/manager/layout/manager-layout.component';
 
 const routes: Routes = [
   // Routes publiques
@@ -31,19 +32,22 @@ const routes: Routes = [
     data: { role: 'client' }
   },
   
-  // Route pour les managers (rôle: manager)
-  { 
-    path: 'manager', 
-    component: AccueilManagerComponent, // Utiliser le nouveau composant spécifique au manager
-    canActivate: [RoleGuard],
-    data: { role: 'manager' }
-  },
-  // Route pour la liste des devis (manager)
+  // Routes pour les managers (rôle: manager) avec mise en page partagée
   {
-    path: 'manager/devis',
-    component: DevisListComponent,
+    path: 'manager',
+    component: ManagerLayoutComponent,
     canActivate: [RoleGuard],
-    data: { role: 'manager' }
+    data: { role: 'manager' },
+    children: [
+      {
+        path: '',
+        component: AccueilManagerComponent
+      },
+      {
+        path: 'devis',
+        component: DevisListComponent
+      }
+    ]
   },
   
   // Route pour les mécaniciens (rôle: mecanicien)
