@@ -9,6 +9,9 @@ import { UnauthorizedComponent } from './page/unauthorized/unauthorized.componen
 import { RoleGuard } from './services/role.guard';
 import { AuthGuard } from './services/auth.guard';
 import { AddVehiculeComponent } from './page/add-vehicule/add-vehicule.component';
+import { DevisListComponent } from './page/manager/devis-list/devis-list.component';
+import { AccueilManagerComponent } from './page/manager/accueil/accueil-manager.component';
+import { ManagerLayoutComponent } from './components/manager/layout/manager-layout.component';
 
 const routes: Routes = [
   // Routes publiques
@@ -29,12 +32,22 @@ const routes: Routes = [
     data: { role: 'client' }
   },
   
-  // Route pour les managers (rôle: manager)
-  { 
-    path: 'manager', 
-    component: AccueilComponent, // Remplacer par le composant spécifique au manager
+  // Routes pour les managers (rôle: manager) avec mise en page partagée
+  {
+    path: 'manager',
+    component: ManagerLayoutComponent,
     canActivate: [RoleGuard],
-    data: { role: 'manager' }
+    data: { role: 'manager' },
+    children: [
+      {
+        path: '',
+        component: AccueilManagerComponent
+      },
+      {
+        path: 'devis',
+        component: DevisListComponent
+      }
+    ]
   },
   
   // Route pour les mécaniciens (rôle: mecanicien)

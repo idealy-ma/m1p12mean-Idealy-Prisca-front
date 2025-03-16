@@ -1,0 +1,8 @@
+<div class="sidebar-layout">
+  <div class="sidebar-container">
+    <ng-content select="[sidebar]"></ng-content>
+  </div>
+  <div class="content-area" [ngStyle]="{'margin-left.px': sidebarWidth}">
+    <router-outlet></router-outlet>
+  </div>
+</div> 
