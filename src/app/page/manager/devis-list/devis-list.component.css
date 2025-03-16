@@ -1,3 +1,16 @@
+.devis-container {
+  padding: 1rem;
+}
+
+.page-title {
+  margin-bottom: 2rem;
+  color: #333;
+  font-size: 1.8rem;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
 .loading-spinner {
   display: flex;
   justify-content: center;
@@ -6,13 +19,20 @@
 
 .table-responsive {
   margin-top: 1rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-h2 {
-  margin-bottom: 1.5rem;
-  color: #333;
-  border-bottom: 2px solid #007bff;
-  padding-bottom: 0.5rem;
+.table {
+  margin-bottom: 0;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  color: #495057;
 }
 
 .badge {
@@ -34,16 +54,16 @@ button {
 }
 
 .page-item.active .page-link {
-  background-color: #007bff;
-  border-color: #007bff;
+  background-color: #3498db;
+  border-color: #3498db;
 }
 
 .page-link {
-  color: #007bff;
+  color: #3498db;
 }
 
 .page-link:hover {
-  color: #0056b3;
+  color: #2980b9;
   background-color: #e9ecef;
   border-color: #dee2e6;
 }
