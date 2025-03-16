@@ -1,0 +1,81 @@
+<div class="container">
+  <h2>Liste des demandes de devis</h2>
+  
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+  </div>
+  
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+  
+  <div *ngIf="!loading && devis.length === 0" class="alert alert-info">
+    Aucune demande de devis trouvée.
+  </div>
+  
+  <div *ngIf="!loading && devis.length > 0" class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th>Véhicule</th>
+          <th>Description</th>
+          <th>Date de création</th>
+          <th>Statut</th>
+          <th>Montant estimé</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of devis">
+          <td>{{ item.client?.nom }} {{ item.client?.prenom }}</td>
+          <td>{{ item.vehicule?.marque }} {{ item.vehicule?.modele }} ({{ item.vehicule?.immatricule }})</td>
+          <td>{{ item.description }}</td>
+          <td>{{ item.dateCreation | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <span [ngClass]="{
+              'badge bg-warning': item.status === 'en_attente',
+              'badge bg-success': item.status === 'accepte',
+              'badge bg-danger': item.status === 'refuse'
+            }">
+              {{ item.status === 'en_attente' ? 'En attente' : 
+                 item.status === 'accepte' ? 'Accepté' : 
+                 item.status === 'refuse' ? 'Refusé' : item.status }}
+            </span>
+          </td>
+          <td>{{ item.montantEstime | currency:'EUR':'symbol':'1.2-2' }}</td>
+          <td>
+            <button class="btn btn-sm btn-primary me-1">Détails</button>
+            <button class="btn btn-sm btn-success me-1" *ngIf="item.status === 'en_attente'">Accepter</button>
+            <button class="btn btn-sm btn-danger" *ngIf="item.status === 'en_attente'">Refuser</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Pagination -->
+  <div *ngIf="pagination && pagination.totalPages > 1" class="d-flex justify-content-center mt-4">
+    <nav aria-label="Navigation des pages">
+      <ul class="pagination">
+        <li class="page-item" [class.disabled]="!pagination.hasPrev">
+          <a class="page-link" href="javascript:void(0)" (click)="changePage(pagination.page - 1)" aria-label="Précédent">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        
+        <li class="page-item" *ngFor="let page of getPageNumbers()" [class.active]="page === pagination.page">
+          <a class="page-link" href="javascript:void(0)" (click)="changePage(page)">{{ page }}</a>
+        </li>
+        
+        <li class="page-item" [class.disabled]="!pagination.hasNext">
+          <a class="page-link" href="javascript:void(0)" (click)="changePage(pagination.page + 1)" aria-label="Suivant">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div> 
