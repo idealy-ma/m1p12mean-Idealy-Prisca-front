@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../services/authentification/auth.service';
 
 @Component({
   selector: 'app-accueil-manager',
@@ -10,7 +9,6 @@ import { AuthService } from '../../../services/authentification/auth.service';
 export class AccueilManagerComponent implements OnInit {
 
   constructor(
-    private authService: AuthService,
     private router: Router
   ) {}
 
@@ -20,9 +18,5 @@ export class AccueilManagerComponent implements OnInit {
 
   goToDevisList(): void {
     this.router.navigate(['/manager/devis']);
-  }
-
-  logout(): void {
-    this.authService.logout();
   }
 } 
