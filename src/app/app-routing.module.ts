@@ -9,6 +9,8 @@ import { UnauthorizedComponent } from './page/unauthorized/unauthorized.componen
 import { RoleGuard } from './services/role.guard';
 import { AuthGuard } from './services/auth.guard';
 import { AddVehiculeComponent } from './page/add-vehicule/add-vehicule.component';
+import { DevisListComponent } from './page/manager/devis-list/devis-list.component';
+import { AccueilManagerComponent } from './page/manager/accueil/accueil-manager.component';
 
 const routes: Routes = [
   // Routes publiques
@@ -32,7 +34,14 @@ const routes: Routes = [
   // Route pour les managers (rôle: manager)
   { 
     path: 'manager', 
-    component: AccueilComponent, // Remplacer par le composant spécifique au manager
+    component: AccueilManagerComponent, // Utiliser le nouveau composant spécifique au manager
+    canActivate: [RoleGuard],
+    data: { role: 'manager' }
+  },
+  // Route pour la liste des devis (manager)
+  {
+    path: 'manager/devis',
+    component: DevisListComponent,
     canActivate: [RoleGuard],
     data: { role: 'manager' }
   },
