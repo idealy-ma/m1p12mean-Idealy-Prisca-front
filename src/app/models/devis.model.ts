@@ -5,6 +5,7 @@ export interface Devis {
     nom: string;
     prenom: string;
     email: string;
+    telephone?: string;
     id?: string;
   };
   vehicule?: {
