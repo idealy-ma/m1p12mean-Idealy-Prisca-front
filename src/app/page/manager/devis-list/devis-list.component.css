@@ -203,6 +203,20 @@
   white-space: nowrap;
 }
 
+.btn-icon {
+  background: none;
+  border: none;
+  color: #3498db;
+  cursor: pointer;
+  padding: 0.375rem;
+  margin-right: 0.5rem;
+  transition: color 0.15s ease-in-out;
+}
+
+.btn-icon:hover {
+  color: #2980b9;
+}
+
 .btn-primary, .btn-success, .btn-danger {
   padding: 0.375rem 0.75rem;
   border: none;
