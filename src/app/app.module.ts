@@ -16,6 +16,7 @@ import { ErrorInterceptorService } from './services/interceptor/error-intercepto
 import { ErrorMessageComponent } from './components/error-message/error-message.component';
 import { AddVehiculeComponent } from './page/add-vehicule/add-vehicule.component';
 import { DevisListComponent } from './page/manager/devis-list/devis-list.component';
+import { DevisDetailsComponent } from './page/manager/devis-details/devis-details.component';
 import { AccueilManagerComponent } from './page/manager/accueil/accueil-manager.component';
 import { ManagerSidebarComponent } from './components/manager/sidebar/manager-sidebar.component';
 import { SidebarLayoutComponent } from './components/shared/layout/sidebar-layout.component';
@@ -33,6 +34,7 @@ import { ManagerLayoutComponent } from './components/manager/layout/manager-layo
     ErrorMessageComponent,
     AddVehiculeComponent,
     DevisListComponent,
+    DevisDetailsComponent,
     AccueilManagerComponent,
     ManagerSidebarComponent,
     SidebarLayoutComponent,
