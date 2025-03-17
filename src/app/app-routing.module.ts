@@ -10,6 +10,7 @@ import { RoleGuard } from './services/role.guard';
 import { AuthGuard } from './services/auth.guard';
 import { AddVehiculeComponent } from './page/add-vehicule/add-vehicule.component';
 import { DevisListComponent } from './page/manager/devis-list/devis-list.component';
+import { DevisDetailsComponent } from './page/manager/devis-details/devis-details.component';
 import { AccueilManagerComponent } from './page/manager/accueil/accueil-manager.component';
 import { ManagerLayoutComponent } from './components/manager/layout/manager-layout.component';
 
@@ -46,6 +47,10 @@ const routes: Routes = [
       {
         path: 'devis',
         component: DevisListComponent
+      },
+      {
+        path: 'devis/:id',
+        component: DevisDetailsComponent
       }
     ]
   },
