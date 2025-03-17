@@ -3,7 +3,7 @@
     <button class="btn-back" (click)="goBack()">
       <i class="fas fa-arrow-left"></i> Retour à la liste
     </button>
-    <h1 class="page-title">Détails du devis</h1>
+    <h1 class="page-title">Analyse de la demande</h1>
   </div>
 
   <div *ngIf="loading" class="loading-spinner">
@@ -17,96 +17,233 @@
   </div>
 
   <div *ngIf="!loading && devis" class="devis-content">
-    <div class="content-grid">
-      <!-- Informations générales -->
-      <div class="section">
-        <h2>Informations générales</h2>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Statut</label>
-            <span class="badge" 
-                  [ngClass]="{
-                    'badge-warning': devis.status === 'en_attente',
-                    'badge-success': devis.status === 'accepte',
-                    'badge-danger': devis.status === 'refuse'
-                  }">
-              {{ devis.status === 'en_attente' ? 'En attente' : 
-                 devis.status === 'accepte' ? 'Accepté' : 
-                 devis.status === 'refuse' ? 'Refusé' : devis.status }}
-            </span>
+    <div class="main-content">
+      <div class="content-grid">
+        <!-- Informations générales -->
+        <div class="section">
+          <h2>Informations générales</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Statut</label>
+              <span class="badge" 
+                    [ngClass]="{
+                      'badge-warning': devis.status === 'en_attente',
+                      'badge-success': devis.status === 'accepte',
+                      'badge-danger': devis.status === 'refuse'
+                    }">
+                {{ devis.status === 'en_attente' ? 'En attente' : 
+                   devis.status === 'accepte' ? 'Accepté' : 
+                   devis.status === 'refuse' ? 'Refusé' : devis.status }}
+              </span>
+            </div>
+            <div class="info-item">
+              <label>Date de création</label>
+              <span>{{ devis.dateCreation | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Montant estimé</label>
+              <span>{{ devis.montantEstime | currency:'EUR':'symbol':'1.2-2' }}</span>
+            </div>
           </div>
-          <div class="info-item">
-            <label>Date de création</label>
-            <span>{{ devis.dateCreation | date:'dd/MM/yyyy' }}</span>
+        </div>
+
+        <!-- Informations client -->
+        <div class="section">
+          <h2>Informations client</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Nom</label>
+              <span>{{ devis.client?.nom }}</span>
+            </div>
+            <div class="info-item">
+              <label>Prénom</label>
+              <span>{{ devis.client?.prenom }}</span>
+            </div>
+            <div class="info-item">
+              <label>Email</label>
+              <span>{{ devis.client?.email }}</span>
+            </div>
+            <div class="info-item" *ngIf="devis.client?.telephone">
+              <label>Téléphone</label>
+              <span>{{ devis.client?.telephone }}</span>
+            </div>
           </div>
-          <div class="info-item">
-            <label>Montant estimé</label>
-            <span>{{ devis.montantEstime | currency:'EUR':'symbol':'1.2-2' }}</span>
+        </div>
+
+        <!-- Informations véhicule -->
+        <div class="section">
+          <h2>Informations véhicule</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Marque</label>
+              <span>{{ devis.vehicule?.marque }}</span>
+            </div>
+            <div class="info-item">
+              <label>Modèle</label>
+              <span>{{ devis.vehicule?.modele }}</span>
+            </div>
+            <div class="info-item">
+              <label>Immatriculation</label>
+              <span>{{ devis.vehicule?.immatricule }}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Informations client -->
-      <div class="section">
-        <h2>Informations client</h2>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Nom</label>
-            <span>{{ devis.client?.nom }}</span>
+      <!-- Description -->
+      <div class="section description-section">
+        <h2>Description de la demande</h2>
+        <div class="description">
+          {{ devis.description }}
+        </div>
+      </div>
+
+      <!-- Création du devis -->
+      <div class="section devis-creation-section">
+        <h2>Création du devis</h2>
+        <div class="devis-form">
+          <!-- Pièces nécessaires -->
+          <div class="form-section">
+            <h3>Pièces nécessaires</h3>
+            <div class="pieces-list">
+              <div class="piece-item" *ngFor="let piece of mockPieces">
+                <div class="piece-info">
+                  <span class="piece-name">{{ piece.nom }}</span>
+                  <span class="piece-quantity">x{{ piece.quantite }}</span>
+                </div>
+                <div class="piece-price">
+                  {{ piece.prixUnitaire | currency:'EUR':'symbol':'1.2-2' }}
+                </div>
+              </div>
+              <button class="btn-add">
+                <i class="fas fa-plus"></i> Ajouter une pièce
+              </button>
+            </div>
           </div>
-          <div class="info-item">
-            <label>Prénom</label>
-            <span>{{ devis.client?.prenom }}</span>
+
+          <!-- Main d'œuvre -->
+          <div class="form-section">
+            <h3>Main d'œuvre</h3>
+            <div class="mecaniciens-section">
+              <div class="mecaniciens-disponibles">
+                <h4>Mécaniciens disponibles</h4>
+                <div class="mecaniciens-list">
+                  <div class="mecanicien-item" *ngFor="let mecanicien of mockMecaniciens">
+                    <div class="mecanicien-info">
+                      <span class="mecanicien-nom">{{ mecanicien.prenom }} {{ mecanicien.nom }}</span>
+                      <span class="mecanicien-specialite">{{ mecanicien.specialite }}</span>
+                      <span class="mecanicien-taux">{{ mecanicien.tauxHoraire | currency:'EUR':'symbol':'1.2-2' }}/h</span>
+                      <span class="mecanicien-temps">Temps estimé: {{ mecanicien.tempsEstime }}h</span>
+                    </div>
+                    <button class="btn-add" (click)="ajouterMecanicien(mecanicien)">
+                      <i class="fas fa-plus"></i> Ajouter
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mecaniciens-selectionnes" *ngIf="mecaniciensSelectionnes.length > 0">
+                <h4>Mécaniciens sélectionnés</h4>
+                <div class="mecaniciens-list">
+                  <div class="mecanicien-item" *ngFor="let mecanicien of mecaniciensSelectionnes">
+                    <div class="mecanicien-info">
+                      <span class="mecanicien-nom">{{ mecanicien.prenom }} {{ mecanicien.nom }}</span>
+                      <span class="mecanicien-specialite">{{ mecanicien.specialite }}</span>
+                      <span class="mecanicien-taux">{{ mecanicien.tauxHoraire | currency:'EUR':'symbol':'1.2-2' }}/h</span>
+                      <span class="mecanicien-temps">Temps estimé: {{ mecanicien.tempsEstime }}h</span>
+                      <span class="mecanicien-total">{{ (mecanicien.tauxHoraire * mecanicien.tempsEstime) | currency:'EUR':'symbol':'1.2-2' }}</span>
+                    </div>
+                    <button class="btn-remove" (click)="retirerMecanicien(mecanicien.id)">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="info-item">
-            <label>Email</label>
-            <span>{{ devis.client?.email }}</span>
+
+          <!-- Services spécifiques -->
+          <div class="form-section">
+            <h3>Services spécifiques</h3>
+            <div class="services-list">
+              <div class="service-item" *ngFor="let service of mockServices">
+                <span class="service-name">{{ service.nom }}</span>
+                <span class="service-price">{{ service.prix | currency:'EUR':'symbol':'1.2-2' }}</span>
+              </div>
+              <button class="btn-add">
+                <i class="fas fa-plus"></i> Ajouter un service
+              </button>
+            </div>
           </div>
-          <div class="info-item" *ngIf="devis.client?.telephone">
-            <label>Téléphone</label>
-            <span>{{ devis.client?.telephone }}</span>
+
+          <!-- Total et commentaires -->
+          <div class="form-section total-section">
+            <div class="total-breakdown">
+              <div class="total-item">
+                <span>Pièces</span>
+                <span>{{ 150.00 | currency:'EUR':'symbol':'1.2-2' }}</span>
+              </div>
+              <div class="total-item">
+                <span>Main d'œuvre</span>
+                <span>{{ calculerTotalMainOeuvre() | currency:'EUR':'symbol':'1.2-2' }}</span>
+              </div>
+              <div class="total-item">
+                <span>Services</span>
+                <span>{{ 75.00 | currency:'EUR':'symbol':'1.2-2' }}</span>
+              </div>
+              <div class="total-item total">
+                <span>Total</span>
+                <span>{{ (150.00 + calculerTotalMainOeuvre() + 75.00) | currency:'EUR':'symbol':'1.2-2' }}</span>
+              </div>
+            </div>
+            <div class="commentaire">
+              <label>Commentaire pour le client</label>
+              <textarea placeholder="Ajouter un commentaire pour le client..."></textarea>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Informations véhicule -->
-      <div class="section">
-        <h2>Informations véhicule</h2>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Marque</label>
-            <span>{{ devis.vehicule?.marque }}</span>
-          </div>
-          <div class="info-item">
-            <label>Modèle</label>
-            <span>{{ devis.vehicule?.modele }}</span>
-          </div>
-          <div class="info-item">
-            <label>Immatriculation</label>
-            <span>{{ devis.vehicule?.immatricule }}</span>
-          </div>
+      <!-- Actions -->
+      <div class="section actions-section">
+        <div class="actions">
+          <button class="btn-primary" (click)="sendToClient()">
+            <i class="fas fa-paper-plane"></i> Envoyer le devis au client
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Description -->
-    <div class="section description-section">
-      <h2>Description de la demande</h2>
-      <div class="description">
-        {{ devis.description }}
-      </div>
-    </div>
+    <!-- Bouton flottant pour réafficher le chat -->
+    <button *ngIf="!isChatVisible" class="btn-show-chat" (click)="toggleChat()">
+      <i class="fas fa-comments"></i>
+    </button>
 
-    <!-- Actions -->
-    <div class="section actions-section" *ngIf="devis.status === 'en_attente'">
-      <h2>Actions</h2>
-      <div class="actions">
-        <button class="btn-success" (click)="updateStatus('accepte')">
-          <i class="fas fa-check"></i> Accepter le devis
+    <!-- Chat sidebar -->
+    <div class="chat-sidebar" [class.visible]="isChatVisible">
+      <div class="chat-header">
+        <h2>Discussion</h2>
+        <button class="btn-toggle-chat" (click)="toggleChat()">
+          <i class="fas" [ngClass]="{'fa-chevron-right': !isChatVisible, 'fa-chevron-left': isChatVisible}"></i>
         </button>
-        <button class="btn-danger" (click)="updateStatus('refuse')">
-          <i class="fas fa-times"></i> Refuser le devis
-        </button>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages">
+          <div class="message client" *ngFor="let message of mockMessages">
+            <div class="message-content">
+              {{ message.contenu }}
+            </div>
+            <div class="message-info">
+              <span class="message-time">{{ message.date | date:'HH:mm' }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input">
+          <textarea placeholder="Écrivez votre message..."></textarea>
+          <button class="btn-send">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
