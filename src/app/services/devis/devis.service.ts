@@ -23,12 +23,12 @@ export class DevisService {
   }
 
   // Récupérer tous les devis (pour le manager)
-  getDevis(page: number = 1, limit: number = 10): Observable<any> {
+  getDevis(page: number = 1, limit: number = 10): Observable<Devis[]> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('limit', limit.toString());
 
-    return this.http.get<any>(`${this.apiUrl}/manager/devis`, {
+    return this.http.get<Devis[]>(`${this.apiUrl}/manager/devis`, {
       ...this.httpOptions,
       params
     });
@@ -45,7 +45,7 @@ export class DevisService {
     limit?: number,
     sortField?: string,
     sortOrder?: string
-  }): Observable<any> {
+    }): Observable<Devis[]> {
     let params = new HttpParams();
     
     // Ajouter tous les filtres non vides aux paramètres
@@ -62,15 +62,15 @@ export class DevisService {
     if (filters.sortField) params = params.set('sortField', filters.sortField);
     if (filters.sortOrder) params = params.set('sortOrder', filters.sortOrder);
     
-    return this.http.get<any>(`${this.apiUrl}/manager/devis`, {
+    return this.http.get<Devis[]>(`${this.apiUrl}/manager/devis`, {
       ...this.httpOptions,
       params
     });
   }
 
   // Récupérer un devis par son ID
-  getDevisById(id: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/manager/devis/${id}`, this.httpOptions);
+  getDevisById(id: string): Observable<Devis> {
+    return this.http.get<Devis>(`${this.apiUrl}/manager/devis/${id}`, this.httpOptions);
   }
 
   // Mettre à jour un devis
