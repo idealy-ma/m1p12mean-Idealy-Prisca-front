@@ -21,6 +21,7 @@ import { AccueilManagerComponent } from './page/manager/accueil/accueil-manager.
 import { ManagerSidebarComponent } from './components/manager/sidebar/manager-sidebar.component';
 import { SidebarLayoutComponent } from './components/shared/layout/sidebar-layout.component';
 import { ManagerLayoutComponent } from './components/manager/layout/manager-layout.component';
+import { AddServiceComponent } from './page/manager/add-service/add-service.component';
 
 @NgModule({
   declarations: [
@@ -38,7 +39,8 @@ import { ManagerLayoutComponent } from './components/manager/layout/manager-layo
     AccueilManagerComponent,
     ManagerSidebarComponent,
     SidebarLayoutComponent,
-    ManagerLayoutComponent
+    ManagerLayoutComponent,
+    AddServiceComponent,
   ],
   imports: [
     BrowserModule,

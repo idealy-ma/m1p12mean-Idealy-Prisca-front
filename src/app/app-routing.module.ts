@@ -13,6 +13,7 @@ import { DevisListComponent } from './page/manager/devis-list/devis-list.compone
 import { DevisDetailsComponent } from './page/manager/devis-details/devis-details.component';
 import { AccueilManagerComponent } from './page/manager/accueil/accueil-manager.component';
 import { ManagerLayoutComponent } from './components/manager/layout/manager-layout.component';
+import { AddServiceComponent } from './page/manager/add-service/add-service.component';
 
 const routes: Routes = [
   // Routes publiques
@@ -51,6 +52,10 @@ const routes: Routes = [
       {
         path: 'devis/:id',
         component: DevisDetailsComponent
+      },
+      {
+        path: 'service',
+        component: AddServiceComponent
       }
     ]
   },
