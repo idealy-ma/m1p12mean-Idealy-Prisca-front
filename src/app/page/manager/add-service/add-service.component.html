@@ -1,0 +1,45 @@
+<div class="container">
+    <h2>Créer un Service</h2>
+  
+    <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()">
+      <!-- Nom -->
+      <div class="form-group">
+        <label for="name">Nom du service</label>
+        <input id="name" type="text" class="form-control" formControlName="name" required />
+        <small *ngIf="serviceForm.controls['name'].invalid && serviceForm.controls['name'].touched" class="text-danger">
+          Ce champ est obligatoire.
+        </small>
+      </div>
+  
+      <!-- Type -->
+      
+      <div class="form-group">
+        <label for="type">Type</label>
+        <select id="type" class="form-control" formControlName="type" required>
+          <option *ngFor="let type of serviceTypes" [ngValue]="type">{{ type }}</option>
+        </select>
+        <small *ngIf="serviceForm.controls['type'].invalid && serviceForm.controls['type'].touched" class="text-danger">
+          Veuillez sélectionner un type.
+        </small>
+      </div>
+
+  
+      <!-- Prix -->
+      <div class="form-group">
+        <label for="price">Prix</label>
+        <input id="price" type="number" class="form-control" formControlName="prix" required />
+        <small *ngIf="serviceForm.controls['prix'].invalid && serviceForm.controls['prix'].touched" class="text-danger">
+          Veuillez entrer un prix valide.
+        </small>
+      </div>
+      <!-- Description (optionnelle) -->
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" class="form-control" formControlName="descri"></textarea>
+      </div>
+  
+      <!-- Bouton Créer -->
+      <button type="submit" class="btn btn-primary" [disabled]="serviceForm.invalid">Créer</button>
+    </form>
+  </div>
+  
