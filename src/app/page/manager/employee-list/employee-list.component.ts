@@ -4,6 +4,8 @@ import { User } from '../../../models/user.model';
 import { UserService } from '../../../services/user/user.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { ErrorService } from '../../../services/error/error.service';
+import { SuccessService } from '../../../services/success/success.service';
 
 @Component({
   selector: 'app-employee-list',
@@ -14,8 +16,6 @@ export class EmployeeListComponent implements OnInit {
   employees: User[] = [];
   filterForm: FormGroup;
   isLoading: boolean = false;
-  successMessage: string = '';
-  errorMessage: string = '';
   
   // Options pour le filtrage
   roleOptions = [
@@ -39,7 +39,9 @@ export class EmployeeListComponent implements OnInit {
   constructor(
     private userService: UserService,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private errorService: ErrorService,
+    private successService: SuccessService
   ) {
     this.filterForm = this.fb.group({
       nom: [''],
@@ -80,8 +82,7 @@ export class EmployeeListComponent implements OnInit {
         error: (error) => {
           console.error('Erreur lors du chargement des employés', error);
           this.isLoading = false;
-          this.errorMessage = 'Erreur lors du chargement des employés';
-          setTimeout(() => this.errorMessage = '', 5000); // Effacer le message après 5 secondes
+          this.errorService.showError('Erreur lors du chargement des employés');
         }
       });
   }
@@ -125,13 +126,11 @@ export class EmployeeListComponent implements OnInit {
       .subscribe({
         next: (response) => {
           employee.estActif = false;
-          this.successMessage = response.message || `L'employé ${employee.prenom} ${employee.nom} a été suspendu avec succès`;
-          setTimeout(() => this.successMessage = '', 5000); // Effacer le message après 5 secondes
+          this.successService.showSuccess(response.message || `L'employé ${employee.prenom} ${employee.nom} a été suspendu avec succès`);
         },
         error: (error) => {
           console.error(`Erreur lors de la suspension de l'employé`, error);
-          this.errorMessage = `Erreur lors de la suspension de l'employé ${employee.prenom} ${employee.nom}`;
-          setTimeout(() => this.errorMessage = '', 5000); // Effacer le message après 5 secondes
+          this.errorService.showError(`Erreur lors de la suspension de l'employé ${employee.prenom} ${employee.nom}`);
         }
       });
   }
@@ -144,13 +143,11 @@ export class EmployeeListComponent implements OnInit {
       .subscribe({
         next: (response) => {
           employee.estActif = true;
-          this.successMessage = response.message || `L'employé ${employee.prenom} ${employee.nom} a été réactivé avec succès`;
-          setTimeout(() => this.successMessage = '', 5000); // Effacer le message après 5 secondes
+          this.successService.showSuccess(response.message || `L'employé ${employee.prenom} ${employee.nom} a été réactivé avec succès`);
         },
         error: (error) => {
           console.error(`Erreur lors de la réactivation de l'employé`, error);
-          this.errorMessage = `Erreur lors de la réactivation de l'employé ${employee.prenom} ${employee.nom}`;
-          setTimeout(() => this.errorMessage = '', 5000); // Effacer le message après 5 secondes
+          this.errorService.showError(`Erreur lors de la réactivation de l'employé ${employee.prenom} ${employee.nom}`);
         }
       });
   }

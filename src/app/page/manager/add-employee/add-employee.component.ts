@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { User } from '../../../models/user.model';
 import { UserService } from '../../../services/user/user.service';
+import { ErrorService } from '../../../services/error/error.service';
+import { SuccessService } from '../../../services/success/success.service';
 
 @Component({
   selector: 'app-add-employee',
@@ -10,13 +12,13 @@ import { UserService } from '../../../services/user/user.service';
 })
 export class AddEmployeeComponent implements OnInit {
   employeeForm: FormGroup;
-  successMessage: string = '';
-  errorMessage: string = '';
   roles: string[] = ['mecanicien', 'manager'];
 
   constructor(
     private fb: FormBuilder, 
-    private userService: UserService
+    private userService: UserService,
+    private errorService: ErrorService,
+    private successService: SuccessService
   ) {
     this.employeeForm = this.fb.group({
       nom: ['', [Validators.required]],
@@ -38,20 +40,18 @@ export class AddEmployeeComponent implements OnInit {
       
       this.userService.createEmployee(newEmployee).subscribe({
         next: (response) => {
-          this.successMessage = 'Employé créé avec succès !';
-          this.errorMessage = '';
+          this.successService.showSuccess('Employé créé avec succès !');
           this.employeeForm.reset();
           // Remettre le rôle par défaut à mecanicien
           this.employeeForm.get('role')?.setValue('mecanicien');
         },
         error: (error) => {
-          this.errorMessage = error.error?.message || 'Erreur lors de la création de l\'employé';
-          this.successMessage = '';
+          this.errorService.showError(error.error?.message || 'Erreur lors de la création de l\'employé');
           console.error(error);
         }
       });
     } else {
-      this.errorMessage = 'Veuillez corriger les erreurs dans le formulaire.';
+      this.errorService.showError('Veuillez corriger les erreurs dans le formulaire.');
       this.markFormGroupTouched(this.employeeForm);
     }
   }

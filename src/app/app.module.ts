@@ -24,6 +24,7 @@ import { ManagerLayoutComponent } from './components/manager/layout/manager-layo
 import { AddServiceComponent } from './page/manager/add-service/add-service.component';
 import { AddEmployeeComponent } from './page/manager/add-employee/add-employee.component';
 import { EmployeeListComponent } from './page/manager/employee-list/employee-list.component';
+import { SuccessMessageComponent } from './components/success-message/success-message.component';
 
 @NgModule({
   declarations: [
@@ -44,7 +45,8 @@ import { EmployeeListComponent } from './page/manager/employee-list/employee-lis
     ManagerLayoutComponent,
     AddServiceComponent,
     AddEmployeeComponent,
-    EmployeeListComponent
+    EmployeeListComponent,
+    SuccessMessageComponent
   ],
   imports: [
     BrowserModule,
