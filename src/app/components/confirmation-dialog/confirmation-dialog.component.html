@@ -1,0 +1,14 @@
+<div class="confirmation-overlay" *ngIf="(confirmationState$ | async)?.show">
+  <div class="confirmation-dialog" [class.danger]="(confirmationState$ | async)?.data?.type === 'danger'" [class.warning]="(confirmationState$ | async)?.data?.type === 'warning'" [class.info]="(confirmationState$ | async)?.data?.type === 'info'">
+    <div class="confirmation-header">
+      <h3>{{ (confirmationState$ | async)?.data?.title }}</h3>
+    </div>
+    <div class="confirmation-body">
+      <p>{{ (confirmationState$ | async)?.data?.message }}</p>
+    </div>
+    <div class="confirmation-footer">
+      <button class="btn-cancel" (click)="cancel()">{{ (confirmationState$ | async)?.data?.cancelButtonText || 'Annuler' }}</button>
+      <button class="btn-confirm" (click)="confirm()">{{ (confirmationState$ | async)?.data?.confirmButtonText || 'Confirmer' }}</button>
+    </div>
+  </div>
+</div> 
