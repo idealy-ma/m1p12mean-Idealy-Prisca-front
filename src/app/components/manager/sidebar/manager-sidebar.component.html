@@ -28,6 +28,10 @@
         <i class="fas fa-receipt"></i>
         <span>Services</span>
       </li>
+      <li [class.active]="activeRoute === 'employee'" (click)="navigateTo('/manager/employee')">
+        <i class="fas fa-user-plus"></i>
+        <span>Employés</span>
+      </li>
       <li class="disabled">
         <i class="fas fa-chart-bar"></i>
         <span>Statistiques</span>

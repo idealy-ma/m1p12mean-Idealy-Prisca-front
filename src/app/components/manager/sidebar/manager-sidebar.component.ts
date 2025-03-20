@@ -35,8 +35,10 @@ export class ManagerSidebarComponent implements OnInit {
       this.activeRoute = 'factures';
     } else if (url.includes('/manager/statistiques')) {
       this.activeRoute = 'statistiques';
-    }else if (url.includes('/manager/service')) {
+    } else if (url.includes('/manager/service')) {
       this.activeRoute = 'service';
+    } else if (url.includes('/manager/employee')) {
+      this.activeRoute = 'employee';
     }
   }
 
