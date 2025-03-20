@@ -23,6 +23,7 @@ import { SidebarLayoutComponent } from './components/shared/layout/sidebar-layou
 import { ManagerLayoutComponent } from './components/manager/layout/manager-layout.component';
 import { AddServiceComponent } from './page/manager/add-service/add-service.component';
 import { AddEmployeeComponent } from './page/manager/add-employee/add-employee.component';
+import { EmployeeListComponent } from './page/manager/employee-list/employee-list.component';
 
 @NgModule({
   declarations: [
@@ -42,7 +43,8 @@ import { AddEmployeeComponent } from './page/manager/add-employee/add-employee.c
     SidebarLayoutComponent,
     ManagerLayoutComponent,
     AddServiceComponent,
-    AddEmployeeComponent
+    AddEmployeeComponent,
+    EmployeeListComponent
   ],
   imports: [
     BrowserModule,
