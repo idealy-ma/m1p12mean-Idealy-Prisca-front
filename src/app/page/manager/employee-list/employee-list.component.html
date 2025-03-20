@@ -45,6 +45,25 @@
     </button>
   </div>
   
+  <!-- Légende des actions -->
+  <div class="legend-container">
+    <h3>Actions disponibles :</h3>
+    <div class="legend-items">
+      <div class="legend-item">
+        <i class="fas fa-toggle-on"></i>
+        <span>Activer/Désactiver un employé</span>
+      </div>
+      <div class="legend-item">
+        <i class="fas fa-exchange-alt"></i>
+        <span>Changer le rôle (Manager ↔ Mécanicien)</span>
+      </div>
+      <div class="legend-item">
+        <i class="fas fa-trash-alt"></i>
+        <span>Supprimer définitivement un employé</span>
+      </div>
+    </div>
+  </div>
+  
   <!-- Tableau des employés -->
   <div class="employee-table-container">
     <table class="employee-table">
@@ -76,10 +95,13 @@
             </span>
           </td>
           <td class="actions">
-            <button class="btn-icon" (click)="toggleEmployeeStatus(employee)" title="Changer le statut">
+            <button class="btn-icon" [ngClass]="{'btn-active': employee.estActif, 'btn-inactive': !employee.estActif}" (click)="toggleEmployeeStatus(employee)" title="{{ employee.estActif ? 'Désactiver' : 'Activer' }} l'employé {{ employee.prenom }} {{ employee.nom }}">
               <i [class]="employee.estActif ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
             </button>
-            <button class="btn-icon btn-delete" (click)="deleteEmployee(employee)" title="Supprimer l'employé">
+            <button class="btn-icon btn-role" (click)="changeRole(employee)" title="Changer le rôle de {{ employee.prenom }} {{ employee.nom }} en {{ employee.role === 'manager' ? 'Mécanicien' : 'Manager' }}">
+              <i class="fas fa-exchange-alt"></i>
+            </button>
+            <button class="btn-icon btn-delete" (click)="deleteEmployee(employee)" title="Supprimer définitivement l'employé {{ employee.prenom }} {{ employee.nom }}">
               <i class="fas fa-trash-alt"></i>
             </button>
           </td>

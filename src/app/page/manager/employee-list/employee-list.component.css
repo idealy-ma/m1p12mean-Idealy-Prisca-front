@@ -113,6 +113,57 @@
   margin-right: 0.5rem;
 }
 
+/* Légende des actions */
+.legend-container {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.legend-container h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #495057;
+}
+
+.legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-item i {
+  font-size: 1.1rem;
+  width: 1.5rem;
+  text-align: center;
+}
+
+.legend-item i.fa-toggle-on {
+  color: #0056b3;
+}
+
+.legend-item i.fa-exchange-alt {
+  color: #856404;
+}
+
+.legend-item i.fa-trash-alt {
+  color: #721c24;
+}
+
+.legend-item span {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
 /* Tableau des employés */
 .employee-table-container {
   background-color: #fff;
@@ -138,6 +189,11 @@
   background-color: #f8f9fa;
   font-weight: 600;
   color: #495057;
+}
+
+.employee-table th:last-child {
+  width: 220px;
+  min-width: 220px;
 }
 
 .employee-table tr:hover {
@@ -184,17 +240,38 @@
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 4px;
+  padding: 0.6rem;
+  border-radius: 50%;
   transition: background-color 0.15s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
 .btn-icon:hover {
   background-color: #e9ecef;
 }
 
+.btn-active {
+  color: #0056b3;
+}
+
+.btn-inactive {
+  color: #6c757d;
+}
+
+.btn-role {
+  color: #856404;
+}
+
+.btn-role:hover {
+  background-color: #fff3cd;
+}
+
 .btn-delete {
-  color: #dc3545;
+  color: #721c24;
 }
 
 .btn-delete:hover {

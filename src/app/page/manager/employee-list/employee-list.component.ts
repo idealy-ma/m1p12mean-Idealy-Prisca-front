@@ -197,4 +197,39 @@ export class EmployeeListComponent implements OnInit {
   addEmployee(): void {
     this.router.navigate(['/manager/employee']);
   }
+
+  // Changer le rôle d'un employé
+  async changeRole(employee: User): Promise<void> {
+    if (!employee._id) return;
+    
+    // Déterminer le nouveau rôle (inverse du rôle actuel)
+    const newRole = employee.role === 'manager' ? 'mecanicien' : 'manager';
+    const newRoleLabel = newRole === 'manager' ? 'Manager' : 'Mécanicien';
+    
+    // Demander confirmation avant de changer le rôle
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Confirmation de changement de rôle',
+      message: `Êtes-vous sûr de vouloir changer le rôle de ${employee.prenom} ${employee.nom} de "${employee.role === 'manager' ? 'Manager' : 'Mécanicien'}" à "${newRoleLabel}" ?`,
+      confirmButtonText: 'Changer le rôle',
+      cancelButtonText: 'Annuler',
+      type: 'warning'
+    });
+    
+    if (!confirmed) {
+      return;
+    }
+    
+    this.userService.changeEmployeeRole(employee._id, newRole)
+      .subscribe({
+        next: (response) => {
+          // Mettre à jour le rôle dans la liste locale
+          employee.role = newRole;
+          this.successService.showSuccess(response.message || `Le rôle de l'employé ${employee.prenom} ${employee.nom} a été changé en ${newRoleLabel} avec succès`);
+        },
+        error: (error) => {
+          console.error(`Erreur lors du changement de rôle de l'employé`, error);
+          this.errorService.showError(`Erreur lors du changement de rôle de l'employé ${employee.prenom} ${employee.nom}`);
+        }
+      });
+  }
 } 

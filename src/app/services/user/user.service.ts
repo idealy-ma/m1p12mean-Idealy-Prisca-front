@@ -65,4 +65,9 @@ export class UserService extends BaseService {
   deleteEmployee(id: string): Observable<any> {
     return this.http.delete(`${this.rootUrl}/manager/employees/${id}`);
   }
+
+  // Changer le rôle d'un employé
+  changeEmployeeRole(id: string, role: 'manager' | 'mecanicien'): Observable<any> {
+    return this.http.patch(`${this.rootUrl}/manager/employees/${id}/role`, { role });
+  }
 } 
