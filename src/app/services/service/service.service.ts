@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { Service } from '../../models/service.model';
 import { ApiConfiguration } from '../api-configuration';
 import { BaseService } from '../base-service';
@@ -15,5 +15,15 @@ export class ServiceService extends BaseService {
 
   createService(service: Service): Observable<any> {
     return this.http.post(`${this.rootUrl}/manager/service`, service);
+  }
+  getServices() {
+    return this.http.get<{ message: string; data: Service[] }>(`${this.rootUrl}/manager/service`)
+      .pipe(
+        map(response => response.data) // 🔹 Récupère uniquement le tableau de services
+      );
+  }  
+  
+  createServicePack(pack: any) {
+    return this.http.post(`${this.rootUrl}/manager/packs`, pack);
   }
 }

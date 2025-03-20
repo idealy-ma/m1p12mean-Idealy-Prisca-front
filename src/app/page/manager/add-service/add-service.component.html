@@ -1,45 +1,91 @@
 <div class="container">
-    <h2>Créer un Service</h2>
   
-    <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()">
-      <!-- Nom -->
-      <div class="form-group">
-        <label for="name">Nom du service</label>
-        <input id="name" type="text" class="form-control" formControlName="name" required />
-        <small *ngIf="serviceForm.controls['name'].invalid && serviceForm.controls['name'].touched" class="text-danger">
-          Ce champ est obligatoire.
-        </small>
-      </div>
-  
-      <!-- Type -->
-      
-      <div class="form-group">
-        <label for="type">Type</label>
-        <select id="type" class="form-control" formControlName="type" required>
-          <option *ngFor="let type of serviceTypes" [ngValue]="type">{{ type }}</option>
-        </select>
-        <small *ngIf="serviceForm.controls['type'].invalid && serviceForm.controls['type'].touched" class="text-danger">
-          Veuillez sélectionner un type.
-        </small>
-      </div>
 
-  
-      <!-- Prix -->
-      <div class="form-group">
-        <label for="price">Prix</label>
-        <input id="price" type="number" class="form-control" formControlName="prix" required />
-        <small *ngIf="serviceForm.controls['prix'].invalid && serviceForm.controls['prix'].touched" class="text-danger">
-          Veuillez entrer un prix valide.
-        </small>
-      </div>
-      <!-- Description (optionnelle) -->
-      <div class="form-group">
-        <label for="description">Description</label>
-        <textarea id="description" class="form-control" formControlName="descri"></textarea>
-      </div>
-  
-      <!-- Bouton Créer -->
-      <button type="submit" class="btn btn-primary" [disabled]="serviceForm.invalid">Créer</button>
-    </form>
+  <!-- Onglets style Excel -->
+  <div class="excel-tabs">
+    <div 
+      class="tab" 
+      [class.active]="activeTab === 'service'" 
+      (click)="activeTab = 'service'">
+      Créer un Service
+    </div>
+    <div 
+      class="tab" 
+      [class.active]="activeTab === 'pack'" 
+      (click)="activeTab = 'pack'">
+      Créer un Pack
+    </div>
   </div>
-  
+
+  <!-- Contenu des onglets -->
+  <div class="tab-content">
+    <!-- Onglet "Créer un Service" -->
+    <div *ngIf="activeTab === 'service'">
+      <form [formGroup]="serviceForm" (ngSubmit)="onSubmitService()">
+        <h2>Créer un Service</h2>
+        <!-- Nom -->
+        <div class="form-group">
+          <label for="name">Nom du service</label>
+          <input id="name" type="text" class="form-control" formControlName="name" required />
+          <small *ngIf="serviceForm.controls['name'].invalid && serviceForm.controls['name'].touched" class="text-danger">
+            Ce champ est obligatoire.
+          </small>
+        </div>
+
+        <!-- Type -->
+        <div class="form-group">
+          <label for="type">Type</label>
+          <select id="type" class="form-control" formControlName="type" required>
+            <option *ngFor="let type of serviceTypes" [ngValue]="type">{{ type }}</option>
+          </select>
+        </div>
+
+        <!-- Prix -->
+        <div class="form-group">
+          <label for="price">Prix</label>
+          <input id="price" type="number" class="form-control" formControlName="prix" required />
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" class="form-control" formControlName="descri"></textarea>
+        </div>
+
+        <!-- Bouton -->
+        <button type="submit" class="btn btn-primary" [disabled]="serviceForm.invalid">Créer</button>
+      </form>
+    </div>
+
+    <!-- Onglet "Créer un Pack" -->
+    <div *ngIf="activeTab === 'pack'">
+      <form [formGroup]="packForm" (ngSubmit)="onSubmitPack()">
+        <h2>Créer un Pack à partir des services</h2>
+
+        <!-- Nom -->
+        <div class="form-group">
+          <label for="packName">Nom du Pack</label>
+          <input id="packName" type="text" class="form-control" formControlName="name" required />
+        </div>
+
+        <!-- Remise -->
+        <div class="form-group">
+          <label for="discount">Remise</label>
+          <input id="discount" type="number" class="form-control" formControlName="remise" min="0" />
+        </div>
+
+        <!-- Liste des services -->
+        <div class="form-group">
+          <label>Services disponibles :</label>
+          <div *ngFor="let service of availableServices">
+            <input type="checkbox" [value]="service._id" (change)="toggleServiceSelection(service._id)" />
+            {{ service.name }}
+          </div>
+        </div>
+
+        <!-- Bouton -->
+        <button type="submit" class="btn btn-primary" [disabled]="packForm.invalid">Créer</button>
+      </form>
+    </div>
+  </div>
+</div>
