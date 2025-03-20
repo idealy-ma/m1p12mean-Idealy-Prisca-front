@@ -22,6 +22,10 @@ import { ManagerSidebarComponent } from './components/manager/sidebar/manager-si
 import { SidebarLayoutComponent } from './components/shared/layout/sidebar-layout.component';
 import { ManagerLayoutComponent } from './components/manager/layout/manager-layout.component';
 import { AddServiceComponent } from './page/manager/add-service/add-service.component';
+import { AddEmployeeComponent } from './page/manager/add-employee/add-employee.component';
+import { EmployeeListComponent } from './page/manager/employee-list/employee-list.component';
+import { SuccessMessageComponent } from './components/success-message/success-message.component';
+import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
 
 @NgModule({
   declarations: [
@@ -41,6 +45,10 @@ import { AddServiceComponent } from './page/manager/add-service/add-service.comp
     SidebarLayoutComponent,
     ManagerLayoutComponent,
     AddServiceComponent,
+    AddEmployeeComponent,
+    EmployeeListComponent,
+    SuccessMessageComponent,
+    ConfirmationDialogComponent
   ],
   imports: [
     BrowserModule,

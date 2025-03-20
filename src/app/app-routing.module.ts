@@ -14,6 +14,8 @@ import { DevisDetailsComponent } from './page/manager/devis-details/devis-detail
 import { AccueilManagerComponent } from './page/manager/accueil/accueil-manager.component';
 import { ManagerLayoutComponent } from './components/manager/layout/manager-layout.component';
 import { AddServiceComponent } from './page/manager/add-service/add-service.component';
+import { AddEmployeeComponent } from './page/manager/add-employee/add-employee.component';
+import { EmployeeListComponent } from './page/manager/employee-list/employee-list.component';
 
 const routes: Routes = [
   // Routes publiques
@@ -56,6 +58,14 @@ const routes: Routes = [
       {
         path: 'service',
         component: AddServiceComponent
+      },
+      {
+        path: 'employee',
+        component: AddEmployeeComponent
+      },
+      {
+        path: 'employees',
+        component: EmployeeListComponent
       }
     ]
   },

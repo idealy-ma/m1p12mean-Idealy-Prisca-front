@@ -1,0 +1,8 @@
+<div *ngIf="(successState$ | async)?.show" class="success-container">
+  <div class="success-message">
+    <div class="success-content">
+      <span>{{ (successState$ | async)?.message }}</span>
+      <button class="close-btn" (click)="hideSuccess()">×</button>
+    </div>
+  </div>
+</div> 
