@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { User } from '../../models/user.model';
@@ -19,8 +19,21 @@ export class UserService extends BaseService {
   }
 
   // Récupérer la liste des employés (mécaniciens)
-  getEmployees(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.rootUrl}/manager/employees`);
+  getEmployees(filters: any = {}, page: number = 1, limit: number = 10): Observable<any> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+    
+    // Ajouter les filtres à l'URL si définis
+    if (filters.nom) params = params.set('nom', filters.nom);
+    if (filters.prenom) params = params.set('prenom', filters.prenom);
+    if (filters.role) params = params.set('role', filters.role);
+    if (filters.estActif !== undefined) params = params.set('estActif', filters.estActif.toString());
+
+    console.log(params);
+    
+    
+    return this.http.get<any>(`${this.rootUrl}/manager/employees`, { params });
   }
 
   // Récupérer un employé par son ID
