@@ -20,6 +20,11 @@ export class ErrorService {
    */
   showError(message: string): void {
     this.errorSubject.next({ show: true, message });
+    
+    // Masquer automatiquement le message après 5 secondes
+    setTimeout(() => {
+      this.hideError();
+    }, 5000);
   }
 
   /**
