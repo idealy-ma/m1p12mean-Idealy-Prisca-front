@@ -50,4 +50,14 @@ export class UserService extends BaseService {
   toggleEmployeeStatus(id: string, estActif: boolean): Observable<any> {
     return this.http.patch(`${this.rootUrl}/manager/employees/${id}/status`, { estActif });
   }
+
+  // Suspendre un utilisateur
+  suspendUser(id: string): Observable<any> {
+    return this.http.patch(`${this.rootUrl}/manager/users/${id}/suspend`, {});
+  }
+
+  // Réactiver un utilisateur
+  reactivateUser(id: string): Observable<any> {
+    return this.http.patch(`${this.rootUrl}/manager/users/${id}/reactivate`, {});
+  }
 } 

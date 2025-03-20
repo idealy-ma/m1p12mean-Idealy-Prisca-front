@@ -14,6 +14,8 @@ export class EmployeeListComponent implements OnInit {
   employees: User[] = [];
   filterForm: FormGroup;
   isLoading: boolean = false;
+  successMessage: string = '';
+  errorMessage: string = '';
   
   // Options pour le filtrage
   roleOptions = [
@@ -78,6 +80,8 @@ export class EmployeeListComponent implements OnInit {
         error: (error) => {
           console.error('Erreur lors du chargement des employés', error);
           this.isLoading = false;
+          this.errorMessage = 'Erreur lors du chargement des employés';
+          setTimeout(() => this.errorMessage = '', 5000); // Effacer le message après 5 secondes
         }
       });
   }
@@ -106,15 +110,47 @@ export class EmployeeListComponent implements OnInit {
   toggleEmployeeStatus(employee: User): void {
     if (!employee._id) return;
     
-    const newStatus = !employee.estActif;
-    this.userService.toggleEmployeeStatus(employee._id, newStatus)
+    if (employee.estActif) {
+      this.suspendEmployee(employee);
+    } else {
+      this.reactivateEmployee(employee);
+    }
+  }
+  
+  // Suspendre un employé
+  suspendEmployee(employee: User): void {
+    if (!employee._id) return;
+    
+    this.userService.suspendUser(employee._id)
       .subscribe({
-        next: () => {
-          // Mettre à jour l'employé dans la liste
-          employee.estActif = newStatus;
+        next: (response) => {
+          employee.estActif = false;
+          this.successMessage = response.message || `L'employé ${employee.prenom} ${employee.nom} a été suspendu avec succès`;
+          setTimeout(() => this.successMessage = '', 5000); // Effacer le message après 5 secondes
         },
         error: (error) => {
-          console.error(`Erreur lors de la modification du statut de l'employé`, error);
+          console.error(`Erreur lors de la suspension de l'employé`, error);
+          this.errorMessage = `Erreur lors de la suspension de l'employé ${employee.prenom} ${employee.nom}`;
+          setTimeout(() => this.errorMessage = '', 5000); // Effacer le message après 5 secondes
+        }
+      });
+  }
+  
+  // Réactiver un employé
+  reactivateEmployee(employee: User): void {
+    if (!employee._id) return;
+    
+    this.userService.reactivateUser(employee._id)
+      .subscribe({
+        next: (response) => {
+          employee.estActif = true;
+          this.successMessage = response.message || `L'employé ${employee.prenom} ${employee.nom} a été réactivé avec succès`;
+          setTimeout(() => this.successMessage = '', 5000); // Effacer le message après 5 secondes
+        },
+        error: (error) => {
+          console.error(`Erreur lors de la réactivation de l'employé`, error);
+          this.errorMessage = `Erreur lors de la réactivation de l'employé ${employee.prenom} ${employee.nom}`;
+          setTimeout(() => this.errorMessage = '', 5000); // Effacer le message après 5 secondes
         }
       });
   }
