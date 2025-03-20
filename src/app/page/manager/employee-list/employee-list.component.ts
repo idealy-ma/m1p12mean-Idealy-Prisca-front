@@ -6,6 +6,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ErrorService } from '../../../services/error/error.service';
 import { SuccessService } from '../../../services/success/success.service';
+import { ConfirmationService } from '../../../services/confirmation/confirmation.service';
 
 @Component({
   selector: 'app-employee-list',
@@ -41,7 +42,8 @@ export class EmployeeListComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private errorService: ErrorService,
-    private successService: SuccessService
+    private successService: SuccessService,
+    private confirmationService: ConfirmationService
   ) {
     this.filterForm = this.fb.group({
       nom: [''],
@@ -148,6 +150,45 @@ export class EmployeeListComponent implements OnInit {
         error: (error) => {
           console.error(`Erreur lors de la réactivation de l'employé`, error);
           this.errorService.showError(`Erreur lors de la réactivation de l'employé ${employee.prenom} ${employee.nom}`);
+        }
+      });
+  }
+  
+  // Supprimer un employé
+  async deleteEmployee(employee: User): Promise<void> {
+    if (!employee._id) return;
+    
+    // Utiliser le service de confirmation au lieu de confirm()
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Confirmation de suppression',
+      message: `Êtes-vous sûr de vouloir supprimer l'employé ${employee.prenom} ${employee.nom} ? Cette action est irréversible.`,
+      confirmButtonText: 'Supprimer',
+      cancelButtonText: 'Annuler',
+      type: 'danger'
+    });
+    
+    if (!confirmed) {
+      return;
+    }
+    
+    this.userService.deleteEmployee(employee._id)
+      .subscribe({
+        next: (response) => {
+          // Supprimer l'employé de la liste locale
+          this.employees = this.employees.filter(e => e._id !== employee._id);
+          this.successService.showSuccess(`L'employé ${employee.prenom} ${employee.nom} a été supprimé avec succès`);
+          
+          // Si la liste est vide et qu'on n'est pas à la première page, retourner à la page précédente
+          if (this.employees.length === 0 && this.currentPage > 1) {
+            this.goToPage(this.currentPage - 1);
+          } else {
+            // Sinon, rafraîchir la liste pour mettre à jour le nombre total
+            this.loadEmployees();
+          }
+        },
+        error: (error) => {
+          console.error(`Erreur lors de la suppression de l'employé`, error);
+          this.errorService.showError(`Erreur lors de la suppression de l'employé ${employee.prenom} ${employee.nom}`);
         }
       });
   }

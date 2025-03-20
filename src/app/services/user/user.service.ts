@@ -60,4 +60,9 @@ export class UserService extends BaseService {
   reactivateUser(id: string): Observable<any> {
     return this.http.patch(`${this.rootUrl}/manager/users/${id}/reactivate`, {});
   }
+
+  // Supprimer un employé
+  deleteEmployee(id: string): Observable<any> {
+    return this.http.delete(`${this.rootUrl}/manager/employees/${id}`);
+  }
 } 

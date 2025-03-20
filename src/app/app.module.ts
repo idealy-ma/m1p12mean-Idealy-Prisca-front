@@ -25,6 +25,7 @@ import { AddServiceComponent } from './page/manager/add-service/add-service.comp
 import { AddEmployeeComponent } from './page/manager/add-employee/add-employee.component';
 import { EmployeeListComponent } from './page/manager/employee-list/employee-list.component';
 import { SuccessMessageComponent } from './components/success-message/success-message.component';
+import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
 
 @NgModule({
   declarations: [
@@ -46,7 +47,8 @@ import { SuccessMessageComponent } from './components/success-message/success-me
     AddServiceComponent,
     AddEmployeeComponent,
     EmployeeListComponent,
-    SuccessMessageComponent
+    SuccessMessageComponent,
+    ConfirmationDialogComponent
   ],
   imports: [
     BrowserModule,

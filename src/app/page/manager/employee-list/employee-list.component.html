@@ -79,6 +79,9 @@
             <button class="btn-icon" (click)="toggleEmployeeStatus(employee)" title="Changer le statut">
               <i [class]="employee.estActif ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
             </button>
+            <button class="btn-icon btn-delete" (click)="deleteEmployee(employee)" title="Supprimer l'employé">
+              <i class="fas fa-trash-alt"></i>
+            </button>
           </td>
         </tr>
       </tbody>
