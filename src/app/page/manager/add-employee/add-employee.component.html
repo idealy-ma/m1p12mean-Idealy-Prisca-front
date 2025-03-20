@@ -1,0 +1,120 @@
+<div class="container">
+  <h1 class="page-title">Ajouter un employé</h1>
+  
+  <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()">
+    <div class="form-sections-container">
+      <div class="form-section">
+        <h3>Informations personnelles</h3>
+
+        <div class="form-group">
+          <label for="nom">Nom*</label>
+          <input 
+            type="text" 
+            id="nom" 
+            formControlName="nom" 
+            class="form-control" 
+            [ngClass]="{'is-invalid': employeeForm.get('nom')?.invalid && employeeForm.get('nom')?.touched}"
+          >
+          <div class="invalid-feedback" *ngIf="employeeForm.get('nom')?.invalid && employeeForm.get('nom')?.touched">
+            Le nom est requis.
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="prenom">Prénom*</label>
+          <input 
+            type="text" 
+            id="prenom" 
+            formControlName="prenom" 
+            class="form-control" 
+            [ngClass]="{'is-invalid': employeeForm.get('prenom')?.invalid && employeeForm.get('prenom')?.touched}"
+          >
+          <div class="invalid-feedback" *ngIf="employeeForm.get('prenom')?.invalid && employeeForm.get('prenom')?.touched">
+            Le prénom est requis.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="telephone">Téléphone</label>
+          <input 
+            type="text" 
+            id="telephone" 
+            formControlName="telephone" 
+            class="form-control"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="adresse">Adresse</label>
+          <textarea 
+            id="adresse" 
+            formControlName="adresse" 
+            class="form-control"
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Informations d'authentification</h3>
+        
+        <div class="form-group">
+          <label for="email">Email*</label>
+          <input 
+            type="email" 
+            id="email" 
+            formControlName="email" 
+            class="form-control" 
+            [ngClass]="{'is-invalid': employeeForm.get('email')?.invalid && employeeForm.get('email')?.touched}"
+          >
+          <div class="invalid-feedback" *ngIf="employeeForm.get('email')?.invalid && employeeForm.get('email')?.touched">
+            <span *ngIf="employeeForm.get('email')?.errors?.['required']">L'email est requis.</span>
+            <span *ngIf="employeeForm.get('email')?.errors?.['email']">L'email n'est pas valide.</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="motDePasse">Mot de passe*</label>
+          <input 
+            type="password" 
+            id="motDePasse" 
+            formControlName="motDePasse" 
+            class="form-control" 
+            [ngClass]="{'is-invalid': employeeForm.get('motDePasse')?.invalid && employeeForm.get('motDePasse')?.touched}"
+          >
+          <div class="invalid-feedback" *ngIf="employeeForm.get('motDePasse')?.invalid && employeeForm.get('motDePasse')?.touched">
+            <span *ngIf="employeeForm.get('motDePasse')?.errors?.['required']">Le mot de passe est requis.</span>
+            <span *ngIf="employeeForm.get('motDePasse')?.errors?.['minlength']">Le mot de passe doit contenir au moins 6 caractères.</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="role">Rôle*</label>
+          <select 
+            id="role" 
+            formControlName="role" 
+            class="form-control"
+          >
+            <option *ngFor="let role of roles" [value]="role">
+              {{ role === 'mecanicien' ? 'Mécanicien' : 'Manager' }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <button type="submit" class="btn btn-primary" [disabled]="employeeForm.invalid">
+        Ajouter l'employé
+      </button>
+    </div>
+  </form>
+  
+  <div *ngIf="successMessage" class="alert alert-success mt-3">
+    {{ successMessage }}
+  </div>
+  
+  <div *ngIf="errorMessage" class="alert alert-danger mt-3">
+    {{ errorMessage }}
+  </div>
+</div> 
