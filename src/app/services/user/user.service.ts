@@ -66,8 +66,25 @@ export class UserService extends BaseService {
     return this.http.delete(`${this.rootUrl}/manager/employees/${id}`);
   }
 
-  // Changer le rôle d'un employé
+  // Changer le rôle d'un employé (manager <-> mécanicien)
   changeEmployeeRole(id: string, role: 'manager' | 'mecanicien'): Observable<any> {
     return this.http.patch(`${this.rootUrl}/manager/employees/${id}/role`, { role });
+  }
+
+  /**
+   * Récupère les informations du profil de l'utilisateur connecté
+   * @returns Un Observable contenant les données du profil utilisateur
+   */
+  getUserProfile(): Observable<any> {
+    return this.http.get<any>(`${this.rootUrl}/users/profile`);
+  }
+
+  /**
+   * Met à jour les informations du profil de l'utilisateur connecté
+   * @param userData Les données à mettre à jour (nom, prenom, telephone, adresse, motDePasse)
+   * @returns Un Observable contenant la réponse de l'API
+   */
+  updateUserProfile(userData: any): Observable<any> {
+    return this.http.put<any>(`${this.rootUrl}/users/profile`, userData);
   }
 } 

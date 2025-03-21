@@ -36,6 +36,10 @@
         <i class="fas fa-user-plus"></i>
         <span>Ajouter un employé</span>
       </li>
+      <li [class.active]="activeRoute === 'profil'" (click)="navigateTo('/manager/profil')">
+        <i class="fas fa-user-circle"></i>
+        <span>Mon Profil</span>
+      </li>
       <li class="disabled">
         <i class="fas fa-chart-bar"></i>
         <span>Statistiques</span>

@@ -26,6 +26,13 @@ import { AddEmployeeComponent } from './page/manager/add-employee/add-employee.c
 import { EmployeeListComponent } from './page/manager/employee-list/employee-list.component';
 import { SuccessMessageComponent } from './components/success-message/success-message.component';
 import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
+import { MecanicienLayoutComponent } from './components/mecanicien/layout/mecanicien-layout/mecanicien-layout.component';
+import { MecanicienSidebarComponent } from './components/mecanicien/sidebar/mecanicien-sidebar/mecanicien-sidebar.component';
+import { AccueilMecanicienComponent } from './page/mecanicien/accueil/accueil-mecanicien/accueil-mecanicien.component';
+import { ClientLayoutComponent } from './components/client/layout/client-layout/client-layout.component';
+import { ClientSidebarComponent } from './components/client/sidebar/client-sidebar/client-sidebar.component';
+import { ClientDashboardComponent } from './page/client-dashboard/client-dashboard.component';
+import { UserProfileComponent } from './page/profile/user-profile/user-profile.component';
 
 @NgModule({
   declarations: [
@@ -48,7 +55,14 @@ import { ConfirmationDialogComponent } from './components/confirmation-dialog/co
     AddEmployeeComponent,
     EmployeeListComponent,
     SuccessMessageComponent,
-    ConfirmationDialogComponent
+    ConfirmationDialogComponent,
+    MecanicienLayoutComponent,
+    MecanicienSidebarComponent,
+    AccueilMecanicienComponent,
+    ClientLayoutComponent,
+    ClientSidebarComponent,
+    ClientDashboardComponent,
+    UserProfileComponent
   ],
   imports: [
     BrowserModule,
