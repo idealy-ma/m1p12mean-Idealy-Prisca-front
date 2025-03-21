@@ -20,6 +20,7 @@ import { MecanicienLayoutComponent } from './components/mecanicien/layout/mecani
 import { AccueilMecanicienComponent } from './page/mecanicien/accueil/accueil-mecanicien/accueil-mecanicien.component';
 import { ClientLayoutComponent } from './components/client/layout/client-layout/client-layout.component';
 import { ClientDashboardComponent } from './page/client-dashboard/client-dashboard.component';
+import { UserProfileComponent } from './page/profile/user-profile/user-profile.component';
 
 const routes: Routes = [
   // Routes publiques
@@ -39,7 +40,8 @@ const routes: Routes = [
     data: { role: 'client' },
     children: [
       { path: '', component: ClientDashboardComponent },
-      { path: 'client/addvehicules', component: AddVehiculeComponent }
+      { path: 'client/addvehicules', component: AddVehiculeComponent },
+      { path: 'profil', component: UserProfileComponent }
       // D'autres routes client peuvent être ajoutées ici
     ]
   },
@@ -56,7 +58,8 @@ const routes: Routes = [
       { path: 'devis/:id', component: DevisDetailsComponent },
       { path: 'service', component: AddServiceComponent },
       { path: 'employee', component: AddEmployeeComponent },
-      { path: 'employees', component: EmployeeListComponent }
+      { path: 'employees', component: EmployeeListComponent },
+      { path: 'profil', component: UserProfileComponent }
     ]
   },
   
@@ -68,6 +71,7 @@ const routes: Routes = [
     data: { role: 'mecanicien' },
     children: [
       { path: '', component: AccueilMecanicienComponent },
+      { path: 'profil', component: UserProfileComponent }
       // Ajoutez les autres routes des mécaniciens ici lorsqu'elles seront créées
     ]
   },

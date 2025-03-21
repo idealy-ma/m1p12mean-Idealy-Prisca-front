@@ -32,6 +32,7 @@ import { AccueilMecanicienComponent } from './page/mecanicien/accueil/accueil-me
 import { ClientLayoutComponent } from './components/client/layout/client-layout/client-layout.component';
 import { ClientSidebarComponent } from './components/client/sidebar/client-sidebar/client-sidebar.component';
 import { ClientDashboardComponent } from './page/client-dashboard/client-dashboard.component';
+import { UserProfileComponent } from './page/profile/user-profile/user-profile.component';
 
 @NgModule({
   declarations: [
@@ -60,7 +61,8 @@ import { ClientDashboardComponent } from './page/client-dashboard/client-dashboa
     AccueilMecanicienComponent,
     ClientLayoutComponent,
     ClientSidebarComponent,
-    ClientDashboardComponent
+    ClientDashboardComponent,
+    UserProfileComponent
   ],
   imports: [
     BrowserModule,
