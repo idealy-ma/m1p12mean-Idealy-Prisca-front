@@ -1,6 +1,6 @@
-<div class="profile-container">
+<div class="profile-container" [ngStyle]="{'--theme-primary': currentTheme.primary, '--theme-secondary': currentTheme.secondary, '--theme-accent': currentTheme.accent}">
   <div class="page-header">
-    <h1>Mon Profil</h1>
+    <h1>Mon Profil <span class="role-badge" *ngIf="userRole">{{userRole | titlecase}}</span></h1>
   </div>
 
   <div class="profile-content" *ngIf="!loading; else loadingTemplate">

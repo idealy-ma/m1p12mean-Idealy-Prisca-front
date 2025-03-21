@@ -4,6 +4,7 @@ import { UserService } from '../../../services/user/user.service';
 import { User } from '../../../models/user.model';
 import { ErrorService } from '../../../services/error/error.service';
 import { SuccessService } from '../../../services/success/success.service';
+import { TokenService } from '../../../services/token/token.service';
 
 @Component({
   selector: 'app-user-profile',
@@ -17,12 +18,42 @@ export class UserProfileComponent implements OnInit {
   loading = false;
   passwordLoading = false;
   showPasswordForm = false;
+  
+  // Rôle de l'utilisateur
+  userRole: string | null = null;
+  
+  // Couleurs spécifiques aux rôles
+  themeColors = {
+    client: {
+      primary: '#27ae60', // Vert
+      secondary: '#2ecc71',
+      accent: '#e8f5e9'
+    },
+    manager: {
+      primary: '#3498db', // Bleu
+      secondary: '#2980b9',
+      accent: '#e3f2fd'
+    },
+    mecanicien: {
+      primary: '#e74c3c', // Rouge
+      secondary: '#c0392b',
+      accent: '#ffebee'
+    }
+  };
+  
+  // Couleurs par défaut (au cas où le rôle n'est pas reconnu)
+  currentTheme = {
+    primary: '#3498db',
+    secondary: '#2980b9',
+    accent: '#e3f2fd'
+  };
 
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
     private errorService: ErrorService,
-    private successService: SuccessService
+    private successService: SuccessService,
+    private tokenService: TokenService
   ) {
     this.profileForm = this.fb.group({
       nom: ['', Validators.required],
@@ -38,6 +69,12 @@ export class UserProfileComponent implements OnInit {
     }, {
       validators: this.passwordMatchValidator
     });
+    
+    // Récupérer le rôle de l'utilisateur et définir le thème correspondant
+    this.userRole = this.tokenService.getUserRole();
+    if (this.userRole && this.themeColors[this.userRole as keyof typeof this.themeColors]) {
+      this.currentTheme = this.themeColors[this.userRole as keyof typeof this.themeColors];
+    }
   }
 
   ngOnInit(): void {
