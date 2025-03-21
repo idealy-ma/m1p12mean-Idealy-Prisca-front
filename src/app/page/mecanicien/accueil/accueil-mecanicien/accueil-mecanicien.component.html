@@ -1,0 +1,45 @@
+<div class="dashboard-container">
+  <h1 class="page-title">Tableau de bord Mécanicien</h1>
+
+  <div class="dashboard-cards">
+    <div class="dashboard-card" (click)="goToTasks()">
+      <div class="card-icon">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <div class="card-content">
+        <h3>Mes tâches</h3>
+        <p>Consulter et gérer vos tâches</p>
+      </div>
+    </div>
+
+    <div class="dashboard-card" (click)="goToRepairs()">
+      <div class="card-icon">
+        <i class="fas fa-wrench"></i>
+      </div>
+      <div class="card-content">
+        <h3>Réparations</h3>
+        <p>Gérer les réparations en cours</p>
+      </div>
+    </div>
+
+    <div class="dashboard-card" (click)="goToHistory()">
+      <div class="card-icon">
+        <i class="fas fa-history"></i>
+      </div>
+      <div class="card-content">
+        <h3>Historique</h3>
+        <p>Consulter l'historique des réparations</p>
+      </div>
+    </div>
+
+    <div class="dashboard-card" (click)="goToProfile()">
+      <div class="card-icon">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="card-content">
+        <h3>Mon profil</h3>
+        <p>Gérer vos informations personnelles</p>
+      </div>
+    </div>
+  </div>
+</div>
