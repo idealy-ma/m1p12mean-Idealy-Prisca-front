@@ -16,6 +16,8 @@ import { ManagerLayoutComponent } from './components/manager/layout/manager-layo
 import { AddServiceComponent } from './page/manager/add-service/add-service.component';
 import { AddEmployeeComponent } from './page/manager/add-employee/add-employee.component';
 import { EmployeeListComponent } from './page/manager/employee-list/employee-list.component';
+import { MecanicienLayoutComponent } from './components/mecanicien/layout/mecanicien-layout/mecanicien-layout.component';
+import { AccueilMecanicienComponent } from './page/mecanicien/accueil/accueil-mecanicien/accueil-mecanicien.component';
 
 const routes: Routes = [
   // Routes publiques
@@ -71,11 +73,15 @@ const routes: Routes = [
   },
   
   // Route pour les mécaniciens (rôle: mecanicien)
-  { 
-    path: 'mecanicien', 
-    component: AccueilComponent, // Remplacer par le composant spécifique au mécanicien
+  {
+    path: 'mecanicien',
+    component: MecanicienLayoutComponent,
     canActivate: [RoleGuard],
-    data: { role: 'mecanicien' }
+    data: { role: 'mecanicien' },
+    children: [
+      { path: '', component: AccueilMecanicienComponent },
+      // Ajoutez les autres routes des mécaniciens ici lorsqu'elles seront créées
+    ]
   },
   
   // Redirection par défaut
