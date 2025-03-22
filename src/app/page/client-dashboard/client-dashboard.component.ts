@@ -61,6 +61,6 @@ export class ClientDashboardComponent implements OnInit {
   }
 
   goToProfil(): void {
-    this.router.navigate(['/profil']);
+    this.router.navigate(['/client/profil']);
   }
 }
