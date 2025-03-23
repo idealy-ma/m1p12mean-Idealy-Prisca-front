@@ -1,0 +1,42 @@
+<div class="vehicule-list-container">
+  <div class="header-actions">
+    <h1>Mes véhicules</h1>
+    <button class="btn btn-primary" (click)="goToAddVehicule()">
+      <i class="fas fa-plus"></i> Ajouter un véhicule
+    </button>
+  </div>
+
+  <div class="vehicule-grid" *ngIf="vehicules.length > 0">
+    <div class="vehicule-card" *ngFor="let vehicule of vehicules">
+      <div class="vehicule-header">
+        <h3>{{ vehicule.marque }} - {{ vehicule.modele }}</h3>
+        <span class="vehicule-info">{{ vehicule.immatricule }}</span>
+      </div>
+      
+      <div class="vehicule-details">
+        <p><i class="fas fa-calendar-alt"></i> Ajouté le {{ vehicule.dateAjout | date:'dd/MM/yyyy' }}</p>
+      </div>
+
+      <div class="photo-grid" *ngIf="vehicule.photos && vehicule.photos.length > 0">
+        <img *ngFor="let photo of vehicule.photos" 
+             [src]="'http://localhost:3000/uploads/' + photo" 
+             alt="Photo du véhicule" />
+      </div>
+      
+      <div class="vehicule-actions">
+        <button class="btn btn-secondary" (click)="voirProblemes(vehicule.immatricule)">
+          <i class="fas fa-wrench"></i> Voir problèmes
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="empty-state" *ngIf="vehicules.length === 0">
+    <i class="fas fa-car-side empty-icon"></i>
+    <h3>Aucun véhicule enregistré</h3>
+    <p>Vous n'avez pas encore ajouté de véhicule à votre compte.</p>
+    <button class="btn btn-primary" (click)="goToAddVehicule()">
+      Ajouter mon premier véhicule
+    </button>
+  </div>
+</div>

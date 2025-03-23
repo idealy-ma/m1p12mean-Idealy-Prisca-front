@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Vehicule } from '../../models/vehicule.model';
-import { VehiculeService } from '../../services/vehicules/vehicule.service';
+import { Vehicule } from '../../../models/vehicule.model';
+import { VehiculeService } from '../../../services/vehicules/vehicule.service';
 
 @Component({
   selector: 'app-client-dashboard',
@@ -41,7 +41,7 @@ export class ClientDashboardComponent implements OnInit {
   }
 
   goToVehicules(): void {
-    this.router.navigate(['/']);
+    this.router.navigate(['/client/vehicules']);
   }
 
   goToAddVehicule(): void {
@@ -49,15 +49,15 @@ export class ClientDashboardComponent implements OnInit {
   }
 
   goToDevis(): void {
-    this.router.navigate(['/devis']);
+    this.router.navigate(['/client/devis']);
   }
 
   goToReparations(): void {
-    this.router.navigate(['/reparations']);
+    this.router.navigate(['/client/reparations']);
   }
 
   goToFactures(): void {
-    this.router.navigate(['/factures']);
+    this.router.navigate(['/client/factures']);
   }
 
   goToProfil(): void {

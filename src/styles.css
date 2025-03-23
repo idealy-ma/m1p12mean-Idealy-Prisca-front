@@ -5,10 +5,10 @@
 /* Autres styles globaux */
 
 :root {
-  --primary-color: #a60319;
-  --secondary-color: #000;
+  --primary-color: #E63946;  /* Rouge vif - Dynamisme et énergie */
+  --secondary-color: #1C1C1C; /* Noir mat - Élégance et performance */
   --dark-color: #333;
-  --light-color: #f4f4f4;
+  --light-color: #F5F5F5; /* Blanc cassé - Lisibilité et contraste */
   --success-color: #5cb85c;
   --error-color: #d9534f;
 }

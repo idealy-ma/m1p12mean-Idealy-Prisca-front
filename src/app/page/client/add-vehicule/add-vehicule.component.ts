@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Vehicule } from '../../models/vehicule.model';
-import { VehiculeService } from '../../services/vehicules/vehicule.service';
+import { Vehicule } from '../../../models/vehicule.model';
+import { VehiculeService } from '../../../services/vehicules/vehicule.service';
 
 @Component({
   selector: 'app-add-vehicule',
@@ -45,7 +45,7 @@ export class AddVehiculeComponent implements OnInit {
       this.vehiculeService.createVehicule(vehiculeData).subscribe({
         next: (response) => {
           console.log('Véhicule ajouté avec succès', response);
-          this.router.navigate(['/problemes']);
+          this.router.navigate(['/client/vehicules']);
         },
         error: (err) => {
           console.error('Erreur lors de l\'ajout du véhicule', err);
