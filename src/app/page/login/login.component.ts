@@ -12,6 +12,7 @@ export class LoginComponent implements OnInit {
   email: string = '';
   motDePasse: string = '';
   errorMessage: string = '';
+  isLoading = false;
 
   constructor(
     private authService: AuthService, 
@@ -30,11 +31,13 @@ export class LoginComponent implements OnInit {
 
   // Fonction de soumission du formulaire de connexion
   onSubmit(): void {
+    this.isLoading = true;
     this.authService.login(this.email, this.motDePasse).subscribe(
       (response) => {
         // Enregistrer le token dans le localStorage
         this.tokenService.token = response.token;
-
+        this.isLoading = false;
+        
         // Rediriger l'utilisateur vers la page d'accueil ou tableau de bord
         const role = this.tokenService.getUserRole();
         this.authService.redirectBasedOnRole(role);
@@ -42,6 +45,7 @@ export class LoginComponent implements OnInit {
       (error) => {
         // Afficher un message d'erreur
         this.errorMessage = 'Identifiants invalides. Veuillez réessayer.';
+        this.isLoading = false;
       }
     );
   }

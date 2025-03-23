@@ -53,7 +53,10 @@
         </div>
 
         <!-- Bouton -->
-        <button type="submit" class="btn btn-primary" [disabled]="serviceForm.invalid">Créer</button>
+        <button type="submit" class="btn btn-primary" [disabled]="serviceForm.invalid || isLoadingService">
+          <span *ngIf="isLoadingService"><span class="spinner-inline"></span>Chargement...</span>
+          <span *ngIf="!isLoadingService">Créer</span>
+        </button>
       </form>
     </div>
 
@@ -84,7 +87,10 @@
         </div>
 
         <!-- Bouton -->
-        <button type="submit" class="btn btn-primary" [disabled]="packForm.invalid">Créer</button>
+        <button type="submit" class="btn btn-primary" [disabled]="packForm.invalid || isLoadingPack">
+          <span *ngIf="isLoadingPack"><span class="spinner-inline"></span>Chargement...</span>
+          <span *ngIf="!isLoadingPack">Créer</span>
+        </button>
       </form>
     </div>
   </div>

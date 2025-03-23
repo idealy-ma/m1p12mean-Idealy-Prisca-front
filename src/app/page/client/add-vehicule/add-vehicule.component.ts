@@ -13,6 +13,7 @@ export class AddVehiculeComponent implements OnInit {
   vehiculeForm!: FormGroup;
   todayDate = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
   selectedFiles: File[] = [];
+  isLoading = false;
 
   constructor(
     private fb: FormBuilder,
@@ -34,6 +35,7 @@ export class AddVehiculeComponent implements OnInit {
 
   onSubmit() {
     if (this.vehiculeForm.valid) {
+      this.isLoading = true;
       const vehiculeData: Vehicule = {
         immatricule: this.vehiculeForm.value.immatricule,
         marque: this.vehiculeForm.value.marque,
@@ -45,10 +47,12 @@ export class AddVehiculeComponent implements OnInit {
       this.vehiculeService.createVehicule(vehiculeData).subscribe({
         next: (response) => {
           console.log('Véhicule ajouté avec succès', response);
+          this.isLoading = false;
           this.router.navigate(['/client/vehicules']);
         },
         error: (err) => {
           console.error('Erreur lors de l\'ajout du véhicule', err);
+          this.isLoading = false;
         },
       });
     }

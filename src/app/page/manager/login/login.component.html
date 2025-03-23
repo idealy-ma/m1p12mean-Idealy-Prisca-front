@@ -48,7 +48,10 @@
           </div>
         </div>
         
-        <button type="submit" class="btn btn-primary">Se connecter</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!email || !motDePasse || isLoading">
+          <span *ngIf="isLoading"><span class="spinner-inline"></span>Chargement...</span>
+          <span *ngIf="!isLoading">Se connecter</span>
+        </button>
       </form>
       
       <div class="login-footer">

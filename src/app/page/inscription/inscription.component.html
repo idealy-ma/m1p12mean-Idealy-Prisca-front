@@ -46,7 +46,10 @@
         </small>
       </div>
   
-      <button type="submit" [disabled]="registerForm.invalid">S'inscrire</button>
+      <button type="submit" [disabled]="registerForm.invalid || isLoading">
+        <span *ngIf="isLoading"><span class="spinner-inline"></span>Chargement...</span>
+        <span *ngIf="!isLoading">S'inscrire</span>
+      </button>
       <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
     </form>
   </div>

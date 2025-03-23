@@ -12,6 +12,7 @@ export class InscriptionComponent {
 
   registerForm: FormGroup;
   errorMessage: string = '';
+  isLoading = false;
 
   constructor(
     private fb: FormBuilder,
@@ -42,15 +43,18 @@ export class InscriptionComponent {
       return;
     }
 
+    this.isLoading = true;
     const { confirmMotDePasse, ...userData } = this.registerForm.value; // Supprime confirmMotDePasse
 
     this.authService.register(userData).subscribe(
       (response) => {
         console.log('Inscription réussie', response);
+        this.isLoading = false;
         this.router.navigate(['/login']); // Redirige vers la page de connexion
       },
       (error) => {
         this.errorMessage = 'Erreur lors de l\'inscription. Veuillez réessayer.';
+        this.isLoading = false;
       }
     );
   }

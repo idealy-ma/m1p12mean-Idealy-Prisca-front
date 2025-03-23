@@ -42,7 +42,10 @@
       </div>
   
       <!-- Bouton Enregistrer -->
-      <button type="submit" [disabled]="vehiculeForm.invalid">Enregistrer</button>
+      <button type="submit" [disabled]="vehiculeForm.invalid || isLoading">
+        <span *ngIf="isLoading"><span class="spinner-inline"></span>Chargement...</span>
+        <span *ngIf="!isLoading">Enregistrer</span>
+      </button>
     </form>
   </div>
   
