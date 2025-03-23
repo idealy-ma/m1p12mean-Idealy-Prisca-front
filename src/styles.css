@@ -24,3 +24,27 @@ body {
   line-height: 1.6;
   color: var(--dark-color);
 }
+
+/* Loader animation */
+.spinner-inline {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.5em;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Disabled button style with loader */
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}

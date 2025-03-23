@@ -12,6 +12,7 @@ export class MecanicienLoginComponent implements OnInit {
   email: string = '';
   motDePasse: string = '';
   errorMessage: string = '';
+  isLoading = false;
 
   constructor(
     private authService: AuthService, 
@@ -35,10 +36,12 @@ export class MecanicienLoginComponent implements OnInit {
 
   // Fonction de soumission du formulaire de connexion
   onSubmit(): void {
+    this.isLoading = true;
     this.authService.login(this.email, this.motDePasse).subscribe(
       (response) => {
         // Vérifier si l'utilisateur est un mécanicien
         const role = this.tokenService.getUserRole();
+        this.isLoading = false;
         if (role !== 'mecanicien') {
           this.errorMessage = 'Vous n\'avez pas les droits de mécanicien. Accès refusé.';
           this.tokenService.token = ''; // Effacer le token
@@ -51,6 +54,7 @@ export class MecanicienLoginComponent implements OnInit {
       (error) => {
         // Afficher un message d'erreur
         this.errorMessage = 'Identifiants invalides. Veuillez réessayer.';
+        this.isLoading = false;
       }
     );
   }
