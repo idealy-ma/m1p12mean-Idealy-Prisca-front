@@ -1,147 +1,53 @@
-<div class="register-page">
-  <div class="register-form-container">
-    <a routerLink="/login" class="back-to-home">
-      <i class="fas fa-arrow-left"></i> Retour à la page de connexion
-    </a>
-    
-    <div class="register-container">
-      <div *ngIf="errorMessage" class="error">
-        <i class="fas fa-exclamation-circle"></i>
-        {{ errorMessage }}
+<div class="register-container">
+    <h1>Inscription</h1>
+  
+    <h2>Informations personnelles</h2>
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div>
+        <label>Nom*</label>
+        <input type="text" formControlName="nom" placeholder="Entrez votre nom">
       </div>
-      
-      <div class="register-header">
-        <h1>Créer un compte</h1>
-        <p>Rejoignez-nous pour profiter de nos services de qualité</p>
+  
+      <div>
+        <label>Prénom*</label>
+        <input type="text" formControlName="prenom" placeholder="Entrez votre prénom">
       </div>
-      
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-        <div class="form-sections">
-          <div class="form-section">
-            <h2 class="section-title">Informations personnelles</h2>
-            
-            <div class="form-group">
-              <label for="nom">Nom</label>
-              <div class="input-with-icon">
-                <i class="fas fa-user"></i>
-                <input 
-                  type="text" 
-                  id="nom" 
-                  class="form-control" 
-                  formControlName="nom" 
-                  placeholder="Entrez votre nom"
-                >
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="prenom">Prénom</label>
-              <div class="input-with-icon">
-                <i class="fas fa-user"></i>
-                <input 
-                  type="text" 
-                  id="prenom" 
-                  class="form-control" 
-                  formControlName="prenom" 
-                  placeholder="Entrez votre prénom"
-                >
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="adresse" class="optional">Adresse</label>
-              <div class="input-with-icon">
-                <i class="fas fa-map-marker-alt"></i>
-                <input 
-                  type="text" 
-                  id="adresse" 
-                  class="form-control" 
-                  formControlName="adresse" 
-                  placeholder="Entrez votre adresse"
-                >
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="telephone" class="optional">Téléphone</label>
-              <div class="input-with-icon">
-                <i class="fas fa-phone"></i>
-                <input 
-                  type="text" 
-                  id="telephone" 
-                  class="form-control" 
-                  formControlName="telephone" 
-                  placeholder="Entrez votre numéro de téléphone"
-                >
-              </div>
-            </div>
-          </div>
-          
-          <div class="form-section">
-            <h2 class="section-title">Vos identifiants</h2>
-            
-            <div class="form-group">
-              <label for="email">Email</label>
-              <div class="input-with-icon">
-                <i class="fas fa-envelope"></i>
-                <input 
-                  type="email" 
-                  id="email" 
-                  class="form-control" 
-                  formControlName="email" 
-                  placeholder="Entrez votre adresse email"
-                >
-              </div>
-              <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="error-text">
-                Veuillez entrer une adresse email valide.
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="motDePasse">Mot de passe</label>
-              <div class="input-with-icon">
-                <i class="fas fa-lock"></i>
-                <input 
-                  type="password" 
-                  id="motDePasse" 
-                  class="form-control" 
-                  formControlName="motDePasse" 
-                  placeholder="Créez un mot de passe"
-                >
-              </div>
-              <div *ngIf="registerForm.get('motDePasse')?.hasError('minlength')" class="error-text">
-                <i class="fas fa-info-circle"></i> Le mot de passe doit contenir au moins 6 caractères.
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="confirmMotDePasse">Confirmation</label>
-              <div class="input-with-icon">
-                <i class="fas fa-lock"></i>
-                <input 
-                  type="password" 
-                  id="confirmMotDePasse" 
-                  class="form-control" 
-                  formControlName="confirmMotDePasse" 
-                  placeholder="Confirmez votre mot de passe"
-                >
-              </div>
-              <div *ngIf="registerForm.hasError('notMatching')" class="error-text">
-                <i class="fas fa-exclamation-triangle"></i> Les mots de passe ne correspondent pas.
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <button type="submit" class="btn btn-primary" [disabled]="registerForm.invalid">
-          <i class="fas fa-user-plus"></i> Créer mon compte
-        </button>
-        
-        <div class="login-link">
-          Vous avez déjà un compte ? <a routerLink="/login">Se connecter</a>
-        </div>
-      </form>
-    </div>
+  
+      <div>
+        <label>Adresse</label>
+        <input type="text" formControlName="adresse" placeholder="Entrez votre adresse">
+      </div>
+  
+      <div>
+        <label>Téléphone</label>
+        <input type="text" formControlName="telephone" placeholder="Entrez votre téléphone">
+      </div>
+  
+      <h2>Vos Identifiants</h2>
+  
+      <div>
+        <label>Email*</label>
+        <input type="email" formControlName="email" placeholder="Entrez votre email">
+      </div>
+  
+      <div>
+        <label>Mot de passe*</label>
+        <input type="password" formControlName="motDePasse" placeholder="Entrez un mot de passe">
+        <small *ngIf="registerForm.get('motDePasse')?.hasError('minlength')">
+          Le mot de passe doit contenir au moins 6 caractères.
+        </small>
+      </div>
+  
+      <div>
+        <label>Confirmez le mot de passe*</label>
+        <input type="password" formControlName="confirmMotDePasse" placeholder="Confirmez le mot de passe">
+        <small *ngIf="registerForm.hasError('notMatching')">
+          Les mots de passe ne correspondent pas.
+        </small>
+      </div>
+  
+      <button type="submit" [disabled]="registerForm.invalid">S'inscrire</button>
+      <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+    </form>
   </div>
-</div>
   

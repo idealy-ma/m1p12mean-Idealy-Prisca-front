@@ -6,9 +6,9 @@
 
 .page-title {
   margin-bottom: 2rem;
-  color: #333;
+  color: var(--dark-color);
   font-size: 1.8rem;
-  border-bottom: 2px solid #27ae60;
+  border-bottom: 2px solid var(--primary-color);
   padding-bottom: 0.5rem;
   display: inline-block;
 }
@@ -33,7 +33,7 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #e8f5e9; /* Fond vert clair */
+  background-color: rgba(166, 3, 25, 0.1); /* Lighter shade of primary color */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -42,7 +42,7 @@
 
 .stat-icon i {
   font-size: 1.5rem;
-  color: #27ae60;
+  color: var(--primary-color);
 }
 
 .stat-info {
@@ -59,7 +59,7 @@
   margin: 0;
   font-size: 1.8rem;
   font-weight: bold;
-  color: #333;
+  color: var(--dark-color);
 }
 
 .dashboard-cards {
@@ -98,12 +98,12 @@
 
 .card-icon {
   font-size: 2.5rem;
-  color: #27ae60;
+  color: var(--primary-color);
   margin-bottom: 1rem;
 }
 
 .card-content h3 {
-  color: #333;
+  color: var(--dark-color);
   margin-bottom: 0.5rem;
 }
 

@@ -7,20 +7,39 @@
   width: 100%;
 }
 
-.success-message {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+.success-alert {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  padding: 15px;
+  margin-bottom: 20px;
   border-radius: 4px;
-  padding: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  animation: slideIn 0.3s ease-out;
+  overflow: hidden;
+  background-color: rgba(92, 184, 92, 0.1);
+  color: var(--success-color);
+  border: 1px solid rgba(92, 184, 92, 0.2);
+}
+
+.success-icon {
+  margin-right: 15px;
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .success-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex: 1;
+}
+
+.success-message {
+  font-weight: 600;
+  margin: 0;
+  color: var(--success-color);
 }
 
 .close-btn {

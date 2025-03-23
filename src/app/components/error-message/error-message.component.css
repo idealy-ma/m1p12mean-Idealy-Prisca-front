@@ -7,20 +7,39 @@
   width: 100%;
 }
 
-.error-message {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+.error-alert {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  padding: 15px;
+  margin-bottom: 20px;
   border-radius: 4px;
-  padding: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  animation: slideIn 0.3s ease-out;
+  overflow: hidden;
+  background-color: rgba(217, 83, 79, 0.1);
+  color: var(--error-color);
+  border: 1px solid rgba(217, 83, 79, 0.2);
+}
+
+.error-icon {
+  margin-right: 15px;
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .error-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex: 1;
+}
+
+.error-message {
+  font-weight: 600;
+  margin: 0;
+  color: var(--error-color);
 }
 
 .close-btn {

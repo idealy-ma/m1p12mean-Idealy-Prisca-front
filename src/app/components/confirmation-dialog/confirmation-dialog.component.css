@@ -1,4 +1,4 @@
-.confirmation-overlay {
+.dialog-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -6,109 +6,83 @@
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 9999;
-  animation: fadeIn 0.3s ease-out;
+  justify-content: center;
+  z-index: 1000;
 }
 
-.confirmation-dialog {
+.dialog-container {
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  animation: slideDown 0.3s ease-out;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   overflow: hidden;
 }
 
-.confirmation-dialog.danger {
-  border-top: 4px solid #dc3545;
+.dialog-container.danger {
+  border-top: 4px solid var(--error-color);
 }
 
-.confirmation-dialog.warning {
+.dialog-container.warning {
   border-top: 4px solid #ffc107;
 }
 
-.confirmation-dialog.info {
-  border-top: 4px solid #17a2b8;
+.dialog-container.info {
+  border-top: 4px solid var(--primary-color);
 }
 
-.confirmation-header {
-  padding: 1.25rem;
+.dialog-header {
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid #e9ecef;
 }
 
-.confirmation-header h3 {
+.dialog-title {
   margin: 0;
   font-size: 1.25rem;
-  color: #343a40;
+  font-weight: 600;
+  color: var(--dark-color);
 }
 
-.confirmation-body {
-  padding: 1.25rem;
-  color: #495057;
+.dialog-body {
+  padding: 1.5rem;
+  color: var(--dark-color);
 }
 
-.confirmation-body p {
-  margin: 0;
-  line-height: 1.5;
-}
-
-.confirmation-footer {
-  padding: 1rem 1.25rem;
-  background-color: #f8f9fa;
-  border-top: 1px solid #e9ecef;
+.dialog-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
 }
 
-.btn-cancel, .btn-confirm {
+.dialog-footer button {
+  margin-left: 0.5rem;
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  font-weight: 500;
   cursor: pointer;
+  font-weight: 500;
   transition: all 0.2s;
 }
 
-.btn-cancel {
+.btn-outline {
   background-color: #f8f9fa;
   border: 1px solid #ced4da;
   color: #6c757d;
 }
 
-.btn-cancel:hover {
+.btn-outline:hover {
   background-color: #e9ecef;
 }
 
-.btn-confirm {
-  background-color: #dc3545;
-  border: 1px solid #dc3545;
+.btn-danger {
+  background-color: var(--error-color);
+  border: 1px solid var(--error-color);
   color: white;
 }
 
-.btn-confirm:hover {
+.btn-danger:hover {
   background-color: #c82333;
   border-color: #bd2130;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideDown {
-  from {
-    transform: translateY(-50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
 } 
