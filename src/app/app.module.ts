@@ -33,7 +33,6 @@ import { ClientLayoutComponent } from './components/client/layout/client-layout/
 import { ClientSidebarComponent } from './components/client/sidebar/client-sidebar/client-sidebar.component';
 import { ClientDashboardComponent } from './page/client-dashboard/client-dashboard.component';
 import { UserProfileComponent } from './page/profile/user-profile/user-profile.component';
-import { LandingPageComponent } from './page/landing-page/landing-page.component';
 
 @NgModule({
   declarations: [
@@ -63,8 +62,7 @@ import { LandingPageComponent } from './page/landing-page/landing-page.component
     ClientLayoutComponent,
     ClientSidebarComponent,
     ClientDashboardComponent,
-    UserProfileComponent,
-    LandingPageComponent
+    UserProfileComponent
   ],
   imports: [
     BrowserModule,

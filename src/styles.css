@@ -1,26 +1,4 @@
 /* You can add global styles to this file, and also import other style files */
 @import '~@fortawesome/fontawesome-free/css/all.min.css';
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
 
 /* Autres styles globaux */
-
-:root {
-  --primary-color: #a60319;
-  --secondary-color: #000;
-  --dark-color: #333;
-  --light-color: #f4f4f4;
-  --success-color: #5cb85c;
-  --error-color: #d9534f;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Montserrat', sans-serif;
-  line-height: 1.6;
-  color: var(--dark-color);
-}
