@@ -10,19 +10,19 @@
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e74c3c;
+  border-bottom: 2px solid var(--primary-color);
 }
 
 h1 {
-  color: #333;
+  color: var(--dark-color);
   margin: 0;
 }
 
 .page-title {
   margin-bottom: 2rem;
-  color: #333;
+  color: var(--dark-color);
   font-size: 1.8rem;
-  border-bottom: 2px solid #e74c3c;
+  border-bottom: 2px solid var(--primary-color);
   padding-bottom: 0.5rem;
   display: inline-block;
 }
@@ -63,12 +63,12 @@ h1 {
 
 .card-icon {
   font-size: 2.5rem;
-  color: #e74c3c;
+  color: var(--primary-color);
   margin-bottom: 1rem;
 }
 
 .card-content h3 {
-  color: #333;
+  color: var(--dark-color);
   margin-bottom: 0.5rem;
 }
 
