@@ -1,21 +1,59 @@
-<div class="login-container">
-  <h2>Connexion Mécanicien</h2>
-
-  <form (ngSubmit)="onSubmit()">
-    <div>
-      <label for="email">Email</label>
-      <input type="email" id="email" [(ngModel)]="email" name="email" required />
+<div class="login-page">
+  <div class="login-form-container">
+    <a href="/" class="back-to-home">
+      <i class="fas fa-arrow-left"></i> Retour à l'accueil
+    </a>
+    
+    <div class="login-container">
+      <div *ngIf="errorMessage" class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ errorMessage }}
+      </div>
+      
+      <div class="login-header">
+        <h2>Espace Mécanicien</h2>
+        <p>Connectez-vous à votre compte technique</p>
+      </div>
+      
+      <form (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="email">Adresse Email</label>
+          <div class="input-with-icon">
+            <i class="fas fa-envelope"></i>
+            <input 
+              type="email" 
+              id="email" 
+              class="form-control" 
+              [(ngModel)]="email" 
+              name="email" 
+              placeholder="Entrez votre email" 
+              required 
+            />
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="motDePasse">Mot de passe</label>
+          <div class="input-with-icon">
+            <i class="fas fa-lock"></i>
+            <input 
+              type="password" 
+              id="motDePasse" 
+              class="form-control" 
+              [(ngModel)]="motDePasse" 
+              name="motDePasse" 
+              placeholder="Entrez votre mot de passe" 
+              required 
+            />
+          </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Se connecter</button>
+      </form>
+      
+      <div class="login-footer">
+        <p>Espace réservé aux mécaniciens autorisés</p>
+      </div>
     </div>
-
-    <div>
-      <label for="motDePasse">Mot de passe</label>
-      <input type="password" id="motDePasse" [(ngModel)]="motDePasse" name="motDePasse" required />
-    </div>
-
-    <button type="submit">Se connecter</button>
-  </form>
-
-  <div *ngIf="errorMessage" class="error-message">
-    {{ errorMessage }}
   </div>
 </div> 

@@ -21,8 +21,12 @@ import { AccueilMecanicienComponent } from './page/mecanicien/accueil/accueil-me
 import { ClientLayoutComponent } from './components/client/layout/client-layout/client-layout.component';
 import { ClientDashboardComponent } from './page/client-dashboard/client-dashboard.component';
 import { UserProfileComponent } from './page/profile/user-profile/user-profile.component';
+import { LandingPageComponent } from './page/landing-page/landing-page.component';
 
 const routes: Routes = [
+  // Landing page (page principale)
+  { path: '', component: LandingPageComponent, pathMatch: 'full' },
+  
   // Routes publiques
   { path: 'login', component: LoginComponent, canActivate: [AuthGuard] },
   { path: 'register', component: InscriptionComponent },
@@ -34,13 +38,13 @@ const routes: Routes = [
   
   // Route pour les clients (rôle: client) avec mise en page partagée
   {
-    path: '',
+    path: 'client',
     component: ClientLayoutComponent,
     canActivate: [RoleGuard],
     data: { role: 'client' },
     children: [
       { path: '', component: ClientDashboardComponent },
-      { path: 'client/addvehicules', component: AddVehiculeComponent },
+      { path: 'addvehicules', component: AddVehiculeComponent },
       { path: 'profil', component: UserProfileComponent }
       // D'autres routes client peuvent être ajoutées ici
     ]
@@ -76,8 +80,8 @@ const routes: Routes = [
     ]
   },
   
-  // Redirection par défaut
-  { path: '**', redirectTo: '/login', pathMatch: 'full' },
+  // Redirection par défaut si aucune route ne correspond
+  { path: '**', redirectTo: '', pathMatch: 'full' },
 ];
 
 @NgModule({

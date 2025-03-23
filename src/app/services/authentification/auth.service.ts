@@ -71,7 +71,7 @@ export class AuthService extends BaseService {
   // Se déconnecter
   logout(): void {
     this.tokenService.token = '';
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 
   register(userData: any): Observable<any> {
