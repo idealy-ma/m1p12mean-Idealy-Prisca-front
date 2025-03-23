@@ -7,14 +7,12 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './page/login/login.component';
 import { InscriptionComponent } from './page/inscription/inscription.component';
-import { AccueilComponent } from './page/accueil/accueil.component';
 import { ManagerLoginComponent } from './page/manager/login/login.component';
 import { MecanicienLoginComponent } from './page/mecanicien/login/login.component';
 import { UnauthorizedComponent } from './page/unauthorized/unauthorized.component';
 import { AuthInterceptorService } from './services/interceptor/auth-interceptor.service';
 import { ErrorInterceptorService } from './services/interceptor/error-interceptor.service';
 import { ErrorMessageComponent } from './components/error-message/error-message.component';
-import { AddVehiculeComponent } from './page/add-vehicule/add-vehicule.component';
 import { DevisListComponent } from './page/manager/devis-list/devis-list.component';
 import { DevisDetailsComponent } from './page/manager/devis-details/devis-details.component';
 import { AccueilManagerComponent } from './page/manager/accueil/accueil-manager.component';
@@ -31,16 +29,17 @@ import { MecanicienSidebarComponent } from './components/mecanicien/sidebar/meca
 import { AccueilMecanicienComponent } from './page/mecanicien/accueil/accueil-mecanicien/accueil-mecanicien.component';
 import { ClientLayoutComponent } from './components/client/layout/client-layout/client-layout.component';
 import { ClientSidebarComponent } from './components/client/sidebar/client-sidebar/client-sidebar.component';
-import { ClientDashboardComponent } from './page/client-dashboard/client-dashboard.component';
-import { UserProfileComponent } from './page/profile/user-profile/user-profile.component';
 import { LandingPageComponent } from './page/landing-page/landing-page.component';
+import { VehiculeListComponent } from './page/client/vehicule-list/vehicule-list.component';
+import { ClientDashboardComponent } from './page/client/dashboard/client-dashboard.component';
+import { AddVehiculeComponent } from './page/client/add-vehicule/add-vehicule.component';
+import { UserProfileComponent } from './page/client/profile/user-profile.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
     InscriptionComponent,
-    AccueilComponent,
     ManagerLoginComponent,
     MecanicienLoginComponent,
     UnauthorizedComponent,
@@ -64,7 +63,8 @@ import { LandingPageComponent } from './page/landing-page/landing-page.component
     ClientSidebarComponent,
     ClientDashboardComponent,
     UserProfileComponent,
-    LandingPageComponent
+    LandingPageComponent,
+    VehiculeListComponent
   ],
   imports: [
     BrowserModule,

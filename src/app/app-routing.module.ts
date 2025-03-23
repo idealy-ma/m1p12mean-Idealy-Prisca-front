@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AccueilComponent } from './page/accueil/accueil.component';
 import { InscriptionComponent } from './page/inscription/inscription.component';
 import { LoginComponent } from './page/login/login.component';
 import { ManagerLoginComponent } from './page/manager/login/login.component';
@@ -8,7 +7,6 @@ import { MecanicienLoginComponent } from './page/mecanicien/login/login.componen
 import { UnauthorizedComponent } from './page/unauthorized/unauthorized.component';
 import { RoleGuard } from './services/role.guard';
 import { AuthGuard } from './services/auth.guard';
-import { AddVehiculeComponent } from './page/add-vehicule/add-vehicule.component';
 import { DevisListComponent } from './page/manager/devis-list/devis-list.component';
 import { DevisDetailsComponent } from './page/manager/devis-details/devis-details.component';
 import { AccueilManagerComponent } from './page/manager/accueil/accueil-manager.component';
@@ -19,9 +17,11 @@ import { EmployeeListComponent } from './page/manager/employee-list/employee-lis
 import { MecanicienLayoutComponent } from './components/mecanicien/layout/mecanicien-layout/mecanicien-layout.component';
 import { AccueilMecanicienComponent } from './page/mecanicien/accueil/accueil-mecanicien/accueil-mecanicien.component';
 import { ClientLayoutComponent } from './components/client/layout/client-layout/client-layout.component';
-import { ClientDashboardComponent } from './page/client-dashboard/client-dashboard.component';
-import { UserProfileComponent } from './page/profile/user-profile/user-profile.component';
 import { LandingPageComponent } from './page/landing-page/landing-page.component';
+import { VehiculeListComponent } from './page/client/vehicule-list/vehicule-list.component';
+import { ClientDashboardComponent } from './page/client/dashboard/client-dashboard.component';
+import { AddVehiculeComponent } from './page/client/add-vehicule/add-vehicule.component';
+import { UserProfileComponent } from './page/client/profile/user-profile.component';
 
 const routes: Routes = [
   // Landing page (page principale)
@@ -44,6 +44,7 @@ const routes: Routes = [
     data: { role: 'client' },
     children: [
       { path: '', component: ClientDashboardComponent },
+      { path: 'vehicules', component: VehiculeListComponent },
       { path: 'addvehicules', component: AddVehiculeComponent },
       { path: 'profil', component: UserProfileComponent }
       // D'autres routes client peuvent être ajoutées ici
