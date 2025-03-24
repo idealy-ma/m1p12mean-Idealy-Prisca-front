@@ -29,12 +29,12 @@
         <div class="progress-label">Véhicule</div>
       </div>
       <div class="progress-line"></div>
-      <div class="progress-step" [class.active]="vehiculeForm.get('vehiculeId')?.value && selectedRequestType">
+      <div class="progress-step" [class.active]="vehiculeForm.get('vehiculeId')?.value && (includeProblem || includeServices)">
         <div class="progress-number">2</div>
         <div class="progress-label">Type de demande</div>
       </div>
       <div class="progress-line"></div>
-      <div class="progress-step" [class.active]="vehiculeForm.get('vehiculeId')?.value && ((selectedRequestType === 'problem' && getDescriptionControl().value) || (selectedRequestType === 'services' && calculateTotalPrice() > 0))">
+      <div class="progress-step" [class.active]="vehiculeForm.get('vehiculeId')?.value && ((includeProblem && getDescriptionControl().value) || (includeServices && calculateTotalPrice() > 0))">
         <div class="progress-number">3</div>
         <div class="progress-label">Détails</div>
       </div>
@@ -182,40 +182,39 @@
             </div>
             <div class="card-content">
               <div class="mb-4">
-                <div class="form-check form-check-inline">
-                  <input 
-                    class="form-check-input" 
-                    type="radio" 
-                    name="requestType" 
-                    id="typeProblem" 
-                    value="problem"
-                    [checked]="selectedRequestType === 'problem'"
-                    (change)="selectedRequestType = 'problem'"
-                  >
-                  <label class="form-check-label" for="typeProblem">
-                    <i class="fas fa-exclamation-triangle me-1"></i> Décrire un problème spécifique
-                  </label>
-                </div>
-                <div class="form-check form-check-inline">
-                  <input 
-                    class="form-check-input" 
-                    type="radio" 
-                    name="requestType" 
-                    id="typeServices" 
-                    value="services"
-                    [checked]="selectedRequestType === 'services'" 
-                    (change)="selectedRequestType = 'services'"
-                  >
-                  <label class="form-check-label" for="typeServices">
-                    <i class="fas fa-list me-1"></i> Sélectionner des services
-                  </label>
+                <p class="form-label">Sélectionnez les types de demandes à inclure :</p>
+                
+                <div class="type-choices-container">
+                  <div class="type-choice" [class.selected]="includeProblem" (click)="toggleIncludeProblem()">
+                    <div class="circle-indicator"></div>
+                    <div class="type-content">
+                      <div class="type-title">
+                        Décrire un problème spécifique
+                      </div>
+                      <div class="type-description">
+                        Idéal si vous avez un souci à signaler (ex: moteur, batterie…).
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="type-choice" [class.selected]="includeServices" (click)="toggleIncludeServices()">
+                    <div class="circle-indicator"></div>
+                    <div class="type-content">
+                      <div class="type-title">
+                        Sélectionner des services
+                      </div>
+                      <div class="type-description">
+                        Choisissez parmi nos services standards (vidange, pneus…).
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- 3. Problèmes spécifiques -->
-          <div *ngIf="selectedRequestType === 'problem'" class="dashboard-card form-card problem-details-card">
+          <div *ngIf="includeProblem" class="dashboard-card form-card problem-details-card">
             <div class="section-header">
               <i class="fas fa-exclamation-triangle"></i>
               <h3>Détails du problème</h3>
@@ -229,9 +228,9 @@
                   class="form-control description-textarea"
                   placeholder="Décrivez en détail le problème que vous rencontrez avec votre véhicule (symptômes, fréquence, circonstances...)."
                   [formControl]="getDescriptionControl()"
-                  [class.is-invalid]="getDescriptionControl().invalid && getDescriptionControl().touched"
+                  [class.is-invalid]="includeProblem && getDescriptionControl().invalid && getDescriptionControl().touched"
                 ></textarea>
-                <div *ngIf="getDescriptionControl().invalid && getDescriptionControl().touched" class="invalid-feedback">
+                <div *ngIf="includeProblem && getDescriptionControl().invalid && getDescriptionControl().touched" class="invalid-feedback">
                   Veuillez décrire votre problème.
                 </div>
               </div>
@@ -283,7 +282,7 @@
           </div>
 
           <!-- 4. Services disponibles -->
-          <div *ngIf="selectedRequestType === 'services'" class="dashboard-card form-card">
+          <div *ngIf="includeServices" class="dashboard-card form-card">
             <div class="section-header">
               <i class="fas fa-list-check"></i>
               <h3>Sélection des services</h3>
@@ -293,36 +292,42 @@
               
               <div class="row mb-4">
                 <div class="col-md-6 mb-2" *ngFor="let service of availableServices">
-                  <div class="form-check service-item">
+                  <div class="service-item vehicle-card-selectable" [class.selected]="service.selected" (click)="toggleService(service)">
                     <input 
-                      class="form-check-input" 
+                      class="form-check-input custom-checkbox visually-hidden" 
                       type="checkbox" 
                       [id]="'service-' + service.id"
                       [checked]="service.selected"
-                      (change)="toggleService(service)"
+                      (change)="toggleService(service); $event.stopPropagation()"
                     >
-                    <label class="form-check-label d-flex justify-content-between" [for]="'service-' + service.id">
-                      <span>{{ service.label }}</span>
-                      <span class="text-primary fw-bold">{{ service.price }}€</span>
-                    </label>
+                    <div class="service-item-content">
+                      <span class="service-label">{{ service.label }}</span>
+                      <span class="service-price">{{ service.price }}€</span>
+                      <span class="vehicle-card-select-indicator">
+                        <i class="fas fa-check-circle"></i>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               <h5 class="mb-3">Packs disponibles</h5>
-              <div class="row">
-                <div class="col-md-6 mb-3" *ngFor="let pack of servicePacks">
-                  <div class="service-pack" [class.selected]="pack.selected" (click)="togglePack(pack)">
+              <div class="packs-container">
+                <div class="pack-item" *ngFor="let pack of servicePacks">
+                  <div class="service-pack vehicle-card-selectable" [class.selected]="pack.selected" (click)="togglePack(pack)">
                     <h5 class="pack-title d-flex justify-content-between">
                       <span>{{ pack.label }}</span>
-                      <span class="text-primary fw-bold">{{ pack.price }}€</span>
+                      <span class="service-price">{{ pack.price }}€</span>
                     </h5>
                     <p class="pack-content">
                       <ng-container *ngFor="let serviceId of pack.services; let last = last">
                         {{ getServiceLabelById(serviceId) }}{{ !last ? ', ' : '' }}
                       </ng-container>
                     </p>
-                    <div class="form-check">
+                    <span class="vehicle-card-select-indicator">
+                      <i class="fas fa-check-circle"></i>
+                    </span>
+                    <div class="form-check d-none">
                       <input 
                         class="form-check-input" 
                         type="checkbox" 
@@ -330,9 +335,6 @@
                         [checked]="pack.selected"
                         (change)="togglePack(pack); $event.stopPropagation()"
                       >
-                      <label class="form-check-label" [for]="'pack-' + pack.id">
-                        Sélectionner ce pack
-                      </label>
                     </div>
                   </div>
                 </div>
@@ -361,49 +363,58 @@
             <h3>Récapitulatif de votre demande</h3>
           </div>
           <div class="card-content">
-            <div class="mb-3">
-              <ul class="summary-list">
-                <li class="summary-item">
-                  <span class="summary-label"><i class="fas fa-car me-2"></i>Véhicule</span>
-                  <span class="summary-value" *ngIf="!isNewVehicule && vehiculeForm.get('vehiculeId')?.value">
+            <ul class="summary-list">
+              <li class="summary-item">
+                <span class="summary-label"><i class="fas fa-car me-2"></i>Véhicule</span>
+                <span class="summary-value">
+                  <ng-container *ngIf="getSelectedVehicule(); else noVehicle">
                     {{ getSelectedVehiculeMarque() }} {{ getSelectedVehiculeModele() }}
-                  </span>
-                  <span class="summary-value" *ngIf="isNewVehicule">
-                    {{ vehiculeForm.get('marque')?.value }} {{ vehiculeForm.get('modele')?.value }}
-                  </span>
-                  <span class="summary-value empty-value" *ngIf="!vehiculeForm.get('vehiculeId')?.value">
-                    <i class="fas fa-plus-circle me-1"></i> Sélectionnez un véhicule
-                  </span>
-                </li>
-                <li class="summary-item">
-                  <span class="summary-label"><i class="fas fa-tools me-2"></i>Type de demande</span>
-                  <span class="summary-value">
-                    {{ selectedRequestType === 'problem' ? 'Problème spécifique' : 'Services sélectionnés' }}
-                  </span>
-                </li>
-                <li *ngIf="selectedRequestType === 'problem'" class="summary-item description-item">
-                  <span class="summary-label"><i class="fas fa-comment me-2"></i>Description</span>
-                  <p class="summary-description" *ngIf="getDescriptionControl().value">{{ getDescriptionControl().value }}</p>
-                  <p class="summary-description empty-description" *ngIf="!getDescriptionControl().value">
-                    <i class="fas fa-pencil-alt"></i> Décrivez votre problème (ex : bruit anormal, voyant allumé…) – cela nous aidera à mieux diagnostiquer votre véhicule.
-                  </p>
-                </li>
-                <li *ngIf="selectedRequestType === 'services'" class="summary-item">
-                  <div class="d-flex justify-content-between summary-label">
-                    <span><i class="fas fa-list me-2"></i>Services sélectionnés</span>
-                    <span *ngIf="calculateTotalPrice() > 0" class="text-primary fw-bold">
-                      {{ calculateTotalPrice() }}€
-                    </span>
-                  </div>
-                  <p class="summary-description" *ngIf="getSelectedServicesDescription()">
+                  </ng-container>
+                  <ng-template #noVehicle>
+                    <span class="text-muted">Non sélectionné</span>
+                  </ng-template>
+                </span>
+              </li>
+              <li class="summary-item">
+                <span class="summary-label"><i class="fas fa-tools me-2"></i>Type de demande</span>
+                <span class="summary-value">
+                  <ng-container *ngIf="includeProblem && includeServices">
+                    Problème spécifique & Services
+                  </ng-container>
+                  <ng-container *ngIf="includeProblem && !includeServices">
+                    Problème spécifique
+                  </ng-container>
+                  <ng-container *ngIf="!includeProblem && includeServices">
+                    Services sélectionnés
+                  </ng-container>
+                </span>
+              </li>
+              <li *ngIf="includeProblem" class="summary-item description-item">
+                <span class="summary-label"><i class="fas fa-comment me-2"></i>Description</span>
+                <p class="summary-description" *ngIf="getDescriptionControl().value">{{ getDescriptionControl().value }}</p>
+                <div class="empty-description" *ngIf="!getDescriptionControl().value">
+                  <i class="fas fa-pencil-alt"></i>
+                  <span>Décrivez votre problème (ex : bruit anormal, voyant allumé…) – cela nous aidera à mieux diagnostiquer votre véhicule.</span>
+                </div>
+              </li>
+              <li *ngIf="includeServices" class="summary-item">
+                <div class="d-flex justify-content-between summary-label">
+                  <span><i class="fas fa-list me-2"></i>Services sélectionnés</span>
+                  <span *ngIf="calculateTotalPrice() > 0" class="fw-bold">{{ calculateTotalPrice() }}€</span>
+                </div>
+                <div class="summary-value">
+                  <ng-container *ngIf="getSelectedServicesDescription(); else noServices">
                     {{ getSelectedServicesDescription() }}
-                  </p>
-                  <p class="summary-description empty-description" *ngIf="!getSelectedServicesDescription()">
-                    <i class="fas fa-tasks me-1"></i> Sélectionnez au moins un service pour votre véhicule
-                  </p>
-                </li>
-              </ul>
-            </div>
+                  </ng-container>
+                  <ng-template #noServices>
+                    <div class="empty-value">
+                      <i class="fas fa-info-circle"></i>
+                      <span>Aucun service sélectionné</span>
+                    </div>
+                  </ng-template>
+                </div>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

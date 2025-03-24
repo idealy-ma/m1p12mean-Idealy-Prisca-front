@@ -17,6 +17,8 @@ export class DevisRequestComponent implements OnInit {
   devisForm: FormGroup;
   isNewVehicule = false;
   selectedRequestType: 'problem' | 'services' = 'problem';
+  includeProblem = true; // Par défaut, inclure la section problème
+  includeServices = false; // Par défaut, ne pas inclure la section services
   isLoading = false;
   hasError = false;
   errorMessage = '';
@@ -104,18 +106,8 @@ export class DevisRequestComponent implements OnInit {
       this.vehiculeForm.get('carburant')?.updateValueAndValidity();
     });
     
-    this.devisForm.get('requestType')?.valueChanges.subscribe(value => {
-      this.selectedRequestType = value;
-      
-      if (value === 'problem') {
-        this.devisForm.get('description')?.setValidators([Validators.required]);
-      } else {
-        // For services, we'll validate later that at least one service is selected
-        this.devisForm.get('description')?.clearValidators();
-      }
-      
-      this.devisForm.get('description')?.updateValueAndValidity();
-    });
+    // Mise à jour des validateurs en fonction des types de demande sélectionnés
+    this.updateFormValidators();
   }
 
   loadVehicules(): void {
@@ -211,78 +203,85 @@ export class DevisRequestComponent implements OnInit {
   toggleService(service: any): void {
     service.selected = !service.selected;
     
-    // If a service is selected, deselect related packs
-    if (service.selected) {
-      this.servicePacks.forEach(pack => {
-        if (pack.services.includes(service.id)) {
-          // Check if all services in the pack are selected
-          const allSelected = pack.services.every(sId => 
-            this.availableServices.find(s => s.id === sId)?.selected
-          );
-          
-          if (!allSelected) {
-            pack.selected = false;
-          }
-        }
-      });
-    }
+    // Services are independent from packs now
   }
 
   togglePack(pack: any): void {
     pack.selected = !pack.selected;
     
-    // If a pack is selected, select all its services
-    if (pack.selected) {
-      pack.services.forEach((serviceId: string) => {
-        const service = this.availableServices.find(s => s.id === serviceId);
-        if (service) {
-          service.selected = true;
-        }
-      });
-      
-      // Deselect other packs
-      this.servicePacks.forEach(p => {
-        if (p.id !== pack.id) {
-          p.selected = false;
-        }
-      });
-    } else {
-      // If pack is deselected, keep services selected
-    }
+    // Packs are independent from services and can be selected multiple at once
+    // No need to select/deselect related services or other packs
   }
 
   calculateTotalPrice(): number {
     let total = 0;
     
-    // If a pack is selected, use its price
-    const selectedPack = this.servicePacks.find(p => p.selected);
-    if (selectedPack) {
-      total = selectedPack.price;
-      
-      // Add prices of services not in the pack
-      this.availableServices.forEach(service => {
-        if (service.selected && !selectedPack.services.includes(service.id)) {
-          total += service.price;
-        }
-      });
-    } else {
-      // Otherwise add up all selected services
-      this.availableServices.forEach(service => {
-        if (service.selected) {
-          total += service.price;
-        }
-      });
-    }
+    // Add prices of all selected packs
+    this.servicePacks.forEach(pack => {
+      if (pack.selected) {
+        total += pack.price;
+      }
+    });
+    
+    // Add prices of all selected services
+    this.availableServices.forEach(service => {
+      if (service.selected) {
+        total += service.price;
+      }
+    });
     
     return total;
   }
 
   getSelectedServicesDescription(): string {
-    const selectedServices = this.availableServices
-      .filter(service => service.selected)
-      .map(service => service.label);
+    const selectedItems: string[] = [];
     
-    return selectedServices.join(', ');
+    // Add selected services
+    this.availableServices
+      .filter(service => service.selected)
+      .forEach(service => selectedItems.push(service.label));
+    
+    // Add selected packs
+    this.servicePacks
+      .filter(pack => pack.selected)
+      .forEach(pack => selectedItems.push(`Pack ${pack.label}`));
+    
+    return selectedItems.join(', ');
+  }
+
+  // Méthode pour activer/désactiver la section problème
+  toggleIncludeProblem(): void {
+    this.includeProblem = !this.includeProblem;
+    
+    // Si aucune option n'est sélectionnée, on force au moins une option
+    if (!this.includeProblem && !this.includeServices) {
+      this.includeServices = true;
+    }
+    
+    this.updateFormValidators();
+  }
+  
+  // Méthode pour activer/désactiver la section services
+  toggleIncludeServices(): void {
+    this.includeServices = !this.includeServices;
+    
+    // Si aucune option n'est sélectionnée, on force au moins une option
+    if (!this.includeProblem && !this.includeServices) {
+      this.includeProblem = true;
+    }
+    
+    this.updateFormValidators();
+  }
+  
+  // Mise à jour des validateurs en fonction des types de demande sélectionnés
+  updateFormValidators(): void {
+    if (this.includeProblem) {
+      this.devisForm.get('description')?.setValidators([Validators.required]);
+    } else {
+      this.devisForm.get('description')?.clearValidators();
+    }
+    
+    this.devisForm.get('description')?.updateValueAndValidity();
   }
 
   async submitDevis(): Promise<void> {
@@ -315,21 +314,26 @@ export class DevisRequestComponent implements OnInit {
       // Prepare devis data
       const devisData: any = {
         vehiculeId: vehiculeId,
-        type: this.selectedRequestType
+        hasProblem: this.includeProblem,
+        hasServices: this.includeServices
       };
       
-      // Add type-specific fields
-      if (this.selectedRequestType === 'problem') {
+      // Add problem-specific fields if included
+      if (this.includeProblem) {
         devisData.description = this.devisForm.get('description')?.value;
         devisData.preferredDate = this.devisForm.get('preferredDate')?.value;
         devisData.photoUrl = this.devisForm.get('photoUrl')?.value;
-      } else {
-        // For services, include the selected services and total
+      }
+      
+      // Add services-specific fields if included
+      if (this.includeServices) {
         devisData.selectedServices = this.availableServices
           .filter(service => service.selected)
           .map(service => service.id);
         
-        devisData.selectedPack = this.servicePacks.find(pack => pack.selected)?.id;
+        devisData.selectedPacks = this.servicePacks
+          .filter(pack => pack.selected)
+          .map(pack => pack.id);
         devisData.montantEstime = this.calculateTotalPrice();
       }
       
@@ -360,14 +364,16 @@ export class DevisRequestComponent implements OnInit {
       return false;
     }
     
-    // Validate devis form based on request type
-    if (this.selectedRequestType === 'problem') {
+    // Validate devis form based on request types
+    if (this.includeProblem) {
       if (!this.devisForm.get('description')?.value) {
         this.hasError = true;
         this.errorMessage = 'Veuillez décrire votre problème.';
         return false;
       }
-    } else {
+    }
+    
+    if (this.includeServices) {
       // Validate services
       const hasSelectedService = this.availableServices.some(service => service.selected);
       if (!hasSelectedService) {
