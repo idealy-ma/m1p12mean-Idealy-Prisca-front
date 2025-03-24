@@ -5,4 +5,5 @@ export interface Vehicule {
     modele: string;       // Modèle du véhicule (obligatoire)
     dateAjout?: Date;     // Date d'ajout automatique
     photos?: string[];    // Liste des URLs des photos (optionnel)
+    carburant?: string;   // Type de carburant (optionnel)
 }  

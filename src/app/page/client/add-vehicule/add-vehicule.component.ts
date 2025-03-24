@@ -26,6 +26,7 @@ export class AddVehiculeComponent implements OnInit {
       immatricule: ['', Validators.required],
       marque: ['', Validators.required],
       modele: ['', Validators.required],
+      carburant: ['', Validators.required],
     });
   }
 
@@ -40,6 +41,7 @@ export class AddVehiculeComponent implements OnInit {
         immatricule: this.vehiculeForm.value.immatricule,
         marque: this.vehiculeForm.value.marque,
         modele: this.vehiculeForm.value.modele,
+        carburant: this.vehiculeForm.value.carburant,
         dateAjout: new Date(), // Date actuelle au format Date
         photos: this.selectedFiles.map(file => file.name)
       };

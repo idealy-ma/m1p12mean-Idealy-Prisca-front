@@ -29,6 +29,21 @@
         </div>
       </div>
   
+      <!-- Type de carburant -->
+      <div>
+        <label for="carburant">Type de carburant *</label>
+        <select id="carburant" formControlName="carburant" required>
+          <option value="">Sélectionner</option>
+          <option value="essence">Essence</option>
+          <option value="diesel">Diesel</option>
+          <option value="electrique">Électrique</option>
+          <option value="hybride">Hybride</option>
+        </select>
+        <div *ngIf="vehiculeForm.controls['carburant'].invalid && vehiculeForm.controls['carburant'].touched">
+          <small class="error">Le type de carburant est obligatoire.</small>
+        </div>
+      </div>
+  
       <!-- Date d'ajout (automatique) -->
       <div>
         <label>Date d'ajout</label>

@@ -1,0 +1,423 @@
+<div class="dashboard-container">
+  <!-- En-tête (Header) -->
+  <h1 class="page-title">Demande de devis</h1>
+
+  <!-- Loading indicator -->
+  <div *ngIf="isLoading" class="d-flex justify-content-center my-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="hasError" class="alert alert-danger alert-dismissible fade show" role="alert">
+    {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="resetError()" aria-label="Close"></button>
+  </div>
+
+  <!-- Success message -->
+  <div *ngIf="isSuccess" class="alert alert-success" role="alert">
+    Votre demande de devis a été envoyée avec succès. Nous la traiterons dans les plus brefs délais.
+  </div>
+
+  <!-- Main content (only show if not loading and not success) -->
+  <div *ngIf="!isLoading && !isSuccess">
+    <!-- Barre de progression -->
+    <div class="progress-indicator" [class.sticky]="isProgressBarSticky">
+      <div class="progress-step" [class.active]="vehiculeForm.get('vehiculeId')?.value">
+        <div class="progress-number">1</div>
+        <div class="progress-label">Véhicule</div>
+      </div>
+      <div class="progress-line"></div>
+      <div class="progress-step" [class.active]="vehiculeForm.get('vehiculeId')?.value && (includeProblem || includeServices)">
+        <div class="progress-number">2</div>
+        <div class="progress-label">Type de demande</div>
+      </div>
+      <div class="progress-line"></div>
+      <div class="progress-step" [class.active]="vehiculeForm.get('vehiculeId')?.value && ((includeProblem && getDescriptionControl().value) || (includeServices && calculateTotalPrice() > 0))">
+        <div class="progress-number">3</div>
+        <div class="progress-label">Détails</div>
+      </div>
+      <div class="progress-line"></div>
+      <div class="progress-step">
+        <div class="progress-number">4</div>
+        <div class="progress-label">Confirmation</div>
+      </div>
+    </div>
+    
+    <div class="devis-layout">
+      <div class="devis-form-container">
+        <form [formGroup]="vehiculeForm" (ngSubmit)="submitDevis()" class="mb-5">
+          <!-- 1. Sélection du véhicule -->
+          <div class="dashboard-card form-card">
+            <div class="section-header">
+              <i class="fas fa-car"></i>
+              <h3>Sélection du véhicule</h3>
+            </div>
+            <div class="card-content">
+              <div *ngIf="vehiculeList.length > 0">
+                <h5 class="mb-3">Mes véhicules</h5>
+                
+                <div class="vehicle-cards-container">
+                  <!-- Cartes pour les véhicules existants -->
+                  <div 
+                    *ngFor="let vehicule of vehiculeList" 
+                    class="vehicle-card-selectable" 
+                    [class.selected]="vehiculeForm.get('vehiculeId')?.value === vehicule._id"
+                    (click)="toggleVehiculeSelection(vehicule._id)"
+                  >
+                    <div class="vehicle-card-icon">
+                      <i class="fas fa-car"></i>
+                    </div>
+                    <div class="vehicle-card-content">
+                      <h4>{{ vehicule.marque }} {{ vehicule.modele }}</h4>
+                      <p class="vehicle-immatriculation">{{ vehicule.immatricule }}</p>
+                      <span class="vehicle-card-select-indicator">
+                        <i class="fas fa-check-circle"></i>
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <!-- Carte pour ajouter un nouveau véhicule -->
+                  <div 
+                    class="vehicle-card-selectable add-vehicle-card" 
+                    [class.selected]="vehiculeForm.get('vehiculeId')?.value === 'new'"
+                    (click)="toggleVehiculeSelection('new')"
+                  >
+                    <div class="vehicle-card-icon add-icon">
+                      <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <div class="vehicle-card-content">
+                      <h4>Ajouter un véhicule</h4>
+                      <p class="vehicle-immatriculation">Enregistrer un nouveau véhicule</p>
+                      <span class="vehicle-card-select-indicator">
+                        <i class="fas fa-check-circle"></i>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Message d'erreur de validation -->
+                <div *ngIf="vehiculeForm.get('vehiculeId')?.invalid && vehiculeForm.get('vehiculeId')?.touched" class="vehicle-selection-error">
+                  Veuillez sélectionner un véhicule.
+                </div>
+                
+                <!-- Champ caché pour maintenir la validation du formulaire -->
+                <input type="hidden" formControlName="vehiculeId">
+              </div>
+
+              <!-- Formulaire pour ajouter un nouveau véhicule -->
+              <div *ngIf="isNewVehicule || vehiculeList.length === 0" class="border-top pt-3 mt-3">
+                <h5 class="mb-3">Ajouter un nouveau véhicule</h5>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="marque" class="form-label">Marque</label>
+                    <input 
+                      type="text" 
+                      formControlName="marque" 
+                      id="marque" 
+                      class="form-control"
+                      [class.is-invalid]="vehiculeForm.get('marque')?.invalid && vehiculeForm.get('marque')?.touched"
+                    >
+                    <div *ngIf="vehiculeForm.get('marque')?.invalid && vehiculeForm.get('marque')?.touched" class="invalid-feedback">
+                      Veuillez indiquer la marque du véhicule.
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="modele" class="form-label">Modèle</label>
+                    <input 
+                      type="text" 
+                      formControlName="modele" 
+                      id="modele" 
+                      class="form-control"
+                      [class.is-invalid]="vehiculeForm.get('modele')?.invalid && vehiculeForm.get('modele')?.touched"
+                    >
+                    <div *ngIf="vehiculeForm.get('modele')?.invalid && vehiculeForm.get('modele')?.touched" class="invalid-feedback">
+                      Veuillez indiquer le modèle du véhicule.
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="immatricule" class="form-label">Immatriculation</label>
+                    <input 
+                      type="text" 
+                      formControlName="immatricule" 
+                      id="immatricule" 
+                      class="form-control"
+                      [class.is-invalid]="vehiculeForm.get('immatricule')?.invalid && vehiculeForm.get('immatricule')?.touched"
+                    >
+                    <div *ngIf="vehiculeForm.get('immatricule')?.invalid && vehiculeForm.get('immatricule')?.touched" class="invalid-feedback">
+                      Veuillez indiquer l'immatriculation du véhicule.
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="carburant" class="form-label">Type de carburant</label>
+                    <select 
+                      formControlName="carburant" 
+                      id="carburant" 
+                      class="form-select"
+                      [class.is-invalid]="vehiculeForm.get('carburant')?.invalid && vehiculeForm.get('carburant')?.touched"
+                    >
+                      <option value="">Sélectionner</option>
+                      <option value="essence">Essence</option>
+                      <option value="diesel">Diesel</option>
+                      <option value="electrique">Électrique</option>
+                      <option value="hybride">Hybride</option>
+                    </select>
+                    <div *ngIf="vehiculeForm.get('carburant')?.invalid && vehiculeForm.get('carburant')?.touched" class="invalid-feedback">
+                      Veuillez sélectionner le type de carburant.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Type de demande -->
+          <div class="dashboard-card form-card">
+            <div class="section-header">
+              <i class="fas fa-tools"></i>
+              <h3>Type de demande</h3>
+            </div>
+            <div class="card-content">
+              <div class="mb-4">
+                <p class="form-label">Sélectionnez les types de demandes à inclure :</p>
+                
+                <div class="type-choices-container">
+                  <div class="type-choice" [class.selected]="includeProblem" (click)="toggleIncludeProblem()">
+                    <div class="circle-indicator"></div>
+                    <div class="type-content">
+                      <div class="type-title">
+                        Décrire un problème spécifique
+                      </div>
+                      <div class="type-description">
+                        Idéal si vous avez un souci à signaler (ex: moteur, batterie…).
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="type-choice" [class.selected]="includeServices" (click)="toggleIncludeServices()">
+                    <div class="circle-indicator"></div>
+                    <div class="type-content">
+                      <div class="type-title">
+                        Sélectionner des services
+                      </div>
+                      <div class="type-description">
+                        Choisissez parmi nos services standards (vidange, pneus…).
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Problèmes spécifiques -->
+          <div *ngIf="includeProblem" class="dashboard-card form-card problem-details-card">
+            <div class="section-header">
+              <i class="fas fa-exclamation-triangle"></i>
+              <h3>Détails du problème</h3>
+            </div>
+            <div class="card-content">
+              <div class="mb-4">
+                <label for="description" class="form-label">Décrivez votre problème</label>
+                <textarea 
+                  id="description" 
+                  rows="6" 
+                  class="form-control description-textarea"
+                  placeholder="Décrivez en détail le problème que vous rencontrez avec votre véhicule (symptômes, fréquence, circonstances...)."
+                  [formControl]="getDescriptionControl()"
+                  [class.is-invalid]="includeProblem && getDescriptionControl().invalid && getDescriptionControl().touched"
+                ></textarea>
+                <div *ngIf="includeProblem && getDescriptionControl().invalid && getDescriptionControl().touched" class="invalid-feedback">
+                  Veuillez décrire votre problème.
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label">Problèmes fréquents :</label>
+                <div class="problems-container">
+                  <button 
+                    *ngFor="let problem of commonProblems" 
+                    type="button"
+                    class="problem-btn"
+                    [class.active]="problem.selected"
+                    (click)="toggleProblem(problem)"
+                  >
+                    <i class="fas" [ngClass]="getProblemIcon(problem)"></i>
+                    {{ problem.label }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label for="photoUrl" class="form-label">Ajouter une photo (facultatif)</label>
+                <div class="input-group">
+                  <input 
+                    type="file" 
+                    class="form-control" 
+                    id="photoUrl"
+                    accept="image/*"
+                  >
+                  <button class="btn btn-outline-secondary" type="button">
+                    <i class="fas fa-upload me-1"></i> Télécharger
+                  </button>
+                </div>
+                <small class="text-muted">Format accepté: JPG, PNG (max 5Mo)</small>
+              </div>
+
+              <div class="mb-4">
+                <label for="preferredDate" class="form-label">Date d'intervention souhaitée (facultatif)</label>
+                <div class="date-input-container">
+                  <input 
+                    type="date" 
+                    id="preferredDate" 
+                    class="form-control"
+                    [formControl]="getPreferredDateControl()"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Services disponibles -->
+          <div *ngIf="includeServices" class="dashboard-card form-card">
+            <div class="section-header">
+              <i class="fas fa-list-check"></i>
+              <h3>Sélection des services</h3>
+            </div>
+            <div class="card-content">
+              <h5 class="mb-3">Services disponibles</h5>
+              
+              <div class="row mb-4">
+                <div class="col-md-6 mb-2" *ngFor="let service of availableServices">
+                  <div class="service-item vehicle-card-selectable" [class.selected]="service.selected" (click)="toggleService(service)">
+                    <input 
+                      class="form-check-input custom-checkbox visually-hidden" 
+                      type="checkbox" 
+                      [id]="'service-' + service.id"
+                      [checked]="service.selected"
+                      (change)="toggleService(service); $event.stopPropagation()"
+                    >
+                    <div class="service-item-content">
+                      <span class="service-label">{{ service.label }}</span>
+                      <span class="service-price">{{ service.price }}€</span>
+                      <span class="vehicle-card-select-indicator">
+                        <i class="fas fa-check-circle"></i>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <h5 class="mb-3">Packs disponibles</h5>
+              <div class="packs-container">
+                <div class="pack-item" *ngFor="let pack of servicePacks">
+                  <div class="service-pack vehicle-card-selectable" [class.selected]="pack.selected" (click)="togglePack(pack)">
+                    <h5 class="pack-title d-flex justify-content-between">
+                      <span>{{ pack.label }}</span>
+                      <span class="service-price">{{ pack.price }}€</span>
+                    </h5>
+                    <p class="pack-content">
+                      <ng-container *ngFor="let serviceId of pack.services; let last = last">
+                        {{ getServiceLabelById(serviceId) }}{{ !last ? ', ' : '' }}
+                      </ng-container>
+                    </p>
+                    <span class="vehicle-card-select-indicator">
+                      <i class="fas fa-check-circle"></i>
+                    </span>
+                    <div class="form-check d-none">
+                      <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        [id]="'pack-' + pack.id"
+                        [checked]="pack.selected"
+                        (change)="togglePack(pack); $event.stopPropagation()"
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="submit-container">
+            <button 
+              type="submit" 
+              class="submit-button"
+              [disabled]="isLoading"
+            >
+              <i class="fas fa-paper-plane me-2"></i> Valider la demande
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Récapitulatif flottant sur le côté -->
+      <div class="summary-sidebar">
+        <!-- 5. Récapitulatif et validation -->
+        <div class="dashboard-card summary-card">
+          <div class="section-header">
+            <i class="fas fa-check-circle"></i>
+            <h3>Récapitulatif de votre demande</h3>
+          </div>
+          <div class="card-content">
+            <ul class="summary-list">
+              <li class="summary-item">
+                <span class="summary-label"><i class="fas fa-car me-2"></i>Véhicule</span>
+                <span class="summary-value">
+                  <ng-container *ngIf="getSelectedVehicule(); else noVehicle">
+                    {{ getSelectedVehiculeMarque() }} {{ getSelectedVehiculeModele() }}
+                  </ng-container>
+                  <ng-template #noVehicle>
+                    <span class="text-muted">Non sélectionné</span>
+                  </ng-template>
+                </span>
+              </li>
+              <li class="summary-item">
+                <span class="summary-label"><i class="fas fa-tools me-2"></i>Type de demande</span>
+                <span class="summary-value">
+                  <ng-container *ngIf="includeProblem && includeServices">
+                    Problème spécifique & Services
+                  </ng-container>
+                  <ng-container *ngIf="includeProblem && !includeServices">
+                    Problème spécifique
+                  </ng-container>
+                  <ng-container *ngIf="!includeProblem && includeServices">
+                    Services sélectionnés
+                  </ng-container>
+                </span>
+              </li>
+              <li *ngIf="includeProblem" class="summary-item description-item">
+                <span class="summary-label"><i class="fas fa-comment me-2"></i>Description</span>
+                <p class="summary-description" *ngIf="getDescriptionControl().value">{{ getDescriptionControl().value }}</p>
+                <div class="empty-description" *ngIf="!getDescriptionControl().value">
+                  <i class="fas fa-pencil-alt"></i>
+                  <span>Décrivez votre problème (ex : bruit anormal, voyant allumé…) – cela nous aidera à mieux diagnostiquer votre véhicule.</span>
+                </div>
+              </li>
+              <li *ngIf="includeServices" class="summary-item">
+                <div class="d-flex justify-content-between summary-label">
+                  <span><i class="fas fa-list me-2"></i>Services sélectionnés</span>
+                  <span *ngIf="calculateTotalPrice() > 0" class="fw-bold">{{ calculateTotalPrice() }}€</span>
+                </div>
+                <div class="summary-value">
+                  <ng-container *ngIf="getSelectedServicesDescription(); else noServices">
+                    {{ getSelectedServicesDescription() }}
+                  </ng-container>
+                  <ng-template #noServices>
+                    <div class="empty-value">
+                      <i class="fas fa-info-circle"></i>
+                      <span>Aucun service sélectionné</span>
+                    </div>
+                  </ng-template>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
