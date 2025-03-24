@@ -22,6 +22,7 @@ import { VehiculeListComponent } from './page/client/vehicule-list/vehicule-list
 import { ClientDashboardComponent } from './page/client/dashboard/client-dashboard.component';
 import { AddVehiculeComponent } from './page/client/add-vehicule/add-vehicule.component';
 import { UserProfileComponent } from './page/client/profile/user-profile.component';
+import { DevisRequestComponent } from './page/client/devis-request/devis-request.component';
 
 const routes: Routes = [
   // Landing page (page principale)
@@ -46,7 +47,8 @@ const routes: Routes = [
       { path: '', component: ClientDashboardComponent },
       { path: 'vehicules', component: VehiculeListComponent },
       { path: 'addvehicules', component: AddVehiculeComponent },
-      { path: 'profil', component: UserProfileComponent }
+      { path: 'profil', component: UserProfileComponent },
+      { path: 'devis/demande', component: DevisRequestComponent }
       // D'autres routes client peuvent être ajoutées ici
     ]
   },

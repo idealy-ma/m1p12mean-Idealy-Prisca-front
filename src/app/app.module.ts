@@ -34,6 +34,7 @@ import { VehiculeListComponent } from './page/client/vehicule-list/vehicule-list
 import { ClientDashboardComponent } from './page/client/dashboard/client-dashboard.component';
 import { AddVehiculeComponent } from './page/client/add-vehicule/add-vehicule.component';
 import { UserProfileComponent } from './page/client/profile/user-profile.component';
+import { DevisRequestComponent } from './page/client/devis-request/devis-request.component';
 
 @NgModule({
   declarations: [
@@ -64,7 +65,8 @@ import { UserProfileComponent } from './page/client/profile/user-profile.compone
     ClientDashboardComponent,
     UserProfileComponent,
     LandingPageComponent,
-    VehiculeListComponent
+    VehiculeListComponent,
+    DevisRequestComponent
   ],
   imports: [
     BrowserModule,

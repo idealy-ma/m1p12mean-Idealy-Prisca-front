@@ -77,4 +77,14 @@ export class DevisService {
   updateDevis(id: string, devis: Partial<Devis>): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/manager/devis/${id}`, devis, this.httpOptions);
   }
+  
+  // Créer un nouveau devis (pour le client)
+  createDevis(devisData: any): Observable<Devis> {
+    return this.http.post<Devis>(`${this.apiUrl}/client/devis`, devisData, this.httpOptions);
+  }
+  
+  // Récupérer les devis d'un client
+  getClientDevis(): Observable<Devis[]> {
+    return this.http.get<Devis[]>(`${this.apiUrl}/client/devis`, this.httpOptions);
+  }
 } 
