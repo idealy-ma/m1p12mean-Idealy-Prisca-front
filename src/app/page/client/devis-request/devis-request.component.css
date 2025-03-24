@@ -803,6 +803,12 @@ input[type="date"]:focus {
   top: 2rem;
   align-self: flex-start;
   height: fit-content;
+  transition: top 0.3s ease;
+}
+
+/* Position du récapitulatif ajustée quand la barre de progression est sticky */
+.progress-indicator.sticky ~ .devis-layout .summary-sidebar {
+  top: calc(2rem + 75px + 20px); /* Ajout de 20px d'espacement supplémentaire */
 }
 
 .summary-card {

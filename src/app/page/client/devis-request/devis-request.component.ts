@@ -433,7 +433,29 @@ export class DevisRequestComponent implements OnInit {
     // Obtenir la position de défilement
     const scrollPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
     
-    // Vérifier si la barre doit être sticky (après avoir défilé au-delà de 50px)
-    this.isProgressBarSticky = scrollPosition > 50;
+    // Vérifier si la barre doit être sticky (après avoir défilé au-delà de 20px)
+    this.isProgressBarSticky = scrollPosition > 20;
+    
+    // Mettre à jour le style CSS pour ajuster la position du récapitulatif
+    const progressBar = document.querySelector('.progress-indicator');
+    if (progressBar && this.isProgressBarSticky) {
+      const progressBarHeight = progressBar.clientHeight;
+      const style = document.createElement('style');
+      style.innerHTML = `
+        .progress-indicator.sticky ~ .devis-layout .summary-sidebar {
+          top: calc(2rem + ${progressBarHeight}px + 20px);
+        }
+      `;
+      
+      // Supprimer l'ancien style s'il existe
+      const oldStyle = document.getElementById('progress-style');
+      if (oldStyle) {
+        oldStyle.remove();
+      }
+      
+      // Ajouter le nouveau style
+      style.id = 'progress-style';
+      document.head.appendChild(style);
+    }
   }
 } 
