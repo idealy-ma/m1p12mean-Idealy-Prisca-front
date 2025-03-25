@@ -96,6 +96,34 @@
         <div class="description">
           {{ devis.description }}
         </div>
+        
+        <!-- Date d'intervention souhaitée -->
+        <div class="preferred-date" *ngIf="devis.preferredDate">
+          <h3>Date d'intervention souhaitée</h3>
+          <div class="date-badge">
+            <i class="fas fa-calendar-alt"></i>
+            {{ devis.preferredDate | date:'dd/MM/yyyy' }}
+          </div>
+        </div>
+        
+        <!-- Image du problème -->
+        <div class="problem-image" *ngIf="devis.photoUrl">
+          <h3>Photos du problème</h3>
+          <div class="image-gallery">
+            <div class="image-container">
+              <img [src]="devis.photoUrl" alt="Photo du problème" class="problem-photo">
+              <button class="btn-zoom" (click)="openImageModal(devis.photoUrl)">
+                <i class="fas fa-search-plus"></i>
+              </button>
+            </div>
+            <div class="image-container" *ngIf="devis.secondPhotoUrl">
+              <img [src]="devis.secondPhotoUrl" alt="Photo du problème 2" class="problem-photo">
+              <button class="btn-zoom" (click)="openImageModal(devis.secondPhotoUrl)">
+                <i class="fas fa-search-plus"></i>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Création du devis -->
@@ -205,7 +233,7 @@
                   <div class="todo-item-edit" *ngIf="todoItemsArray.controls.indexOf(item) === editingItemIndex" [formGroupName]="todoItemsArray.controls.indexOf(item)">
                     <div class="edit-form-row">
                       <div class="form-group">
-                        <label>Nom</label>
+                      <label>Nom</label>
                         <input type="text" formControlName="nom" class="form-control" placeholder="Nom de l'élément">
                         <div *ngIf="item.get('nom')?.invalid && item.get('nom')?.touched" class="invalid-feedback">
                           Ce champ est obligatoire
@@ -298,7 +326,7 @@
                       </button>
                       <button type="button" class="btn-save" (click)="saveTodoItem()" [disabled]="item.invalid">
                         <i class="fas fa-check"></i> Enregistrer
-                      </button>
+                    </button>
                     </div>
                   </div>
                 </div>
@@ -319,11 +347,11 @@
                 <div class="total-item summary-item">
                   <span class="summary-label">Pièces</span>
                   <span class="summary-value">{{ calculerTotalParType('piece') | currency:'EUR':'symbol':'1.2-2' }}</span>
-                </div>
+                    </div>
                 <div class="total-item summary-item">
                   <span class="summary-label">Services</span>
                   <span class="summary-value">{{ calculerTotalParType('service') | currency:'EUR':'symbol':'1.2-2' }}</span>
-                </div>
+                  </div>
                 <div class="total-item summary-item">
                   <span class="summary-label">Main d'œuvre</span>
                   <span class="summary-value">{{ calculerTotalParType('main_oeuvre') | currency:'EUR':'symbol':'1.2-2' }}</span>
@@ -331,15 +359,15 @@
                 <div class="total-item summary-item">
                   <span class="summary-label">Autres</span>
                   <span class="summary-value">{{ calculerTotalParType('autre') | currency:'EUR':'symbol':'1.2-2' }}</span>
-                </div>
+              </div>
                 <div class="total-item summary-item summary-total">
                   <span class="summary-label">Total</span>
                   <span class="summary-value">{{ calculerTotalTodos() | currency:'EUR':'symbol':'1.2-2' }}</span>
-                </div>
               </div>
-              <div class="commentaire">
-                <label>Commentaire pour le client</label>
-                <textarea placeholder="Ajouter un commentaire pour le client..."></textarea>
+            </div>
+            <div class="commentaire">
+              <label>Commentaire pour le client</label>
+              <textarea placeholder="Ajouter un commentaire pour le client..."></textarea>
               </div>
             </div>
           </div>

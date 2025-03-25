@@ -20,6 +20,9 @@ export interface Devis {
   montantEstime?: number;
   commentaire?: string;
   items?: DevisItem[];
+  preferredDate?: Date;
+  photoUrl?: string;
+  secondPhotoUrl?: string;
   id?: string;
 }
 

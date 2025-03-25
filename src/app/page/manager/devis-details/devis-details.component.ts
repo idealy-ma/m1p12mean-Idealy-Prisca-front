@@ -216,6 +216,16 @@ export class DevisDetailsComponent implements OnInit {
       next: (response: any) => {
         if (response && response.success) {
           this.devis = response.data;
+          
+          // Ajouter des données mockées pour la démonstration
+          if (this.devis) {
+            // Ajouter une date d'intervention souhaitée
+            this.devis.preferredDate = new Date('2024-11-15');
+            
+            // Ajouter des images mockées
+            this.devis.photoUrl = 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&auto=format&fit=crop&q=60';
+            this.devis.secondPhotoUrl = 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&auto=format&fit=crop&q=60';
+          }
         } else {
           this.error = 'Format de données invalide';
         }
@@ -498,5 +508,193 @@ export class DevisDetailsComponent implements OnInit {
       }
     }
     return total;
+  }
+
+  // Méthode pour ouvrir l'image en plein écran dans un modal
+  openImageModal(imageUrl: string): void {
+    if (!imageUrl) return;
+    
+    // Récupérer toutes les URLs d'images disponibles
+    const images = [this.devis?.photoUrl, this.devis?.secondPhotoUrl].filter(url => !!url) as string[];
+    if (images.length === 0) return;
+    
+    // Trouver l'index de l'image actuelle
+    let currentIndex = images.indexOf(imageUrl);
+    if (currentIndex === -1) currentIndex = 0;
+    
+    // Créer un élément div pour le modal
+    const modal = document.createElement('div');
+    modal.className = 'image-modal';
+    
+    // Ajouter des styles inline pour s'assurer que le modal s'affiche correctement
+    Object.assign(modal.style, {
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      width: '100%',
+      height: '100%',
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: '10000'
+    });
+    
+    // Créer l'élément image
+    const img = document.createElement('img');
+    img.src = images[currentIndex];
+    img.className = 'modal-image';
+    img.alt = 'Photo du problème';
+    
+    // Ajouter des styles inline pour l'image
+    Object.assign(img.style, {
+      maxWidth: '80%',
+      maxHeight: '80%',
+      objectFit: 'contain',
+      boxShadow: '0 0 20px rgba(0, 0, 0, 0.5)'
+    });
+    
+    // Créer le bouton de fermeture
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    Object.assign(closeBtn.style, {
+      position: 'absolute',
+      top: '20px',
+      right: '20px',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      border: 'none',
+      color: 'white',
+      fontSize: '1.5rem',
+      width: '40px',
+      height: '40px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'pointer'
+    });
+    
+    // Ajouter les boutons de navigation si plus d'une image
+    let prevBtn: HTMLButtonElement | null = null;
+    let nextBtn: HTMLButtonElement | null = null;
+    
+    if (images.length > 1) {
+      // Bouton précédent
+      prevBtn = document.createElement('button');
+      prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+      Object.assign(prevBtn.style, {
+        position: 'absolute',
+        left: '20px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        border: 'none',
+        color: 'white',
+        fontSize: '1.5rem',
+        width: '50px',
+        height: '50px',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        visibility: currentIndex > 0 ? 'visible' : 'hidden'
+      });
+      
+      // Bouton suivant
+      nextBtn = document.createElement('button');
+      nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+      Object.assign(nextBtn.style, {
+        position: 'absolute',
+        right: '20px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        border: 'none',
+        color: 'white',
+        fontSize: '1.5rem',
+        width: '50px',
+        height: '50px',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        visibility: currentIndex < images.length - 1 ? 'visible' : 'hidden'
+      });
+      
+      modal.appendChild(prevBtn);
+      modal.appendChild(nextBtn);
+    }
+    
+    // Ajouter les éléments au modal
+    modal.appendChild(img);
+    modal.appendChild(closeBtn);
+    
+    // Ajouter le modal au body
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+    
+    // Fonction pour mettre à jour l'image
+    const updateImage = (newIndex: number) => {
+      if (newIndex >= 0 && newIndex < images.length) {
+        currentIndex = newIndex;
+        img.src = images[currentIndex];
+        
+        // Mettre à jour la visibilité des boutons de navigation
+        if (prevBtn) prevBtn.style.visibility = currentIndex > 0 ? 'visible' : 'hidden';
+        if (nextBtn) nextBtn.style.visibility = currentIndex < images.length - 1 ? 'visible' : 'hidden';
+      }
+    };
+    
+    // Fonction pour fermer le modal
+    const closeModal = () => {
+      if (document.body.contains(modal)) {
+        document.body.removeChild(modal);
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', keyHandler);
+      }
+    };
+    
+    // Événements pour les boutons
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeModal();
+    });
+    
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        updateImage(currentIndex - 1);
+      });
+    }
+    
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        updateImage(currentIndex + 1);
+      });
+    }
+    
+    // Empêcher la fermeture du modal lors du clic sur l'image
+    img.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+    
+    // Fermer le modal lors du clic en dehors
+    modal.addEventListener('click', closeModal);
+    
+    // Gérer les événements clavier
+    const keyHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      } else if (e.key === 'ArrowLeft' && images.length > 1) {
+        updateImage(currentIndex - 1);
+      } else if (e.key === 'ArrowRight' && images.length > 1) {
+        updateImage(currentIndex + 1);
+      }
+    };
+    
+    document.addEventListener('keydown', keyHandler);
   }
 } 
