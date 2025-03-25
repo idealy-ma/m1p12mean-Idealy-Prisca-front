@@ -19,5 +19,19 @@ export interface Devis {
   status?: string;
   montantEstime?: number;
   commentaire?: string;
+  items?: DevisItem[];
   id?: string;
+}
+
+export interface DevisItem {
+  _id?: string;
+  nom: string;
+  type: 'piece' | 'service' | 'main_oeuvre' | 'autre';
+  quantite: number;
+  prixUnitaire: number;
+  completed?: boolean;
+  priorite?: 'basse' | 'moyenne' | 'haute';
+  note?: string;
+  mecanicienId?: string;
+  tauxStandard?: number;
 } 
