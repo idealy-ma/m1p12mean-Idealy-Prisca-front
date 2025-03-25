@@ -42,6 +42,11 @@ export class DevisDetailsComponent implements OnInit {
   isChatVisible = false;
   elementsForm: FormGroup;
   todoItemsForm: FormGroup;
+  
+  // Propriétés pour la gestion de la date d'intervention
+  isEditingDate = false;
+  dateInputValue = '';
+  private originalDate: Date | null = null;
 
   // Filtres pour les todos
   filterType: 'tous' | 'piece' | 'service' | 'main_oeuvre' | 'autre' = 'tous';
@@ -508,6 +513,63 @@ export class DevisDetailsComponent implements OnInit {
       }
     }
     return total;
+  }
+
+  // Méthodes pour gérer la date d'intervention souhaitée
+  startEditDate(): void {
+    this.isEditingDate = true;
+    this.originalDate = this.devis?.preferredDate || null;
+    
+    // Formater la date pour l'input de type date (YYYY-MM-DD)
+    if (this.devis?.preferredDate) {
+      const date = new Date(this.devis.preferredDate);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      this.dateInputValue = `${year}-${month}-${day}`;
+    } else {
+      // Si pas de date, utiliser la date actuelle
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      this.dateInputValue = `${year}-${month}-${day}`;
+    }
+  }
+  
+  onDateChange(dateString: string): void {
+    this.dateInputValue = dateString;
+  }
+  
+  savePreferredDate(): void {
+    if (this.devis && this.dateInputValue) {
+      this.devis.preferredDate = new Date(this.dateInputValue);
+    }
+    this.isEditingDate = false;
+    
+    // En production, appeler le service pour mettre à jour la date sur le serveur
+    // this.devisService.updatePreferredDate(this.devis._id, this.devis.preferredDate)...
+  }
+  
+  cancelEditDate(): void {
+    // Restaurer la date originale
+    if (this.devis) {
+      if (this.originalDate) {
+        this.devis.preferredDate = this.originalDate;
+      } else {
+        this.devis.preferredDate = undefined;
+      }
+    }
+    this.isEditingDate = false;
+  }
+  
+  removePreferredDate(): void {
+    if (this.devis) {
+      this.devis.preferredDate = undefined;
+    }
+    
+    // En production, appeler le service pour mettre à jour la date sur le serveur
+    // this.devisService.updatePreferredDate(this.devis._id, null)...
   }
 
   // Méthode pour ouvrir l'image en plein écran dans un modal

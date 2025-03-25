@@ -98,11 +98,33 @@
         </div>
         
         <!-- Date d'intervention souhaitée -->
-        <div class="preferred-date" *ngIf="devis.preferredDate">
+        <div class="preferred-date">
           <h3>Date d'intervention souhaitée</h3>
-          <div class="date-badge">
-            <i class="fas fa-calendar-alt"></i>
-            {{ devis.preferredDate | date:'dd/MM/yyyy' }}
+          <div *ngIf="!isEditingDate" class="date-content">
+            <div *ngIf="devis?.preferredDate" class="date-badge">
+              <i class="fas fa-calendar-alt"></i>
+              {{ devis.preferredDate | date:'dd/MM/yyyy' }}
+              <button class="btn-edit-date" (click)="startEditDate()">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn-delete-date" (click)="removePreferredDate()">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <button *ngIf="!devis?.preferredDate" class="btn-add-date" (click)="startEditDate()">
+              <i class="fas fa-plus"></i> Ajouter une date
+            </button>
+          </div>
+          <div *ngIf="isEditingDate" class="date-edit">
+            <input type="date" [ngModel]="dateInputValue" (ngModelChange)="onDateChange($event)" class="date-input">
+            <div class="date-actions">
+              <button class="btn-save-date" (click)="savePreferredDate()">
+                <i class="fas fa-check"></i> Enregistrer
+              </button>
+              <button class="btn-cancel-date" (click)="cancelEditDate()">
+                <i class="fas fa-times"></i> Annuler
+              </button>
+            </div>
           </div>
         </div>
         
