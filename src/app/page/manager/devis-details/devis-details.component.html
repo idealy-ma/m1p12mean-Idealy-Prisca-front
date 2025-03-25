@@ -248,7 +248,14 @@
                              item.value.type === 'main_oeuvre' ? 'Main d\'œuvre' :
                              'Autre' }}
                         </span>
-                        <span class="todo-quantity">{{ item.value.quantite }} {{ item.value.type === 'main_oeuvre' ? 'heure(s)' : '' }} × {{ item.value.prixUnitaire | currency:'EUR':'symbol':'1.2-2' }}</span>
+                        <!-- Afficher la quantité et le prix unitaire seulement si ce n'est pas un service ou si la quantité > 0 -->
+                        <span class="todo-quantity" *ngIf="item.value.type !== 'service' || item.value.quantite > 0">
+                          {{ item.value.quantite }} {{ item.value.type === 'main_oeuvre' ? 'heure(s)' : '' }} × {{ item.value.prixUnitaire | currency:'EUR':'symbol':'1.2-2' }}
+                        </span>
+                        <!-- Pour les services avec forfait, afficher le prix forfaitaire -->
+                        <span class="todo-forfait" *ngIf="item.value.type === 'service' && item.value.quantite === 0">
+                          <i class="fas fa-money-bill-wave"></i> Forfait
+                        </span>
                         <span class="todo-priority" [ngClass]="'priority-' + item.value.priorite">
                           <i class="fas fa-flag"></i>
                           {{ item.value.priorite === 'basse' ? 'Priorité basse' : 
@@ -270,7 +277,12 @@
                     </div>
                     
                     <div class="todo-price">
-                      {{ (item.value.quantite * item.value.prixUnitaire) | currency:'EUR':'symbol':'1.2-2' }}
+                      <ng-container *ngIf="item.value.type === 'service' && item.value.quantite === 0; else normalPrice">
+                        {{ item.value.prixUnitaire | currency:'EUR':'symbol':'1.2-2' }}
+                      </ng-container>
+                      <ng-template #normalPrice>
+                        {{ (item.value.quantite * item.value.prixUnitaire) | currency:'EUR':'symbol':'1.2-2' }}
+                      </ng-template>
                     </div>
                     
                     <div class="todo-actions">
@@ -287,7 +299,7 @@
                   <div class="todo-item-edit" *ngIf="todoItemsArray.controls.indexOf(item) === editingItemIndex" [formGroupName]="todoItemsArray.controls.indexOf(item)">
                     <div class="edit-form-row">
                       <div class="form-group">
-                      <label>Nom</label>
+                        <label>Nom</label>
                         <input type="text" formControlName="nom" class="form-control" placeholder="Nom de l'élément">
                         <div *ngIf="item.get('nom')?.invalid && item.get('nom')?.touched" class="invalid-feedback">
                           Ce champ est obligatoire
@@ -296,7 +308,7 @@
                       
                       <div class="form-group">
                         <label>Type</label>
-                        <select formControlName="type" class="form-control">
+                        <select formControlName="type" class="form-control" (change)="onTypeChange($event)">
                           <option value="piece">Pièce</option>
                           <option value="service">Service</option>
                           <option value="main_oeuvre">Main d'œuvre</option>
@@ -304,25 +316,40 @@
                         </select>
                       </div>
                       
-                      <div class="form-group">
-                        <label>{{ item.value.type === 'main_oeuvre' ? 'Heures de travail' : 'Quantité' }}</label>
-                        <input type="number" formControlName="quantite" class="form-control" min="1">
-                        <div *ngIf="item.get('quantite')?.invalid && item.get('quantite')?.touched" class="invalid-feedback">
-                          {{ item.value.type === 'main_oeuvre' ? 'Le nombre d\'heures doit être d\'au moins 1' : 'La quantité doit être d\'au moins 1' }}
+                      <!-- Afficher les champs quantité/prix unitaire seulement si ce n'est pas un service -->
+                      <ng-container *ngIf="item.value.type !== 'service'">
+                        <div class="form-group">
+                          <label>{{ item.value.type === 'main_oeuvre' ? 'Heures de travail' : 'Quantité' }}</label>
+                          <input type="number" formControlName="quantite" class="form-control" min="1">
+                          <div *ngIf="item.get('quantite')?.invalid && item.get('quantite')?.touched" class="invalid-feedback">
+                            {{ item.value.type === 'main_oeuvre' ? 'Le nombre d\'heures doit être d\'au moins 1' : 'La quantité doit être d\'au moins 1' }}
+                          </div>
                         </div>
-                      </div>
+                        
+                        <div class="form-group">
+                          <label>{{ item.value.type === 'main_oeuvre' ? 'Taux horaire (€)' : 'Prix unitaire (€)' }}</label>
+                          <input type="number" formControlName="prixUnitaire" class="form-control" min="0" step="0.01" [ngClass]="{'modified-rate': item.value.type === 'main_oeuvre' && hourlyRateDiff !== 0}" (input)="onHourlyRateChange($event)">
+                          <div *ngIf="item.value.type === 'main_oeuvre' && hourlyRateDiff !== 0" class="rate-diff" [ngClass]="{'positive': hourlyRateDiff > 0, 'negative': hourlyRateDiff < 0}">
+                            {{ hourlyRateDiff > 0 ? '+' : '' }}{{ hourlyRateDiff | number:'1.2-2' }}€ par rapport au taux standard
+                          </div>
+                          <div *ngIf="item.get('prixUnitaire')?.invalid && item.get('prixUnitaire')?.touched" class="invalid-feedback">
+                            {{ item.value.type === 'main_oeuvre' ? 'Le taux horaire doit être positif' : 'Le prix doit être positif' }}
+                          </div>
+                          <div *ngIf="item.value.type === 'main_oeuvre'" class="form-hint">
+                            Vous êtes en train de modifier le taux horaire du mécanicien pour cette réparation.
+                          </div>
+                        </div>
+                      </ng-container>
                       
-                      <div class="form-group">
-                        <label>{{ item.value.type === 'main_oeuvre' ? 'Taux horaire (€)' : 'Prix unitaire (€)' }}</label>
-                        <input type="number" formControlName="prixUnitaire" class="form-control" min="0" step="0.01" [ngClass]="{'modified-rate': item.value.type === 'main_oeuvre' && hourlyRateDiff !== 0}" (input)="onHourlyRateChange($event)">
-                        <div *ngIf="item.value.type === 'main_oeuvre' && hourlyRateDiff !== 0" class="rate-diff" [ngClass]="{'positive': hourlyRateDiff > 0, 'negative': hourlyRateDiff < 0}">
-                          {{ hourlyRateDiff > 0 ? '+' : '' }}{{ hourlyRateDiff | number:'1.2-2' }}€ par rapport au taux standard
-                        </div>
+                      <!-- Pour les services, afficher un champ de prix forfaitaire -->
+                      <div class="form-group" *ngIf="item.value.type === 'service'">
+                        <label>Prix forfaitaire (€)</label>
+                        <input type="number" formControlName="prixUnitaire" class="form-control" min="0" step="0.01">
                         <div *ngIf="item.get('prixUnitaire')?.invalid && item.get('prixUnitaire')?.touched" class="invalid-feedback">
-                          {{ item.value.type === 'main_oeuvre' ? 'Le taux horaire doit être positif' : 'Le prix doit être positif' }}
+                          Le prix forfaitaire doit être positif
                         </div>
-                        <div *ngIf="item.value.type === 'main_oeuvre'" class="form-hint">
-                          Vous êtes en train de modifier le taux horaire du mécanicien pour cette réparation.
+                        <div class="form-hint">
+                          Les services sont facturés au forfait, sans quantité.
                         </div>
                       </div>
                     </div>

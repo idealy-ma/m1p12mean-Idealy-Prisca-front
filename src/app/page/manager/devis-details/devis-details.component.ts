@@ -324,11 +324,20 @@ export class DevisDetailsComponent implements OnInit {
 
   // Créer un FormGroup pour un nouvel item todo
   createTodoItemFormGroup(item?: DevisItem): FormGroup {
+    // Définir des valeurs par défaut en fonction du type
+    let defaultQuantite = 1;
+    let defaultType = item?.type || 'piece';
+    
+    // Si c'est un service, la quantité par défaut est 0 (forfait)
+    if (defaultType === 'service' && !item) {
+      defaultQuantite = 0;
+    }
+    
     return this.fb.group({
       _id: [item?._id || null],
       nom: [item?.nom || '', Validators.required],
-      type: [item?.type || 'piece', Validators.required],
-      quantite: [item?.quantite || 1, [Validators.required, Validators.min(1)]],
+      type: [defaultType, Validators.required],
+      quantite: [item?.quantite !== undefined ? item.quantite : defaultQuantite, [Validators.required, Validators.min(0)]],
       prixUnitaire: [item?.prixUnitaire || 0, [Validators.required, Validators.min(0)]],
       completed: [item?.completed || false],
       priorite: [item?.priorite || 'moyenne'],
@@ -433,6 +442,13 @@ export class DevisDetailsComponent implements OnInit {
     if (this.editingItemIndex !== null) {
       const item = this.todoItemsArray.at(this.editingItemIndex);
       
+      // Si c'est un service, définir la quantité à 0 pour indiquer un forfait
+      if (item.value.type === 'service') {
+        item.patchValue({
+          quantite: 0
+        });
+      }
+      
       // Si c'est un élément de type main d'oeuvre, sauvegarder les informations du mécanicien
       if (item.value.type === 'main_oeuvre') {
         // S'assurer que le taux standard est sauvegardé
@@ -530,7 +546,13 @@ export class DevisDetailsComponent implements OnInit {
     let total = 0;
     for (let i = 0; i < this.todoItemsArray.length; i++) {
       const item = this.todoItemsArray.at(i).value;
-      total += item.quantite * item.prixUnitaire;
+      
+      // Pour les services avec quantité 0, le prix unitaire est le prix forfaitaire total
+      if (item.type === 'service' && item.quantite === 0) {
+        total += item.prixUnitaire;
+      } else {
+        total += item.quantite * item.prixUnitaire;
+      }
     }
     return total;
   }
@@ -541,7 +563,12 @@ export class DevisDetailsComponent implements OnInit {
     for (let i = 0; i < this.todoItemsArray.length; i++) {
       const item = this.todoItemsArray.at(i).value;
       if (item.type === type) {
-        total += item.quantite * item.prixUnitaire;
+        // Pour les services avec quantité 0, le prix unitaire est le prix forfaitaire total
+        if (type === 'service' && item.quantite === 0) {
+          total += item.prixUnitaire;
+        } else {
+          total += item.quantite * item.prixUnitaire;
+        }
       }
     }
     return total;
@@ -798,14 +825,21 @@ export class DevisDetailsComponent implements OnInit {
     
     // Convertir les services présélectionnés en items de devis
     const servicesItems = this.devis.servicesPreselectionnes.map(service => {
+      // Pour les services, on n'utilise pas de prix unitaire mais un prix forfaitaire
+      const isService = service.type === 'service';
+      
       return {
         nom: service.type === 'pack' ? `Pack: ${service.nom}` : service.nom,
         type: 'service' as 'piece' | 'service' | 'main_oeuvre' | 'autre',
-        quantite: 1,
+        // Pour les services, la quantité est 0 (forfait sans prix unitaire)
+        quantite: isService ? 0 : 1,
+        // Pour les services, le prix total est stocké dans prixUnitaire si la quantité est 0
         prixUnitaire: service.prix,
         completed: false,
         priorite: 'haute' as 'basse' | 'moyenne' | 'haute',
-        note: service.description || '',
+        note: isService 
+          ? `Prix forfaitaire: ${service.prix}€${service.description ? ' - ' + service.description : ''}`
+          : service.description || '',
         estPreselectionne: true
       };
     });
@@ -839,5 +873,26 @@ export class DevisDetailsComponent implements OnInit {
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
     }, 100);
+  }
+
+  // Gérer le changement de type dans le formulaire d'édition
+  onTypeChange(event: any): void {
+    if (this.editingItemIndex === null) return;
+    
+    const item = this.todoItemsArray.at(this.editingItemIndex);
+    const newType = event.target.value;
+    
+    // Si le type est changé en "service", mettre à jour la quantité à 0 (forfait)
+    if (newType === 'service') {
+      item.patchValue({
+        quantite: 0
+      });
+    } 
+    // Si le type est changé d'un "service" vers autre chose, remettre une quantité à 1
+    else if (item.value.quantite === 0) {
+      item.patchValue({
+        quantite: 1
+      });
+    }
   }
 } 

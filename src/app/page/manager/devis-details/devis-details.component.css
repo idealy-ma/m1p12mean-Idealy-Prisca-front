@@ -1575,4 +1575,19 @@ textarea.form-control {
 
 .btn-discuss i {
   font-size: 0.9rem;
+}
+
+.todo-forfait {
+  display: inline-flex;
+  align-items: center;
+  background-color: #e3f4fc;
+  color: #2196F3;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin-right: 0.5rem;
+}
+
+.todo-forfait i {
+  margin-right: 0.3rem;
 } 
