@@ -19,5 +19,32 @@ export interface Devis {
   status?: string;
   montantEstime?: number;
   commentaire?: string;
+  items?: DevisItem[];
+  servicesPreselectionnes?: ServicePreselectionne[];
+  preferredDate?: Date;
+  photoUrl?: string;
+  secondPhotoUrl?: string;
   id?: string;
+}
+
+export interface DevisItem {
+  _id?: string;
+  nom: string;
+  type: 'piece' | 'service' | 'main_oeuvre' | 'autre';
+  quantite: number;
+  prixUnitaire: number;
+  completed?: boolean;
+  priorite?: 'basse' | 'moyenne' | 'haute';
+  note?: string;
+  mecanicienId?: string;
+  tauxStandard?: number;
+  estPreselectionne?: boolean;
+}
+
+export interface ServicePreselectionne {
+  _id?: string;
+  nom: string;
+  description?: string;
+  prix: number;
+  type: 'service' | 'pack';
 } 

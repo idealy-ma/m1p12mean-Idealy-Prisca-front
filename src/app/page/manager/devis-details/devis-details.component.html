@@ -96,109 +96,360 @@
         <div class="description">
           {{ devis.description }}
         </div>
+        
+        <!-- Services présélectionnés -->
+        <div class="services-preselectionnes" *ngIf="devis.servicesPreselectionnes?.length">
+          <h3>Services présélectionnés par le client</h3>
+          <div class="preselection-info">
+            Les services ci-dessous ont été choisis par le client lors de sa demande de devis. 
+            Ils ont été automatiquement ajoutés à la liste des éléments nécessaires avec une priorité haute.
+          </div>
+          <div class="preselection-list">
+            <div *ngFor="let service of devis.servicesPreselectionnes" class="preselection-item">
+              <div class="preselection-icon">
+                <i class="fas" [ngClass]="{'fa-box': service.type === 'pack', 'fa-tools': service.type === 'service'}"></i>
+              </div>
+              <div class="preselection-details">
+                <div class="preselection-name">{{ service.nom }}</div>
+                <div class="preselection-description" *ngIf="service.description">{{ service.description }}</div>
+                <div class="preselection-type">{{ service.type === 'pack' ? 'Pack de services' : 'Service' }}</div>
+              </div>
+              <div class="preselection-price">{{ service.prix | currency:'EUR':'symbol':'1.2-2' }}</div>
+              <button class="btn-discuss" (click)="discuterAvecClient(service)">
+                <i class="fas fa-comments"></i> Discuter
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Date d'intervention souhaitée -->
+        <div class="preferred-date">
+          <h3>Date d'intervention souhaitée</h3>
+          <div *ngIf="!isEditingDate" class="date-content">
+            <div *ngIf="devis?.preferredDate" class="date-badge">
+              <i class="fas fa-calendar-alt"></i>
+              {{ devis.preferredDate | date:'dd/MM/yyyy' }}
+              <button class="btn-edit-date" (click)="startEditDate()">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn-delete-date" (click)="removePreferredDate()">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <button *ngIf="!devis?.preferredDate" class="btn-add-date" (click)="startEditDate()">
+              <i class="fas fa-plus"></i> Ajouter une date
+            </button>
+          </div>
+          <div *ngIf="isEditingDate" class="date-edit">
+            <input type="date" [ngModel]="dateInputValue" (ngModelChange)="onDateChange($event)" class="date-input">
+            <div class="date-actions">
+              <button class="btn-save-date" (click)="savePreferredDate()">
+                <i class="fas fa-check"></i> Enregistrer
+              </button>
+              <button class="btn-cancel-date" (click)="cancelEditDate()">
+                <i class="fas fa-times"></i> Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Image du problème -->
+        <div class="problem-image" *ngIf="devis.photoUrl">
+          <h3>Photos du problème</h3>
+          <div class="image-gallery">
+            <div class="image-container">
+              <img [src]="devis.photoUrl" alt="Photo du problème" class="problem-photo">
+              <button class="btn-zoom" (click)="openImageModal(devis.photoUrl)">
+                <i class="fas fa-search-plus"></i>
+              </button>
+            </div>
+            <div class="image-container" *ngIf="devis.secondPhotoUrl">
+              <img [src]="devis.secondPhotoUrl" alt="Photo du problème 2" class="problem-photo">
+              <button class="btn-zoom" (click)="openImageModal(devis.secondPhotoUrl)">
+                <i class="fas fa-search-plus"></i>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Création du devis -->
       <div class="section devis-creation-section">
         <h2>Création du devis</h2>
         <div class="devis-form">
-          <!-- Pièces nécessaires -->
+          <!-- Todo Items (Éléments nécessaires) -->
           <div class="form-section">
-            <h3>Pièces nécessaires</h3>
-            <div class="pieces-list">
-              <div class="piece-item" *ngFor="let piece of mockPieces">
-                <div class="piece-info">
-                  <span class="piece-name">{{ piece.nom }}</span>
-                  <span class="piece-quantity">x{{ piece.quantite }}</span>
-                </div>
-                <div class="piece-price">
-                  {{ piece.prixUnitaire | currency:'EUR':'symbol':'1.2-2' }}
+            <h3>Éléments nécessaires <span class="badge task-count">{{ todoItemsArray.length }} éléments</span></h3>
+            
+            <!-- Filtres -->
+            <div class="todo-filters">
+              <div class="filter-group">
+                <label>Type:</label>
+                <div class="btn-group">
+                  <button type="button" class="btn" [class.btn-active]="filterType === 'tous'" (click)="updateTypeFilter('tous')">Tous</button>
+                  <button type="button" class="btn" [class.btn-active]="filterType === 'piece'" (click)="updateTypeFilter('piece')">Pièces</button>
+                  <button type="button" class="btn" [class.btn-active]="filterType === 'service'" (click)="updateTypeFilter('service')">Services</button>
+                  <button type="button" class="btn" [class.btn-active]="filterType === 'main_oeuvre'" (click)="updateTypeFilter('main_oeuvre')">Main d'œuvre</button>
+                  <button type="button" class="btn" [class.btn-active]="filterType === 'autre'" (click)="updateTypeFilter('autre')">Autre</button>
                 </div>
               </div>
-              <button class="btn-add">
-                <i class="fas fa-plus"></i> Ajouter une pièce
-              </button>
+              
+              <div class="filter-group">
+                <label>Statut:</label>
+                <div class="btn-group">
+                  <button type="button" class="btn" [class.btn-active]="filterStatus === 'tous'" (click)="updateStatusFilter('tous')">Tous</button>
+                  <button type="button" class="btn" [class.btn-active]="filterStatus === 'pending'" (click)="updateStatusFilter('pending')">En attente</button>
+                  <button type="button" class="btn" [class.btn-active]="filterStatus === 'completed'" (click)="updateStatusFilter('completed')">Terminés</button>
+                </div>
+              </div>
+              
+              <div class="filter-group">
+                <label>Priorité:</label>
+                <div class="btn-group">
+                  <button type="button" class="btn" [class.btn-active]="filterPriority === 'tous'" (click)="updatePriorityFilter('tous')">Toutes</button>
+                  <button type="button" class="btn" [class.btn-active]="filterPriority === 'basse'" (click)="updatePriorityFilter('basse')">Basse</button>
+                  <button type="button" class="btn" [class.btn-active]="filterPriority === 'moyenne'" (click)="updatePriorityFilter('moyenne')">Moyenne</button>
+                  <button type="button" class="btn" [class.btn-active]="filterPriority === 'haute'" (click)="updatePriorityFilter('haute')">Haute</button>
+                </div>
+              </div>
             </div>
-          </div>
-
-          <!-- Main d'œuvre -->
-          <div class="form-section">
-            <h3>Main d'œuvre</h3>
-            <div class="mecaniciens-section">
-              <div class="mecaniciens-disponibles">
-                <h4>Mécaniciens disponibles</h4>
-                <div class="mecaniciens-list">
-                  <div class="mecanicien-item" *ngFor="let mecanicien of mockMecaniciens">
-                    <div class="mecanicien-info">
-                      <span class="mecanicien-nom">{{ mecanicien.prenom }} {{ mecanicien.nom }}</span>
-                      <span class="mecanicien-specialite">{{ mecanicien.specialite }}</span>
-                      <span class="mecanicien-taux">{{ mecanicien.tauxHoraire | currency:'EUR':'symbol':'1.2-2' }}/h</span>
-                      <span class="mecanicien-temps">Temps estimé: {{ mecanicien.tempsEstime }}h</span>
+            
+            <!-- Liste des todos -->
+            <form [formGroup]="todoItemsForm">
+              <div class="todo-list" formArrayName="items">
+                <div *ngFor="let item of filteredTodoItems(); let i = index" class="todo-item" [ngClass]="{'todo-completed': item.value.completed, 'todo-editing': todoItemsArray.controls.indexOf(item) === editingItemIndex}">
+                  
+                  <!-- Mode affichage -->
+                  <div class="todo-item-header" 
+                       *ngIf="todoItemsArray.controls.indexOf(item) !== editingItemIndex"
+                       [class.preselection]="item.value.estPreselectionne">
+                    <div class="todo-checkbox">
+                      <input type="checkbox" [checked]="item.value.completed" (change)="toggleCompleted(todoItemsArray.controls.indexOf(item))" disabled>
                     </div>
-                    <button class="btn-add" (click)="ajouterMecanicien(mecanicien)">
-                      <i class="fas fa-plus"></i> Ajouter
+                    
+                    <div class="todo-content">
+                      <div class="todo-name">
+                        {{ item.value.nom }}
+                        <span *ngIf="item.value.estPreselectionne" class="preselection-badge">
+                          <i class="fas fa-check-circle"></i> Présélectionné par le client
+                        </span>
+                      </div>
+                      <div class="todo-details">
+                        <span class="todo-type" [ngClass]="'todo-type-' + item.value.type">
+                          <i class="fas" 
+                            [ngClass]="{
+                              'fa-cog': item.value.type === 'piece',
+                              'fa-tools': item.value.type === 'service',
+                              'fa-user-cog': item.value.type === 'main_oeuvre',
+                              'fa-question-circle': item.value.type === 'autre'
+                            }"></i>
+                          {{ item.value.type === 'piece' ? 'Pièce' : 
+                             item.value.type === 'service' ? 'Service' : 
+                             item.value.type === 'main_oeuvre' ? 'Main d\'œuvre' :
+                             'Autre' }}
+                        </span>
+                        <!-- Afficher la quantité et le prix unitaire seulement si ce n'est pas un service ou si la quantité > 0 -->
+                        <span class="todo-quantity" *ngIf="item.value.type !== 'service' || item.value.quantite > 0">
+                          {{ item.value.quantite }} {{ item.value.type === 'main_oeuvre' ? 'heure(s)' : '' }} × {{ item.value.prixUnitaire | currency:'EUR':'symbol':'1.2-2' }}
+                        </span>
+                        <!-- Pour les services avec forfait, afficher le prix forfaitaire -->
+                        <span class="todo-forfait" *ngIf="item.value.type === 'service' && item.value.quantite === 0">
+                          <i class="fas fa-money-bill-wave"></i> Forfait
+                        </span>
+                        <span class="todo-priority" [ngClass]="'priority-' + item.value.priorite">
+                          <i class="fas fa-flag"></i>
+                          {{ item.value.priorite === 'basse' ? 'Priorité basse' : 
+                             item.value.priorite === 'moyenne' ? 'Priorité moyenne' : 'Priorité haute' }}
+                        </span>
+                        
+                        <!-- Affichage de la différence de taux pour le type main d'oeuvre -->
+                        <span *ngIf="item.value.type === 'main_oeuvre' && item.value.tauxStandard && item.value.prixUnitaire !== item.value.tauxStandard" 
+                              class="todo-rate-diff" 
+                              [ngClass]="{'positive': item.value.prixUnitaire > item.value.tauxStandard, 'negative': item.value.prixUnitaire < item.value.tauxStandard}">
+                          <i class="fas" [ngClass]="{'fa-arrow-up': item.value.prixUnitaire > item.value.tauxStandard, 'fa-arrow-down': item.value.prixUnitaire < item.value.tauxStandard}"></i>
+                          {{ item.value.prixUnitaire > item.value.tauxStandard ? '+' : '' }}{{ item.value.prixUnitaire - item.value.tauxStandard | number:'1.2-2' }}€/h
+                        </span>
+                      </div>
+                      
+                      <div class="todo-note" *ngIf="item.value.note">
+                        <i class="fas fa-comment"></i> {{ item.value.note }}
+                      </div>
+                    </div>
+                    
+                    <div class="todo-price">
+                      <ng-container *ngIf="item.value.type === 'service' && item.value.quantite === 0; else normalPrice">
+                        {{ item.value.prixUnitaire | currency:'EUR':'symbol':'1.2-2' }}
+                      </ng-container>
+                      <ng-template #normalPrice>
+                        {{ (item.value.quantite * item.value.prixUnitaire) | currency:'EUR':'symbol':'1.2-2' }}
+                      </ng-template>
+                    </div>
+                    
+                    <div class="todo-actions">
+                      <button type="button" class="btn-icon btn-edit" (click)="editTodoItem(todoItemsArray.controls.indexOf(item))">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button type="button" class="btn-icon" (click)="supprimerTodoItem(todoItemsArray.controls.indexOf(item))">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Mode édition -->
+                  <div class="todo-item-edit" *ngIf="todoItemsArray.controls.indexOf(item) === editingItemIndex" [formGroupName]="todoItemsArray.controls.indexOf(item)">
+                    <div class="edit-form-row">
+                      <div class="form-group">
+                        <label>Nom</label>
+                        <input type="text" formControlName="nom" class="form-control" placeholder="Nom de l'élément">
+                        <div *ngIf="item.get('nom')?.invalid && item.get('nom')?.touched" class="invalid-feedback">
+                          Ce champ est obligatoire
+                        </div>
+                      </div>
+                      
+                      <div class="form-group">
+                        <label>Type</label>
+                        <select formControlName="type" class="form-control" (change)="onTypeChange($event)">
+                          <option value="piece">Pièce</option>
+                          <option value="service">Service</option>
+                          <option value="main_oeuvre">Main d'œuvre</option>
+                          <option value="autre">Autre</option>
+                        </select>
+                      </div>
+                      
+                      <!-- Afficher les champs quantité/prix unitaire seulement si ce n'est pas un service -->
+                      <ng-container *ngIf="item.value.type !== 'service'">
+                        <div class="form-group">
+                          <label>{{ item.value.type === 'main_oeuvre' ? 'Heures de travail' : 'Quantité' }}</label>
+                          <input type="number" formControlName="quantite" class="form-control" min="1">
+                          <div *ngIf="item.get('quantite')?.invalid && item.get('quantite')?.touched" class="invalid-feedback">
+                            {{ item.value.type === 'main_oeuvre' ? 'Le nombre d\'heures doit être d\'au moins 1' : 'La quantité doit être d\'au moins 1' }}
+                          </div>
+                        </div>
+                        
+                        <div class="form-group">
+                          <label>{{ item.value.type === 'main_oeuvre' ? 'Taux horaire (€)' : 'Prix unitaire (€)' }}</label>
+                          <input type="number" formControlName="prixUnitaire" class="form-control" min="0" step="0.01" [ngClass]="{'modified-rate': item.value.type === 'main_oeuvre' && hourlyRateDiff !== 0}" (input)="onHourlyRateChange($event)">
+                          <div *ngIf="item.value.type === 'main_oeuvre' && hourlyRateDiff !== 0" class="rate-diff" [ngClass]="{'positive': hourlyRateDiff > 0, 'negative': hourlyRateDiff < 0}">
+                            {{ hourlyRateDiff > 0 ? '+' : '' }}{{ hourlyRateDiff | number:'1.2-2' }}€ par rapport au taux standard
+                          </div>
+                          <div *ngIf="item.get('prixUnitaire')?.invalid && item.get('prixUnitaire')?.touched" class="invalid-feedback">
+                            {{ item.value.type === 'main_oeuvre' ? 'Le taux horaire doit être positif' : 'Le prix doit être positif' }}
+                          </div>
+                          <div *ngIf="item.value.type === 'main_oeuvre'" class="form-hint">
+                            Vous êtes en train de modifier le taux horaire du mécanicien pour cette réparation.
+                          </div>
+                        </div>
+                      </ng-container>
+                      
+                      <!-- Pour les services, afficher un champ de prix forfaitaire -->
+                      <div class="form-group" *ngIf="item.value.type === 'service'">
+                        <label>Prix forfaitaire (€)</label>
+                        <input type="number" formControlName="prixUnitaire" class="form-control" min="0" step="0.01">
+                        <div *ngIf="item.get('prixUnitaire')?.invalid && item.get('prixUnitaire')?.touched" class="invalid-feedback">
+                          Le prix forfaitaire doit être positif
+                        </div>
+                        <div class="form-hint">
+                          Les services sont facturés au forfait, sans quantité.
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Section sélection mécanicien pour le type main_oeuvre -->
+                    <div class="edit-form-row" *ngIf="item.value.type === 'main_oeuvre'">
+                      <div class="form-group full-width">
+                        <label>Sélectionner un mécanicien</label>
+                        <div class="mecaniciens-picker">
+                          <div 
+                            *ngFor="let mecanicien of mockMecaniciens" 
+                            class="mecanicien-option" 
+                            [class.selected]="selectedMecanicienId === mecanicien.id"
+                            (click)="selectMecanicien(mecanicien)"
+                          >
+                            <div class="mecanicien-avatar">
+                              <i class="fas fa-user-cog"></i>
+                            </div>
+                            <div class="mecanicien-details">
+                              <div class="mecanicien-name">{{ mecanicien.prenom }} {{ mecanicien.nom }}</div>
+                              <div class="mecanicien-info">
+                                <span class="mecanicien-spec">{{ mecanicien.specialite }}</span>
+                                <span class="mecanicien-rate">{{ mecanicien.tauxHoraire | currency:'EUR':'symbol':'1.2-2' }}/h</span>
+                              </div>
+                            </div>
+                            <div class="selector-check">
+                              <i class="fas fa-check-circle"></i>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="edit-form-row">
+                      <div class="form-group">
+                        <label>Priorité</label>
+                        <select formControlName="priorite" class="form-control">
+                          <option value="basse">Basse</option>
+                          <option value="moyenne">Moyenne</option>
+                          <option value="haute">Haute</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div class="edit-form-row">
+                      <div class="form-group full-width">
+                        <label>Note</label>
+                        <textarea formControlName="note" class="form-control" placeholder="Ajouter une note..."></textarea>
+                      </div>
+                    </div>
+                    
+                    <div class="edit-actions">
+                      <button type="button" class="btn-cancel" (click)="cancelEditTodoItem()">
+                        <i class="fas fa-times"></i> Annuler
+                      </button>
+                      <button type="button" class="btn-save" (click)="saveTodoItem()" [disabled]="item.invalid">
+                        <i class="fas fa-check"></i> Enregistrer
                     </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div class="mecaniciens-selectionnes" *ngIf="mecaniciensSelectionnes.length > 0">
-                <h4>Mécaniciens sélectionnés</h4>
-                <div class="mecaniciens-list">
-                  <div class="mecanicien-item" *ngFor="let mecanicien of mecaniciensSelectionnes">
-                    <div class="mecanicien-info">
-                      <span class="mecanicien-nom">{{ mecanicien.prenom }} {{ mecanicien.nom }}</span>
-                      <span class="mecanicien-specialite">{{ mecanicien.specialite }}</span>
-                      <span class="mecanicien-taux">{{ mecanicien.tauxHoraire | currency:'EUR':'symbol':'1.2-2' }}/h</span>
-                      <span class="mecanicien-temps">Temps estimé: {{ mecanicien.tempsEstime }}h</span>
-                      <span class="mecanicien-total">{{ (mecanicien.tauxHoraire * mecanicien.tempsEstime) | currency:'EUR':'symbol':'1.2-2' }}</span>
-                    </div>
-                    <button class="btn-remove" (click)="retirerMecanicien(mecanicien.id)">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
+                
+                <div *ngIf="filteredTodoItems().length === 0" class="no-todos">
+                  Aucun élément ne correspond aux filtres sélectionnés.
                 </div>
+                
+                <button type="button" class="btn-add" (click)="ajouterTodoItem()">
+                  <i class="fas fa-plus"></i> Ajouter un élément
+                </button>
               </div>
-            </div>
-          </div>
+            </form>
 
-          <!-- Services spécifiques -->
-          <div class="form-section">
-            <h3>Services spécifiques</h3>
-            <div class="services-list">
-              <div class="service-item" *ngFor="let service of mockServices">
-                <span class="service-name">{{ service.nom }}</span>
-                <span class="service-price">{{ service.prix | currency:'EUR':'symbol':'1.2-2' }}</span>
+            <!-- Résumé par catégorie et commentaires -->
+            <div class="form-section total-section">
+              <div class="total-breakdown todo-summary">
+                <div class="total-item summary-item">
+                  <span class="summary-label">Pièces</span>
+                  <span class="summary-value">{{ calculerTotalParType('piece') | currency:'EUR':'symbol':'1.2-2' }}</span>
+                    </div>
+                <div class="total-item summary-item">
+                  <span class="summary-label">Services</span>
+                  <span class="summary-value">{{ calculerTotalParType('service') | currency:'EUR':'symbol':'1.2-2' }}</span>
+                  </div>
+                <div class="total-item summary-item">
+                  <span class="summary-label">Main d'œuvre</span>
+                  <span class="summary-value">{{ calculerTotalParType('main_oeuvre') | currency:'EUR':'symbol':'1.2-2' }}</span>
+                </div>
+                <div class="total-item summary-item">
+                  <span class="summary-label">Autres</span>
+                  <span class="summary-value">{{ calculerTotalParType('autre') | currency:'EUR':'symbol':'1.2-2' }}</span>
               </div>
-              <button class="btn-add">
-                <i class="fas fa-plus"></i> Ajouter un service
-              </button>
-            </div>
-          </div>
-
-          <!-- Total et commentaires -->
-          <div class="form-section total-section">
-            <div class="total-breakdown">
-              <div class="total-item">
-                <span>Pièces</span>
-                <span>{{ 150.00 | currency:'EUR':'symbol':'1.2-2' }}</span>
-              </div>
-              <div class="total-item">
-                <span>Main d'œuvre</span>
-                <span>{{ calculerTotalMainOeuvre() | currency:'EUR':'symbol':'1.2-2' }}</span>
-              </div>
-              <div class="total-item">
-                <span>Services</span>
-                <span>{{ 75.00 | currency:'EUR':'symbol':'1.2-2' }}</span>
-              </div>
-              <div class="total-item total">
-                <span>Total</span>
-                <span>{{ (150.00 + calculerTotalMainOeuvre() + 75.00) | currency:'EUR':'symbol':'1.2-2' }}</span>
+                <div class="total-item summary-item summary-total">
+                  <span class="summary-label">Total</span>
+                  <span class="summary-value">{{ calculerTotalTodos() | currency:'EUR':'symbol':'1.2-2' }}</span>
               </div>
             </div>
             <div class="commentaire">
               <label>Commentaire pour le client</label>
               <textarea placeholder="Ajouter un commentaire pour le client..."></textarea>
+              </div>
             </div>
           </div>
         </div>
