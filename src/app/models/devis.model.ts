@@ -20,6 +20,7 @@ export interface Devis {
   montantEstime?: number;
   commentaire?: string;
   items?: DevisItem[];
+  servicesPreselectionnes?: ServicePreselectionne[];
   preferredDate?: Date;
   photoUrl?: string;
   secondPhotoUrl?: string;
@@ -37,4 +38,13 @@ export interface DevisItem {
   note?: string;
   mecanicienId?: string;
   tauxStandard?: number;
+  estPreselectionne?: boolean;
+}
+
+export interface ServicePreselectionne {
+  _id?: string;
+  nom: string;
+  description?: string;
+  prix: number;
+  type: 'service' | 'pack';
 } 

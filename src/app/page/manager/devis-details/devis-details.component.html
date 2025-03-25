@@ -97,6 +97,31 @@
           {{ devis.description }}
         </div>
         
+        <!-- Services présélectionnés -->
+        <div class="services-preselectionnes" *ngIf="devis.servicesPreselectionnes?.length">
+          <h3>Services présélectionnés par le client</h3>
+          <div class="preselection-info">
+            Les services ci-dessous ont été choisis par le client lors de sa demande de devis. 
+            Ils ont été automatiquement ajoutés à la liste des éléments nécessaires avec une priorité haute.
+          </div>
+          <div class="preselection-list">
+            <div *ngFor="let service of devis.servicesPreselectionnes" class="preselection-item">
+              <div class="preselection-icon">
+                <i class="fas" [ngClass]="{'fa-box': service.type === 'pack', 'fa-tools': service.type === 'service'}"></i>
+              </div>
+              <div class="preselection-details">
+                <div class="preselection-name">{{ service.nom }}</div>
+                <div class="preselection-description" *ngIf="service.description">{{ service.description }}</div>
+                <div class="preselection-type">{{ service.type === 'pack' ? 'Pack de services' : 'Service' }}</div>
+              </div>
+              <div class="preselection-price">{{ service.prix | currency:'EUR':'symbol':'1.2-2' }}</div>
+              <button class="btn-discuss" (click)="discuterAvecClient(service)">
+                <i class="fas fa-comments"></i> Discuter
+              </button>
+            </div>
+          </div>
+        </div>
+        
         <!-- Date d'intervention souhaitée -->
         <div class="preferred-date">
           <h3>Date d'intervention souhaitée</h3>
@@ -195,13 +220,20 @@
                 <div *ngFor="let item of filteredTodoItems(); let i = index" class="todo-item" [ngClass]="{'todo-completed': item.value.completed, 'todo-editing': todoItemsArray.controls.indexOf(item) === editingItemIndex}">
                   
                   <!-- Mode affichage -->
-                  <div class="todo-item-header" *ngIf="todoItemsArray.controls.indexOf(item) !== editingItemIndex">
+                  <div class="todo-item-header" 
+                       *ngIf="todoItemsArray.controls.indexOf(item) !== editingItemIndex"
+                       [class.preselection]="item.value.estPreselectionne">
                     <div class="todo-checkbox">
                       <input type="checkbox" [checked]="item.value.completed" (change)="toggleCompleted(todoItemsArray.controls.indexOf(item))">
                     </div>
                     
                     <div class="todo-content">
-                      <div class="todo-name">{{ item.value.nom }}</div>
+                      <div class="todo-name">
+                        {{ item.value.nom }}
+                        <span *ngIf="item.value.estPreselectionne" class="preselection-badge">
+                          <i class="fas fa-check-circle"></i> Présélectionné par le client
+                        </span>
+                      </div>
                       <div class="todo-details">
                         <span class="todo-type" [ngClass]="'todo-type-' + item.value.type">
                           <i class="fas" 

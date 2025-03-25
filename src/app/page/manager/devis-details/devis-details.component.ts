@@ -65,6 +65,31 @@ export class DevisDetailsComponent implements OnInit {
     { nom: 'Vidange', prix: 25.00 }
   ];
 
+  // Données mockées pour les services présélectionnés par le client
+  mockServicesPreselectionnes = [
+    { 
+      _id: 's1', 
+      nom: 'Pack entretien standard', 
+      description: 'Inclut le changement d\'huile, de filtre et la vérification des niveaux', 
+      prix: 120.00, 
+      type: 'pack' as 'service' | 'pack'
+    },
+    { 
+      _id: 's2', 
+      nom: 'Diagnostic électronique avancé', 
+      description: 'Analyse complète du système électronique du véhicule', 
+      prix: 85.00, 
+      type: 'service' as 'service' | 'pack'
+    },
+    { 
+      _id: 's3', 
+      nom: 'Contrôle suspension', 
+      description: 'Vérification complète du système de suspension', 
+      prix: 60.00, 
+      type: 'service' as 'service' | 'pack'
+    }
+  ];
+
   mockMecaniciens: Mecanicien[] = [
     { id: '1', nom: 'Dupont', prenom: 'Jean', specialite: 'Moteur', tauxHoraire: 45, tempsEstime: 2.5 },
     { id: '2', nom: 'Martin', prenom: 'Pierre', specialite: 'Carrosserie', tauxHoraire: 40, tempsEstime: 1.5 },
@@ -230,6 +255,12 @@ export class DevisDetailsComponent implements OnInit {
             // Ajouter des images mockées
             this.devis.photoUrl = 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&auto=format&fit=crop&q=60';
             this.devis.secondPhotoUrl = 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&auto=format&fit=crop&q=60';
+            
+            // Ajouter les services présélectionnés mockés
+            this.devis.servicesPreselectionnes = this.mockServicesPreselectionnes;
+            
+            // Ajouter les services présélectionnés à la liste des items
+            this.ajouterServicesPreselectionnes();
           }
         } else {
           this.error = 'Format de données invalide';
@@ -303,7 +334,8 @@ export class DevisDetailsComponent implements OnInit {
       priorite: [item?.priorite || 'moyenne'],
       note: [item?.note || ''],
       mecanicienId: [item?.mecanicienId || null],
-      tauxStandard: [item?.tauxStandard || 0]
+      tauxStandard: [item?.tauxStandard || 0],
+      estPreselectionne: [item?.estPreselectionne || false]
     });
   }
 
@@ -758,5 +790,54 @@ export class DevisDetailsComponent implements OnInit {
     };
     
     document.addEventListener('keydown', keyHandler);
+  }
+
+  // Méthode pour ajouter les services présélectionnés à la liste des éléments
+  ajouterServicesPreselectionnes(): void {
+    if (!this.devis?.servicesPreselectionnes?.length) return;
+    
+    // Convertir les services présélectionnés en items de devis
+    const servicesItems = this.devis.servicesPreselectionnes.map(service => {
+      return {
+        nom: service.type === 'pack' ? `Pack: ${service.nom}` : service.nom,
+        type: 'service' as 'piece' | 'service' | 'main_oeuvre' | 'autre',
+        quantite: 1,
+        prixUnitaire: service.prix,
+        completed: false,
+        priorite: 'haute' as 'basse' | 'moyenne' | 'haute',
+        note: service.description || '',
+        estPreselectionne: true
+      };
+    });
+    
+    // Ajouter les items au FormArray des todos
+    servicesItems.forEach(item => {
+      this.todoItemsArray.push(this.createTodoItemFormGroup(item));
+    });
+  }
+
+  // Méthode pour ouvrir le chat avec un message concernant un service présélectionné
+  discuterAvecClient(service: any): void {
+    // Ouvrir le chat s'il n'est pas déjà visible
+    if (!this.isChatVisible) {
+      this.toggleChat();
+    }
+    
+    // Ajouter un message dans le chat concernant le service
+    const message = {
+      contenu: `Je souhaite discuter avec vous concernant le service "${service.nom}" que vous avez sélectionné. Avez-vous des questions ou des besoins spécifiques à ce sujet ?`,
+      date: new Date(),
+      type: 'manager' as 'client' | 'manager'
+    };
+    
+    this.mockMessages.push(message);
+    
+    // Faire défiler jusqu'au dernier message (en production, cela serait géré par une directive)
+    setTimeout(() => {
+      const chatContainer = document.querySelector('.chat-messages');
+      if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }, 100);
   }
 } 
