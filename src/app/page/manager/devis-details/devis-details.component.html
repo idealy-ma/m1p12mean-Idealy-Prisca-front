@@ -224,7 +224,7 @@
                        *ngIf="todoItemsArray.controls.indexOf(item) !== editingItemIndex"
                        [class.preselection]="item.value.estPreselectionne">
                     <div class="todo-checkbox">
-                      <input type="checkbox" [checked]="item.value.completed" (change)="toggleCompleted(todoItemsArray.controls.indexOf(item))">
+                      <input type="checkbox" [checked]="item.value.completed" (change)="toggleCompleted(todoItemsArray.controls.indexOf(item))" disabled>
                     </div>
                     
                     <div class="todo-content">

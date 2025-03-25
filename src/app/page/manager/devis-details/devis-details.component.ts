@@ -96,6 +96,7 @@ export class DevisDetailsComponent implements OnInit {
     { id: '3', nom: 'Bernard', prenom: 'Marie', specialite: 'Électronique', tauxHoraire: 50, tempsEstime: 3 }
   ];
 
+  // Tableau vide pour les mécaniciens sélectionnés
   mecaniciensSelectionnes: Mecanicien[] = [];
 
   mockMessages: Message[] = [
@@ -128,7 +129,7 @@ export class DevisDetailsComponent implements OnInit {
       type: 'piece', 
       quantite: 5, 
       prixUnitaire: 12.00,
-      completed: true,
+      completed: false,
       priorite: 'haute'
     },
     { 
@@ -144,7 +145,7 @@ export class DevisDetailsComponent implements OnInit {
       type: 'service', 
       quantite: 1, 
       prixUnitaire: 50.00,
-      completed: true,
+      completed: false,
       priorite: 'basse'
     },
     { 
