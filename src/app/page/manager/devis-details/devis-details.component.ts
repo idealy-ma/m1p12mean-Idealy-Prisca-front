@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DevisService } from '../../../services/devis/devis.service';
-import { Devis, DevisItem } from '../../../models/devis.model';
+import { Devis, DevisItem, ServiceChoisi, PackChoisi } from '../../../models/devis.model';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 
 interface Element {
@@ -248,20 +248,12 @@ export class DevisDetailsComponent implements OnInit {
         if (response && response.success) {
           this.devis = response.data;
           
-          // Ajouter des données mockées pour la démonstration
+          // Initialiser les todos avec les données réelles du devis
           if (this.devis) {
-            // Ajouter une date d'intervention souhaitée
-            this.devis.preferredDate = new Date('2024-11-15');
+            // Ajouter les services et packs choisis à la liste des items
+            this.convertirServicesEtPacksEnItems();
             
-            // Ajouter des images mockées
-            this.devis.photoUrl = 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&auto=format&fit=crop&q=60';
-            this.devis.secondPhotoUrl = 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&auto=format&fit=crop&q=60';
-            
-            // Ajouter les services présélectionnés mockés
-            this.devis.servicesPreselectionnes = this.mockServicesPreselectionnes;
-            
-            // Ajouter les services présélectionnés à la liste des items
-            this.ajouterServicesPreselectionnes();
+            // Les champs photoUrl et secondPhotoUrl sont déjà ajoutés par la fonction mapDevisDTOToDevis
           }
         } else {
           this.error = 'Format de données invalide';
@@ -276,13 +268,168 @@ export class DevisDetailsComponent implements OnInit {
     });
   }
 
+  // Méthode pour convertir les services et packs choisis en items de devis
+  convertirServicesEtPacksEnItems(): void {
+    if (!this.devis) return;
+    
+    // Vider le FormArray
+    while (this.todoItemsArray.length) {
+      this.todoItemsArray.removeAt(0);
+    }
+    
+    // Convertir les services choisis en items
+    if (this.devis.servicesChoisis && this.devis.servicesChoisis.length > 0) {
+      this.devis.servicesChoisis.forEach(serviceChoisi => {
+        const service = serviceChoisi.service;
+        const devisItem: DevisItem = {
+          _id: serviceChoisi._id,
+          nom: service.name,
+          type: 'service',
+          quantite: 0, // Pour service, c'est un forfait
+          prixUnitaire: service.prix,
+          completed: false,
+          priorite: this.convertirPriorite(serviceChoisi.priorite),
+          note: serviceChoisi.note || '',
+          estPreselectionne: true
+        };
+        
+        this.todoItemsArray.push(this.createTodoItemFormGroup(devisItem));
+      });
+    }
+    
+    // Convertir les packs choisis en items
+    if (this.devis.packsChoisis && this.devis.packsChoisis.length > 0) {
+      this.devis.packsChoisis.forEach(packChoisi => {
+        const pack = packChoisi.servicePack;
+        
+        // Essayer de calculer un prix pour le pack
+        // Normalement, ce prix devrait être fourni par l'API
+        let prix = 0;
+        
+        // Comme on n'a pas le prix du pack dans l'API, on pourrait le calculer à partir des services
+        // ou utiliser un prix par défaut. Pour l'instant, on met un prix de base fixe à 100
+        prix = 10000; // 100 euros en centimes, à adapter selon votre système de prix
+        
+        const devisItem: DevisItem = {
+          _id: packChoisi._id,
+          nom: `Pack: ${pack.name}`,
+          type: 'service',
+          quantite: 0, // Pour service, c'est un forfait
+          prixUnitaire: prix,
+          completed: false,
+          priorite: this.convertirPriorite(packChoisi.priorite),
+          note: packChoisi.note || '',
+          estPreselectionne: true
+        };
+        
+        this.todoItemsArray.push(this.createTodoItemFormGroup(devisItem));
+      });
+    }
+    
+    // Ajouter les lignes supplémentaires s'il y en a
+    if (this.devis.lignesSupplementaires && this.devis.lignesSupplementaires.length > 0) {
+      this.devis.lignesSupplementaires.forEach(ligne => {
+        const devisItem: DevisItem = {
+          _id: ligne._id,
+          nom: ligne.designation || 'Ligne supplémentaire',
+          type: ligne.typeElement || 'piece',
+          quantite: ligne.quantite || 1,
+          prixUnitaire: ligne.prixUnitaire || 0,
+          completed: ligne.completed || false,
+          priorite: this.convertirPriorite(ligne.priorite),
+          note: ligne.description || ''
+        };
+        
+        this.todoItemsArray.push(this.createTodoItemFormGroup(devisItem));
+      });
+    }
+    
+    // Si on a des mécaniciens assignés, ajouter leurs lignes de main d'œuvre
+    if (this.devis.mecaniciensTravaillant && this.devis.mecaniciensTravaillant.length > 0) {
+      this.devis.mecaniciensTravaillant.forEach(mecTravail => {
+        const mecanicien = mecTravail.mecanicien;
+        if (mecanicien) {
+          const devisItem: DevisItem = {
+            _id: mecTravail._id,
+            nom: `Main d'œuvre - ${mecanicien.prenom} ${mecanicien.nom}`,
+            type: 'main_oeuvre',
+            quantite: mecTravail.tempsEstime || 1,
+            prixUnitaire: mecTravail.tauxHoraire || 0,
+            completed: false,
+            priorite: 'moyenne',
+            mecanicienId: mecanicien._id
+          };
+          
+          this.todoItemsArray.push(this.createTodoItemFormGroup(devisItem));
+        }
+      });
+    }
+    
+    // Ajouter les éléments mockés seulement en développement ou si liste vide
+    if (this.todoItemsArray.length === 0) {
+      this.initTodoItemsForm();
+    }
+  }
+  
+  // Méthode pour convertir la priorité du format API vers le format du modèle DevisItem
+  convertirPriorite(priorite?: string): 'basse' | 'moyenne' | 'haute' {
+    if (!priorite) return 'moyenne';
+    
+    switch(priorite.toLowerCase()) {
+      case 'haute':
+      case 'urgente':
+      case 'critical':
+        return 'haute';
+      case 'basse':
+      case 'faible':
+      case 'low':
+        return 'basse';
+      case 'normale':
+      case 'medium':
+      case 'moyenne':
+      default:
+        return 'moyenne';
+    }
+  }
+
   toggleChat(): void {
     this.isChatVisible = !this.isChatVisible;
   }
 
   sendToClient(): void {
-    // Cette méthode sera implémentée plus tard avec le backend
-    console.log('Envoi du devis au client');
+    if (!this.devis || !this.devis._id) {
+      this.error = "Impossible d'envoyer le devis, identifiant manquant";
+      return;
+    }
+    
+    // Préparer les données à envoyer
+    const devisData = {
+      _id: this.devis._id,
+      items: this.todoItemsArray.getRawValue(),
+      total: this.calculerTotalTodos(),
+      status: 'envoye'
+    };
+    
+    // Appeler le service pour envoyer le devis au client
+    this.devisService.sendDevisToClient(this.devis._id, devisData).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          // Mise à jour du statut local
+          if (this.devis) {
+            this.devis.status = 'envoye';
+          }
+          
+          // Afficher un message de succès (à implémenter selon votre UI)
+          alert('Devis envoyé au client avec succès!');
+        } else {
+          this.error = response?.message || 'Erreur lors de l\'envoi du devis';
+        }
+      },
+      error: (error: Error) => {
+        console.error('Erreur lors de l\'envoi du devis', error);
+        this.error = 'Erreur lors de l\'envoi du devis au client';
+      }
+    });
   }
 
   goBack(): void {
@@ -842,7 +989,7 @@ export class DevisDetailsComponent implements OnInit {
           ? `Prix forfaitaire: ${service.prix}€${service.description ? ' - ' + service.description : ''}`
           : service.description || '',
         estPreselectionne: true
-      };
+      } as DevisItem;
     });
     
     // Ajouter les items au FormArray des todos
@@ -851,23 +998,50 @@ export class DevisDetailsComponent implements OnInit {
     });
   }
 
+  // Calculer le prix d'un pack
+  getPrixPack(packChoisi: any): number {
+    if (!packChoisi) return 0;
+    
+    // Dans une implémentation réelle, il faudrait calculer le prix 
+    // en fonction des services contenus dans le pack et de la remise
+    const prixBase = 10000; // Prix de base fixe à 100 euros (en centimes)
+    
+    // Appliquer la remise si elle existe
+    if (packChoisi.servicePack.remise) {
+      return prixBase * (1 - packChoisi.servicePack.remise / 100);
+    }
+    
+    return prixBase;
+  }
+
   // Méthode pour ouvrir le chat avec un message concernant un service présélectionné
-  discuterAvecClient(service: any): void {
+  discuterAvecClient(serviceOuPack: any, isPack: boolean = false): void {
     // Ouvrir le chat s'il n'est pas déjà visible
     if (!this.isChatVisible) {
       this.toggleChat();
     }
     
-    // Ajouter un message dans le chat concernant le service
-    const message = {
-      contenu: `Je souhaite discuter avec vous concernant le service "${service.nom}" que vous avez sélectionné. Avez-vous des questions ou des besoins spécifiques à ce sujet ?`,
+    // Préparer le message en fonction du type d'objet
+    let message: string;
+    
+    if (isPack) {
+      // Pour un pack
+      message = `Je souhaite discuter avec vous concernant le pack "${serviceOuPack.servicePack.name}" que vous avez sélectionné. Avez-vous des questions ou des besoins spécifiques à ce sujet ?`;
+    } else {
+      // Pour un service
+      message = `Je souhaite discuter avec vous concernant le service "${serviceOuPack.service.name}" que vous avez sélectionné. Avez-vous des questions ou des besoins spécifiques à ce sujet ?`;
+    }
+    
+    // Ajouter le message dans le chat
+    const chatMessage = {
+      contenu: message,
       date: new Date(),
       type: 'manager' as 'client' | 'manager'
     };
     
-    this.mockMessages.push(message);
+    this.mockMessages.push(chatMessage);
     
-    // Faire défiler jusqu'au dernier message (en production, cela serait géré par une directive)
+    // Faire défiler jusqu'au dernier message
     setTimeout(() => {
       const chatContainer = document.querySelector('.chat-messages');
       if (chatContainer) {
@@ -895,5 +1069,106 @@ export class DevisDetailsComponent implements OnInit {
         quantite: 1
       });
     }
+  }
+
+  // Méthode pour mettre à jour le statut du devis
+  updateDevisStatus(newStatus: string): void {
+    if (!this.devis || !this.devis._id) {
+      this.error = "Impossible de mettre à jour le statut, identifiant manquant";
+      return;
+    }
+    
+    const updateData = {
+      status: newStatus
+    };
+    
+    this.devisService.updateDevis(this.devis._id, updateData).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          // Mise à jour du statut local
+          if (this.devis) {
+            this.devis.status = newStatus;
+          }
+          
+          // Afficher un message de succès
+          alert(`Statut mis à jour : ${this.formatStatus(newStatus)}`);
+        } else {
+          this.error = response?.message || 'Erreur lors de la mise à jour du statut';
+        }
+      },
+      error: (error: Error) => {
+        console.error('Erreur lors de la mise à jour du statut', error);
+        this.error = 'Erreur lors de la mise à jour du statut';
+      }
+    });
+  }
+  
+  // Méthode pour formater l'affichage du statut
+  formatStatus(status: string): string {
+    switch (status) {
+      case 'en_attente': return 'En attente';
+      case 'envoye': return 'Envoyé';
+      case 'accepte': return 'Accepté';
+      case 'refuse': return 'Refusé';
+      case 'en_cours': return 'En cours';
+      case 'termine': return 'Terminé';
+      default: return status;
+    }
+  }
+  
+  // Méthode pour sauvegarder toutes les modifications du devis
+  saveDevis(): void {
+    if (!this.devis || !this.devis._id) {
+      this.error = "Impossible de sauvegarder le devis, identifiant manquant";
+      return;
+    }
+    
+    // Récupérer les données du formulaire
+    const items = this.todoItemsArray.getRawValue();
+    
+    // Préparer les données à envoyer
+    const updateData = {
+      // Regrouper les items par type pour les envoyer au backend
+      lignesSupplementaires: items.filter(item => item.type !== 'main_oeuvre')
+        .map(item => ({
+          _id: item._id,
+          designation: item.nom,
+          description: item.note,
+          quantite: item.quantite,
+          prixUnitaire: item.prixUnitaire,
+          typeElement: item.type,
+          priorite: item.priorite,
+          completed: item.completed
+        })),
+      // Gérer les mécaniciens séparément
+      mecaniciensTravaillant: items.filter(item => item.type === 'main_oeuvre')
+        .map(item => ({
+          _id: item._id,
+          mecanicien: item.mecanicienId,
+          tempsEstime: item.quantite,
+          tauxHoraire: item.prixUnitaire
+        })),
+      total: this.calculerTotalTodos()
+    };
+    
+    this.devisService.updateDevis(this.devis._id, updateData).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          // Mise à jour des données locales
+          if (this.devis) {
+            this.devis.total = updateData.total;
+          }
+          
+          // Afficher un message de succès
+          alert('Devis sauvegardé avec succès!');
+        } else {
+          this.error = response?.message || 'Erreur lors de la sauvegarde du devis';
+        }
+      },
+      error: (error: Error) => {
+        console.error('Erreur lors de la sauvegarde du devis', error);
+        this.error = 'Erreur lors de la sauvegarde du devis';
+      }
+    });
   }
 } 

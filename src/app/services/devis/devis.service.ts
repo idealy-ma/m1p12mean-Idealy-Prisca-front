@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Devis } from '../../models/devis.model';
+import { Observable, map } from 'rxjs';
+import { Devis, DevisDTO, mapDevisDTOToDevis } from '../../models/devis.model';
+import { ApiResponse, ApiPaginatedResponse, ApiPagination } from '../../models/api-response.model';
 import { ApiConfiguration } from '../api-configuration';
 
 @Injectable({
@@ -23,15 +24,38 @@ export class DevisService {
   }
 
   // Récupérer tous les devis (pour le manager)
-  getDevis(page: number = 1, limit: number = 10): Observable<Devis[]> {
+  getDevis(page: number = 1, limit: number = 10): Observable<{
+    devis: Devis[],
+    pagination: ApiPagination
+  }> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('limit', limit.toString());
 
-    return this.http.get<Devis[]>(`${this.apiUrl}/manager/devis`, {
+    return this.http.get<ApiPaginatedResponse<DevisDTO>>(`${this.apiUrl}/manager/devis`, {
       ...this.httpOptions,
       params
-    });
+    }).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          return {
+            devis: response.data.map(devisDTO => mapDevisDTOToDevis(devisDTO)),
+            pagination: response.pagination
+          };
+        }
+        return {
+          devis: [],
+          pagination: {
+            total: 0,
+            page: 1,
+            limit: 10,
+            totalPages: 0,
+            hasNext: false,
+            hasPrev: false
+          }
+        };
+      })
+    );
   }
   
   // Récupérer les devis avec filtres
@@ -45,7 +69,10 @@ export class DevisService {
     limit?: number,
     sortField?: string,
     sortOrder?: string
-    }): Observable<Devis[]> {
+    }): Observable<{
+      devis: Devis[],
+      pagination: ApiPagination
+    }> {
     let params = new HttpParams();
     
     // Ajouter tous les filtres non vides aux paramètres
@@ -62,30 +89,90 @@ export class DevisService {
     if (filters.sortField) params = params.set('sortField', filters.sortField);
     if (filters.sortOrder) params = params.set('sortOrder', filters.sortOrder);
     
-    return this.http.get<Devis[]>(`${this.apiUrl}/manager/devis`, {
+    return this.http.get<ApiPaginatedResponse<DevisDTO>>(`${this.apiUrl}/manager/devis`, {
       ...this.httpOptions,
       params
-    });
+    }).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          return {
+            devis: response.data.map(devisDTO => mapDevisDTOToDevis(devisDTO)),
+            pagination: response.pagination
+          };
+        }
+        return {
+          devis: [],
+          pagination: {
+            total: 0,
+            page: 1,
+            limit: 10,
+            totalPages: 0,
+            hasNext: false,
+            hasPrev: false
+          }
+        };
+      })
+    );
   }
 
   // Récupérer un devis par son ID
-  getDevisById(id: string): Observable<Devis> {
-    return this.http.get<Devis>(`${this.apiUrl}/manager/devis/${id}`, this.httpOptions);
+  getDevisById(id: string): Observable<ApiResponse<Devis>> {
+    return this.http.get<ApiResponse<DevisDTO>>(`${this.apiUrl}/manager/devis/${id}`, this.httpOptions)
+      .pipe(
+        map(response => {
+          if (response.success && response.data) {
+            return {
+              success: response.success,
+              message: response.message,
+              data: mapDevisDTOToDevis(response.data)
+            };
+          }
+          return response as ApiResponse<Devis>;
+        })
+      );
   }
 
   // Mettre à jour un devis
-  updateDevis(id: string, devis: Partial<Devis>): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/manager/devis/${id}`, devis, this.httpOptions);
+  updateDevis(id: string, devis: Partial<Devis>): Observable<ApiResponse<Devis>> {
+    return this.http.put<ApiResponse<DevisDTO>>(`${this.apiUrl}/manager/devis/${id}`, devis, this.httpOptions)
+      .pipe(
+        map(response => {
+          if (response.success && response.data) {
+            return {
+              success: response.success,
+              message: response.message,
+              data: mapDevisDTOToDevis(response.data)
+            };
+          }
+          return response as ApiResponse<Devis>;
+        })
+      );
   }
   
   // Créer un nouveau devis (pour le client)
   createDevis(devisData: any): Observable<Devis> {
-    return this.http.post<Devis>(`${this.apiUrl}/client/devis`, devisData, this.httpOptions);
+    return this.http.post<ApiResponse<DevisDTO>>(`${this.apiUrl}/client/devis`, devisData, this.httpOptions)
+      .pipe(
+        map(response => {
+          if (response.success && response.data) {
+            return mapDevisDTOToDevis(response.data);
+          }
+          throw new Error(response.message || 'Erreur lors de la création du devis');
+        })
+      );
   }
   
   // Récupérer les devis d'un client
   getClientDevis(): Observable<Devis[]> {
-    return this.http.get<Devis[]>(`${this.apiUrl}/client/devis`, this.httpOptions);
+    return this.http.get<ApiPaginatedResponse<DevisDTO>>(`${this.apiUrl}/client/devis`, this.httpOptions)
+      .pipe(
+        map(response => {
+          if (response.success && response.data) {
+            return response.data.map(devisDTO => mapDevisDTOToDevis(devisDTO));
+          }
+          return [];
+        })
+      );
   }
   
   // Récupérer tous les services disponibles
@@ -96,5 +183,10 @@ export class DevisService {
   // Récupérer tous les packs de services disponibles
   getServicePacks(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/client/servicePacks`, this.httpOptions);
+  }
+  
+  // Envoyer un devis au client
+  sendDevisToClient(id: string, devisData: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/manager/devis/${id}/send`, devisData, this.httpOptions);
   }
 } 

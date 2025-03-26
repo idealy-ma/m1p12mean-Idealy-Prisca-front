@@ -97,25 +97,48 @@
           {{ devis.probleme }}
         </div>
         
-        <!-- Services présélectionnés -->
-        <div class="services-preselectionnes" *ngIf="devis.servicesPreselectionnes?.length">
-          <h3>Services présélectionnés par le client</h3>
+        <!-- Services choisis -->
+        <div class="services-preselectionnes" *ngIf="devis.servicesChoisis?.length || devis.packsChoisis?.length">
+          <h3>Services choisis par le client</h3>
           <div class="preselection-info">
             Les services ci-dessous ont été choisis par le client lors de sa demande de devis. 
             Ils ont été automatiquement ajoutés à la liste des éléments nécessaires avec une priorité haute.
           </div>
           <div class="preselection-list">
-            <div *ngFor="let service of devis.servicesPreselectionnes" class="preselection-item">
+            <!-- Services -->
+            <div *ngFor="let serviceChoisi of devis.servicesChoisis" class="preselection-item">
               <div class="preselection-icon">
-                <i class="fas" [ngClass]="{'fa-box': service.type === 'pack', 'fa-tools': service.type === 'service'}"></i>
+                <i class="fas fa-tools"></i>
               </div>
               <div class="preselection-details">
-                <div class="preselection-name">{{ service.nom }}</div>
-                <div class="preselection-description" *ngIf="service.description">{{ service.description }}</div>
-                <div class="preselection-type">{{ service.type === 'pack' ? 'Pack de services' : 'Service' }}</div>
+                <div class="preselection-name">{{ serviceChoisi.service.name }}</div>
+                <div class="preselection-description" *ngIf="serviceChoisi.service.descri">{{ serviceChoisi.service.descri }}</div>
+                <div class="preselection-type">Service</div>
+                <div class="preselection-note" *ngIf="serviceChoisi.note">Note: {{ serviceChoisi.note }}</div>
+                <div class="preselection-priority">Priorité: {{ serviceChoisi.priorite || 'normale' }}</div>
               </div>
-              <div class="preselection-price">{{ service.prix | currency:'EUR':'symbol':'1.2-2' }}</div>
-              <button class="btn-discuss" (click)="discuterAvecClient(service)">
+              <div class="preselection-price">{{ serviceChoisi.service.prix | currency:'EUR':'symbol':'1.2-2' }}</div>
+              <button class="btn-discuss" (click)="discuterAvecClient(serviceChoisi)">
+                <i class="fas fa-comments"></i> Discuter
+              </button>
+            </div>
+            
+            <!-- Packs -->
+            <div *ngFor="let packChoisi of devis.packsChoisis" class="preselection-item">
+              <div class="preselection-icon">
+                <i class="fas fa-box"></i>
+              </div>
+              <div class="preselection-details">
+                <div class="preselection-name">Pack: {{ packChoisi.servicePack.name }}</div>
+                <div class="preselection-type">Pack de services</div>
+                <div class="preselection-note" *ngIf="packChoisi.note">Note: {{ packChoisi.note }}</div>
+                <div class="preselection-priority">Priorité: {{ packChoisi.priorite || 'normale' }}</div>
+              </div>
+              <div class="preselection-price">
+                {{ getPrixPack(packChoisi) | currency:'EUR':'symbol':'1.2-2' }}
+                <span *ngIf="packChoisi.servicePack.remise" class="remise-tag">-{{ packChoisi.servicePack.remise }}%</span>
+              </div>
+              <button class="btn-discuss" (click)="discuterAvecClient(packChoisi, true)">
                 <i class="fas fa-comments"></i> Discuter
               </button>
             </div>
