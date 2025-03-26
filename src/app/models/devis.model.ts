@@ -14,7 +14,7 @@ export interface Devis {
     modele: string;
     immatricule: string;
   };
-  description?: string;
+  probleme?: string;
   dateCreation?: Date;
   status?: string;
   montantEstime?: number;

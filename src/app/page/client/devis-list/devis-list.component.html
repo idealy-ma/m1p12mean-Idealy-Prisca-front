@@ -1,5 +1,5 @@
 <div class="devis-container">
-  <h1 class="page-title">Liste des demandes de devis</h1>
+  <h1 class="page-title">Mes demandes de devis</h1>
   
   <!-- Filtres -->
   <div class="filters-container">
@@ -9,14 +9,6 @@
           <label for="status">Statut</label>
           <select id="status" formControlName="status">
             <option *ngFor="let option of statusOptions" [value]="option.value">{{ option.label }}</option>
-          </select>
-        </div>
-        
-        <div class="filter-item">
-          <label for="client">Client</label>
-          <select id="client" formControlName="client">
-            <option value="">Tous les clients</option>
-            <option *ngFor="let client of clients" [value]="client.id">{{ client.nom }} {{ client.prenom }}</option>
           </select>
         </div>
         
@@ -34,7 +26,7 @@
       <div class="search-row">
         <div class="search-field">
           <label for="search">Recherche</label>
-          <input type="text" id="search" formControlName="search" placeholder="Rechercher par client, véhicule ou description...">
+          <input type="text" id="search" formControlName="search" placeholder="Rechercher par véhicule ou description...">
         </div>
         
         <div class="reset-button">
@@ -64,7 +56,6 @@
     <table class="devis-table">
       <thead>
         <tr>
-          <th>Client</th>
           <th>Véhicule</th>
           <th>Description</th>
           <th>Date de création</th>
@@ -75,7 +66,6 @@
       </thead>
       <tbody>
         <tr *ngFor="let item of filteredDevis">
-          <td>{{ item.client?.nom }} {{ item.client?.prenom }}</td>
           <td>{{ item.vehicule?.marque }} {{ item.vehicule?.modele }} ({{ item.vehicule?.immatricule }})</td>
           <td>{{ item.probleme }}</td>
           <td>{{ item.dateCreation | date:'dd/MM/yyyy' }}</td>
@@ -93,9 +83,9 @@
           </td>
           <td>{{ item.montantEstime | currency:'EUR':'symbol':'1.2-2' }}</td>
           <td class="actions">
-            <button class="btn-primary" [routerLink]="['/manager/devis', item._id]">Gérer</button>
-            <button class="btn-success" *ngIf="item.status === 'en_attente'">Accepter</button>
-            <button class="btn-danger" *ngIf="item.status === 'en_attente'">Refuser</button>
+            <button class="btn-primary" [routerLink]="['/client/devis', item._id]">Détails</button>
+            <button class="btn-success" *ngIf="item.status === 'en_attente'" (click)="item._id && accepterDevis(item._id)">Accepter</button>
+            <button class="btn-danger" *ngIf="item.status === 'en_attente'" (click)="item._id && refuserDevis(item._id)">Refuser</button>
           </td>
         </tr>
       </tbody>
