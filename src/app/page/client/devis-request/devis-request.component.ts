@@ -24,6 +24,9 @@ export class DevisRequestComponent implements OnInit {
   errorMessage = '';
   isSuccess = false;
   isProgressBarSticky = false;
+  isLoadingServices = false;
+  isLoadingPacks = false;
+  isSubmitting = false;
   
   // TODO: Récupérer les problèmes communs depuis l'API
   commonProblems = [
@@ -121,7 +124,7 @@ export class DevisRequestComponent implements OnInit {
 
   // Méthode pour charger les services depuis l'API
   loadServices(): void {
-    this.isLoading = true;
+    this.isLoadingServices = true;
     console.log('Début du chargement des services et packs...');
     
     // Chargement des services
@@ -148,11 +151,11 @@ export class DevisRequestComponent implements OnInit {
           console.error('Format de réponse incorrect pour les services');
           this.hasError = true;
           this.errorMessage = 'Erreur lors du chargement des services. Format de réponse incorrect.';
-          this.isLoading = false;
+          this.isLoadingServices = false;
         }
       },
       error: (error) => {
-        this.isLoading = false;
+        this.isLoadingServices = false;
         this.hasError = true;
         this.errorMessage = 'Erreur lors du chargement des services. Veuillez réessayer.';
         console.error('Erreur détaillée lors du chargement des services:', error);
@@ -162,6 +165,7 @@ export class DevisRequestComponent implements OnInit {
   
   // Méthode pour charger les packs de services depuis l'API
   loadServicePacks(): void {
+    this.isLoadingPacks = true;
     this.devisService.getServicePacks().subscribe({
       next: (response: any) => {
         console.log('Packs de services reçus :', response);
@@ -195,10 +199,12 @@ export class DevisRequestComponent implements OnInit {
           console.error('Format de réponse incorrect pour les packs de services');
         }
         
-        this.isLoading = false;
+        this.isLoadingServices = false;
+        this.isLoadingPacks = false;
       },
       error: (error) => {
-        this.isLoading = false;
+        this.isLoadingServices = false;
+        this.isLoadingPacks = false;
         console.error('Erreur détaillée lors du chargement des packs de services:', error);
       }
     });
@@ -357,6 +363,7 @@ export class DevisRequestComponent implements OnInit {
     }
     
     this.isLoading = true;
+    this.isSubmitting = true;
     let vehiculeId = this.vehiculeForm.get('vehiculeId')?.value;
     
     try {
@@ -424,6 +431,7 @@ export class DevisRequestComponent implements OnInit {
       
       this.isSuccess = true;
       this.isLoading = false;
+      this.isSubmitting = false;
       
       // Redirect to dashboard after a successful submission
       setTimeout(() => {
@@ -432,6 +440,7 @@ export class DevisRequestComponent implements OnInit {
       
     } catch (error) {
       this.isLoading = false;
+      this.isSubmitting = false;
       this.hasError = true;
       this.errorMessage = 'Erreur lors de la soumission du devis. Veuillez réessayer.';
       console.error('Error submitting devis', error);

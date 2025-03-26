@@ -288,57 +288,77 @@
               <h3>Sélection des services</h3>
             </div>
             <div class="card-content">
-              <h5 class="mb-3">Services disponibles</h5>
+              <!-- Loading indicator pour les services -->
+              <div *ngIf="isLoadingServices" class="spinner-container">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Chargement des services...</span>
+                </div>
+                <p class="mt-2 spinner-text">Chargement des services...</p>
+              </div>
               
-              <div class="row mb-4">
-                <div class="col-md-6 mb-2" *ngFor="let service of availableServices">
-                  <div class="service-item vehicle-card-selectable" [class.selected]="service.selected" (click)="toggleService(service)">
-                    <input 
-                      class="form-check-input custom-checkbox visually-hidden" 
-                      type="checkbox" 
-                      [id]="'service-' + service.id"
-                      [checked]="service.selected"
-                      (change)="toggleService(service); $event.stopPropagation()"
-                    >
-                    <div class="service-item-content">
-                      <span class="service-label">{{ service.label }}</span>
-                      <span class="service-price">{{ service.price }}€</span>
-                      <span class="vehicle-card-select-indicator">
-                        <i class="fas fa-check-circle"></i>
-                      </span>
+              <div *ngIf="!isLoadingServices">
+                <h5 class="mb-3">Services disponibles</h5>
+                
+                <div class="row mb-4">
+                  <div class="col-md-6 mb-2" *ngFor="let service of availableServices">
+                    <div class="service-item vehicle-card-selectable" [class.selected]="service.selected" (click)="toggleService(service)">
+                      <input 
+                        class="form-check-input custom-checkbox visually-hidden" 
+                        type="checkbox" 
+                        [id]="'service-' + service.id"
+                        [checked]="service.selected"
+                        (change)="toggleService(service); $event.stopPropagation()"
+                      >
+                      <div class="service-item-content">
+                        <span class="service-label">{{ service.label }}</span>
+                        <span class="service-price">{{ service.price }}€</span>
+                        <span class="vehicle-card-select-indicator">
+                          <i class="fas fa-check-circle"></i>
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <h5 class="mb-3">Packs disponibles</h5>
-              <div class="packs-container">
-                <div class="pack-item" *ngFor="let pack of servicePacks">
-                  <div class="service-pack vehicle-card-selectable" [class.selected]="pack.selected" (click)="togglePack(pack)">
-                    <h5 class="pack-title d-flex justify-content-between">
-                      <span>{{ pack.label }}</span>
-                      <span class="service-price">
-                        <span class="original-price" *ngIf="pack.discount > 0">{{ pack.originalPrice }}€</span>
-                        {{ pack.price }}€
-                        <span class="discount-badge" *ngIf="pack.discount > 0">-{{ pack.discount }}%</span>
-                      </span>
-                    </h5>
-                    <p class="pack-content">
-                      <ng-container *ngFor="let serviceId of pack.services; let last = last">
-                        {{ getServiceLabelById(serviceId) }}{{ !last ? ', ' : '' }}
-                      </ng-container>
-                    </p>
-                    <span class="vehicle-card-select-indicator">
-                      <i class="fas fa-check-circle"></i>
-                    </span>
-                    <div class="form-check d-none">
-                      <input 
-                        class="form-check-input" 
-                        type="checkbox" 
-                        [id]="'pack-' + pack.id"
-                        [checked]="pack.selected"
-                        (change)="togglePack(pack); $event.stopPropagation()"
-                      >
+                <!-- Loading indicator pour les packs -->
+                <div *ngIf="isLoadingPacks" class="spinner-container">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement des packs...</span>
+                  </div>
+                  <p class="mt-2 spinner-text">Chargement des packs...</p>
+                </div>
+                
+                <div *ngIf="!isLoadingPacks">
+                  <h5 class="mb-3">Packs disponibles</h5>
+                  <div class="packs-container">
+                    <div class="pack-item" *ngFor="let pack of servicePacks">
+                      <div class="service-pack vehicle-card-selectable" [class.selected]="pack.selected" (click)="togglePack(pack)">
+                        <h5 class="pack-title d-flex justify-content-between">
+                          <span>{{ pack.label }}</span>
+                          <span class="service-price">
+                            <span class="original-price" *ngIf="pack.discount > 0">{{ pack.originalPrice }}€</span>
+                            {{ pack.price }}€
+                            <span class="discount-badge" *ngIf="pack.discount > 0">-{{ pack.discount }}%</span>
+                          </span>
+                        </h5>
+                        <p class="pack-content">
+                          <ng-container *ngFor="let serviceId of pack.services; let last = last">
+                            {{ getServiceLabelById(serviceId) }}{{ !last ? ', ' : '' }}
+                          </ng-container>
+                        </p>
+                        <span class="vehicle-card-select-indicator">
+                          <i class="fas fa-check-circle"></i>
+                        </span>
+                        <div class="form-check d-none">
+                          <input 
+                            class="form-check-input" 
+                            type="checkbox" 
+                            [id]="'pack-' + pack.id"
+                            [checked]="pack.selected"
+                            (change)="togglePack(pack); $event.stopPropagation()"
+                          >
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -350,9 +370,15 @@
             <button 
               type="submit" 
               class="submit-button"
-              [disabled]="isLoading"
+              [disabled]="isLoading || isSubmitting"
             >
-              <i class="fas fa-paper-plane me-2"></i> Valider la demande
+              <span *ngIf="!isSubmitting">
+                <i class="fas fa-paper-plane me-2"></i> Valider la demande
+              </span>
+              <span *ngIf="isSubmitting" class="d-flex align-items-center">
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Envoi en cours...
+              </span>
             </button>
           </div>
         </form>
