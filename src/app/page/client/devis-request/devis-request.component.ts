@@ -24,7 +24,11 @@ export class DevisRequestComponent implements OnInit {
   errorMessage = '';
   isSuccess = false;
   isProgressBarSticky = false;
+  isLoadingServices = false;
+  isLoadingPacks = false;
+  isSubmitting = false;
   
+  // TODO: Récupérer les problèmes communs depuis l'API
   commonProblems = [
     { id: 'battery', label: 'Batterie', selected: false },
     { id: 'engine', label: 'Moteur', selected: false },
@@ -35,31 +39,9 @@ export class DevisRequestComponent implements OnInit {
     { id: 'cooling', label: 'Système de refroidissement', selected: false },
   ];
   
-  availableServices = [
-    { id: 'oil', label: 'Vidange', selected: false, price: 50 },
-    { id: 'tires', label: 'Changement de pneus', selected: false, price: 200 },
-    { id: 'filters', label: 'Changement de filtres', selected: false, price: 30 },
-    { id: 'brakes', label: 'Entretien des freins', selected: false, price: 120 },
-    { id: 'ac', label: 'Entretien climatisation', selected: false, price: 80 },
-    { id: 'battery', label: 'Remplacement batterie', selected: false, price: 100 },
-  ];
+  availableServices: any[] = [];
   
-  servicePacks = [
-    { 
-      id: 'basic', 
-      label: 'Pack entretien basique', 
-      services: ['oil', 'filters'],
-      price: 70, // Discount applied
-      selected: false
-    },
-    { 
-      id: 'complete', 
-      label: 'Pack entretien complet', 
-      services: ['oil', 'filters', 'brakes'],
-      price: 180, // Discount applied
-      selected: false
-    },
-  ];
+  servicePacks: any[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -85,6 +67,7 @@ export class DevisRequestComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadVehicules();
+    this.loadServices();
     this.vehiculeForm.get('vehiculeId')?.valueChanges.subscribe(value => {
       this.isNewVehicule = value === 'new';
       
@@ -138,6 +121,96 @@ export class DevisRequestComponent implements OnInit {
       }
     });
   }
+
+  // Méthode pour charger les services depuis l'API
+  loadServices(): void {
+    this.isLoadingServices = true;
+    console.log('Début du chargement des services et packs...');
+    
+    // Chargement des services
+    this.devisService.getServices().subscribe({
+      next: (response: any) => {
+        console.log('Services reçus :', response);
+        
+        if (response.success && response.data) {
+          // Transformer les données de l'API pour correspondre à la structure attendue par le composant
+          this.availableServices = response.data.map((service: any) => ({
+            id: service._id,
+            label: service.name,
+            selected: false,
+            price: service.prix || 0,
+            type: service.type,
+            description: service.descri || ''
+          }));
+          
+          console.log(`${this.availableServices.length} services chargés avec succès`);
+          
+          // Une fois les services chargés, charger les packs de services
+          this.loadServicePacks();
+        } else {
+          console.error('Format de réponse incorrect pour les services');
+          this.hasError = true;
+          this.errorMessage = 'Erreur lors du chargement des services. Format de réponse incorrect.';
+          this.isLoadingServices = false;
+        }
+      },
+      error: (error) => {
+        this.isLoadingServices = false;
+        this.hasError = true;
+        this.errorMessage = 'Erreur lors du chargement des services. Veuillez réessayer.';
+        console.error('Erreur détaillée lors du chargement des services:', error);
+      }
+    });
+  }
+  
+  // Méthode pour charger les packs de services depuis l'API
+  loadServicePacks(): void {
+    this.isLoadingPacks = true;
+    this.devisService.getServicePacks().subscribe({
+      next: (response: any) => {
+        console.log('Packs de services reçus :', response);
+        
+        if (response.success && response.data) {
+          // Transformer les données de l'API pour correspondre à la structure attendue par le composant
+          this.servicePacks = response.data.map((pack: any) => {
+            // Calculer le prix total des services inclus dans le pack
+            let totalPrice = 0;
+            const packServices = pack.services || [];
+            
+            // Appliquer la remise si elle existe
+            const discountPercentage = pack.remise || 0;
+            const discountedPrice = discountPercentage > 0 
+              ? totalPrice * (1 - discountPercentage / 100)
+              : totalPrice;
+            
+            return {
+              id: pack._id,
+              label: pack.name,
+              services: packServices,
+              price: Math.round(discountedPrice),
+              originalPrice: totalPrice,
+              discount: discountPercentage,
+              selected: false
+            };
+          });
+          
+          console.log(`${this.servicePacks.length} packs de services chargés avec succès`);
+        } else {
+          console.error('Format de réponse incorrect pour les packs de services');
+        }
+        
+        this.isLoadingServices = false;
+        this.isLoadingPacks = false;
+      },
+      error: (error) => {
+        this.isLoadingServices = false;
+        this.isLoadingPacks = false;
+        console.error('Erreur détaillée lors du chargement des packs de services:', error);
+      }
+    });
+  }
+  
+
 
   // Méthode pour récupérer le véhicule sélectionné
   getSelectedVehicule(): Vehicule | undefined {
@@ -290,6 +363,7 @@ export class DevisRequestComponent implements OnInit {
     }
     
     this.isLoading = true;
+    this.isSubmitting = true;
     let vehiculeId = this.vehiculeForm.get('vehiculeId')?.value;
     
     try {
@@ -311,37 +385,53 @@ export class DevisRequestComponent implements OnInit {
         }
       }
       
-      // Prepare devis data
+      // Prepare devis data selon le format attendu par l'API
       const devisData: any = {
-        vehiculeId: vehiculeId,
-        hasProblem: this.includeProblem,
-        hasServices: this.includeServices
+        vehicule: vehiculeId,
+        probleme: this.includeProblem ? this.devisForm.get('description')?.value : '',
+        servicesChoisis: [],
+        packsChoisis: [],
+        preferredDate: this.devisForm.get('preferredDate')?.value || null,
+        urlPhotos: []
       };
       
-      // Add problem-specific fields if included
-      if (this.includeProblem) {
-        devisData.description = this.devisForm.get('description')?.value;
-        devisData.preferredDate = this.devisForm.get('preferredDate')?.value;
-        devisData.photoUrl = this.devisForm.get('photoUrl')?.value;
+      // Ajouter les photos si disponibles
+      if (this.devisForm.get('photoUrl')?.value) {
+        devisData.urlPhotos.push(this.devisForm.get('photoUrl')?.value);
       }
       
-      // Add services-specific fields if included
+      // Ajouter les services sélectionnés
       if (this.includeServices) {
-        devisData.selectedServices = this.availableServices
+        this.availableServices
           .filter(service => service.selected)
-          .map(service => service.id);
+          .forEach(service => {
+            devisData.servicesChoisis.push({
+              service: service.id, // ID du service (dans un environnement réel, utilisez l'ID MongoDB)
+              note: "", // Note par défaut
+              priorite: "normale" // Priorité par défaut
+            });
+          });
         
-        devisData.selectedPacks = this.servicePacks
+        // Ajouter les packs sélectionnés
+        this.servicePacks
           .filter(pack => pack.selected)
-          .map(pack => pack.id);
-        devisData.montantEstime = this.calculateTotalPrice();
+          .forEach(pack => {
+            devisData.packsChoisis.push({
+              servicePack: pack.id, // ID du pack (dans un environnement réel, utilisez l'ID MongoDB)
+              note: "", // Note par défaut
+              priorite: "normale" // Priorité par défaut
+            });
+          });
       }
+      
+      console.log('Données du devis à envoyer:', devisData);
       
       // Submit the devis
       await firstValueFrom(this.devisService.createDevis(devisData));
       
       this.isSuccess = true;
       this.isLoading = false;
+      this.isSubmitting = false;
       
       // Redirect to dashboard after a successful submission
       setTimeout(() => {
@@ -350,6 +440,7 @@ export class DevisRequestComponent implements OnInit {
       
     } catch (error) {
       this.isLoading = false;
+      this.isSubmitting = false;
       this.hasError = true;
       this.errorMessage = 'Erreur lors de la soumission du devis. Veuillez réessayer.';
       console.error('Error submitting devis', error);
