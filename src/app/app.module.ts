@@ -35,6 +35,7 @@ import { ClientDashboardComponent } from './page/client/dashboard/client-dashboa
 import { AddVehiculeComponent } from './page/client/add-vehicule/add-vehicule.component';
 import { UserProfileComponent } from './page/client/profile/user-profile.component';
 import { DevisRequestComponent } from './page/client/devis-request/devis-request.component';
+import { ClientDevisListComponent } from './page/client/devis-list/devis-list.component';
 
 @NgModule({
   declarations: [
@@ -66,7 +67,8 @@ import { DevisRequestComponent } from './page/client/devis-request/devis-request
     UserProfileComponent,
     LandingPageComponent,
     VehiculeListComponent,
-    DevisRequestComponent
+    DevisRequestComponent,
+    ClientDevisListComponent
   ],
   imports: [
     BrowserModule,

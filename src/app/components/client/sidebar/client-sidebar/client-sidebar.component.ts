@@ -31,7 +31,7 @@ export class ClientSidebarComponent implements OnInit {
       this.activeRoute = 'vehicules';
     } else if (url.includes('/client/devis/demande')) {
       this.activeRoute = 'devis-request';
-    } else if (url.includes('/devis')) {
+    } else if (url.includes('/client/devis')) {
       this.activeRoute = 'devis';
     } else if (url.includes('/reparations')) {
       this.activeRoute = 'reparations';
