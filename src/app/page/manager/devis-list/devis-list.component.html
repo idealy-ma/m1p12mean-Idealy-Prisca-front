@@ -77,7 +77,7 @@
         <tr *ngFor="let item of filteredDevis">
           <td>{{ item.client?.nom }} {{ item.client?.prenom }}</td>
           <td>{{ item.vehicule?.marque }} {{ item.vehicule?.modele }} ({{ item.vehicule?.immatricule }})</td>
-          <td>{{ item.description }}</td>
+          <td>{{ item.probleme }}</td>
           <td>{{ item.dateCreation | date:'dd/MM/yyyy' }}</td>
           <td>
             <span class="badge" 
