@@ -155,7 +155,7 @@ export class ClientDevisListComponent implements OnInit {
       const searchLower = filters.search.toLowerCase();
       result = result.filter(devis => {
         return (
-          (devis.description && devis.description.toLowerCase().includes(searchLower)) ||
+          (devis.probleme && devis.probleme.toLowerCase().includes(searchLower)) ||
           (devis.vehicule && 
            ((devis.vehicule.marque && devis.vehicule.marque.toLowerCase().includes(searchLower)) ||
             (devis.vehicule.modele && devis.vehicule.modele.toLowerCase().includes(searchLower)) ||
