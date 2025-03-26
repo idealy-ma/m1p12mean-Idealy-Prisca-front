@@ -25,6 +25,7 @@ export class DevisRequestComponent implements OnInit {
   isSuccess = false;
   isProgressBarSticky = false;
   
+  // TODO: Récupérer les problèmes communs depuis l'API
   commonProblems = [
     { id: 'battery', label: 'Batterie', selected: false },
     { id: 'engine', label: 'Moteur', selected: false },
@@ -155,9 +156,6 @@ export class DevisRequestComponent implements OnInit {
         this.hasError = true;
         this.errorMessage = 'Erreur lors du chargement des services. Veuillez réessayer.';
         console.error('Erreur détaillée lors du chargement des services:', error);
-        
-        // Fallback sur des données par défaut en cas d'erreur
-        this.initializeDefaultServices();
       }
     });
   }
@@ -202,52 +200,11 @@ export class DevisRequestComponent implements OnInit {
       error: (error) => {
         this.isLoading = false;
         console.error('Erreur détaillée lors du chargement des packs de services:', error);
-        
-        // En cas d'erreur, on laisse les packs par défaut (s'ils existent)
-        if (this.servicePacks.length === 0) {
-          this.initializeDefaultServicePacks();
-        }
       }
     });
   }
   
-  // Initialiser des services par défaut en cas d'erreur de chargement
-  initializeDefaultServices(): void {
-    this.availableServices = [
-      { id: 'oil', label: 'Vidange', selected: false, price: 50 },
-      { id: 'tires', label: 'Changement de pneus', selected: false, price: 200 },
-      { id: 'filters', label: 'Changement de filtres', selected: false, price: 30 },
-      { id: 'brakes', label: 'Entretien des freins', selected: false, price: 120 },
-      { id: 'ac', label: 'Entretien climatisation', selected: false, price: 80 },
-      { id: 'battery', label: 'Remplacement batterie', selected: false, price: 100 },
-    ];
-    
-    this.initializeDefaultServicePacks();
-  }
-  
-  // Initialiser des packs par défaut en cas d'erreur de chargement
-  initializeDefaultServicePacks(): void {
-    this.servicePacks = [
-      { 
-        id: 'basic', 
-        label: 'Pack entretien basique', 
-        services: ['oil', 'filters'],
-        price: 70,
-        originalPrice: 80,
-        discount: 12.5,
-        selected: false
-      },
-      { 
-        id: 'complete', 
-        label: 'Pack entretien complet', 
-        services: ['oil', 'filters', 'brakes'],
-        price: 180,
-        originalPrice: 200,
-        discount: 10,
-        selected: false
-      },
-    ];
-  }
+
 
   // Méthode pour récupérer le véhicule sélectionné
   getSelectedVehicule(): Vehicule | undefined {
