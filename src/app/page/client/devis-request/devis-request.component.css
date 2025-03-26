@@ -1274,4 +1274,22 @@ input[type="date"]:focus {
   .pack-item {
     flex: 0 0 100%;
   }
+}
+
+.original-price {
+  text-decoration: line-through;
+  font-size: 0.85em;
+  color: #999;
+  margin-right: 5px;
+}
+
+.discount-badge {
+  display: inline-block;
+  background-color: #ffc107;
+  color: #212529;
+  font-size: 0.75em;
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-left: 5px;
+  font-weight: bold;
 } 

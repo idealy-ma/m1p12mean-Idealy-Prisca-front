@@ -87,4 +87,14 @@ export class DevisService {
   getClientDevis(): Observable<Devis[]> {
     return this.http.get<Devis[]>(`${this.apiUrl}/client/devis`, this.httpOptions);
   }
+  
+  // Récupérer tous les services disponibles
+  getServices(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/client/services`, this.httpOptions);
+  }
+  
+  // Récupérer tous les packs de services disponibles
+  getServicePacks(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/client/servicePacks`, this.httpOptions);
+  }
 } 

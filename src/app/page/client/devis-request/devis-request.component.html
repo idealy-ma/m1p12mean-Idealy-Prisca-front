@@ -317,7 +317,11 @@
                   <div class="service-pack vehicle-card-selectable" [class.selected]="pack.selected" (click)="togglePack(pack)">
                     <h5 class="pack-title d-flex justify-content-between">
                       <span>{{ pack.label }}</span>
-                      <span class="service-price">{{ pack.price }}€</span>
+                      <span class="service-price">
+                        <span class="original-price" *ngIf="pack.discount > 0">{{ pack.originalPrice }}€</span>
+                        {{ pack.price }}€
+                        <span class="discount-badge" *ngIf="pack.discount > 0">-{{ pack.discount }}%</span>
+                      </span>
                     </h5>
                     <p class="pack-content">
                       <ng-container *ngFor="let serviceId of pack.services; let last = last">
