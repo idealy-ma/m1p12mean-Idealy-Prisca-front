@@ -3,15 +3,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { Devis } from '../../../models/devis.model';
 import { DevisService } from '../../../services/devis/devis.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-
-interface Pagination {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-}
+import { ApiPagination } from '../../../models/api-response.model';
 
 @Component({
   selector: 'app-client-devis-list',
@@ -23,7 +15,7 @@ export class ClientDevisListComponent implements OnInit {
   filteredDevis: Devis[] = [];
   loading: boolean = false;
   error: string | null = null;
-  pagination: Pagination | null = null;
+  pagination: ApiPagination | null = null;
   currentPage: number = 1;
   
   // Filtres
@@ -67,17 +59,10 @@ export class ClientDevisListComponent implements OnInit {
     this.error = null;
     
     this.devisService.getClientDevis().subscribe({
-      next: (response: any) => {
-        if (response && response.success && Array.isArray(response.data)) {
-          this.devis = response.data;
-          this.filteredDevis = [...this.devis]; // Copie initiale pour les filtres
-          this.pagination = response.pagination;
-        } else {
-          console.error('Données invalides :', response);
-          this.devis = [];
-          this.filteredDevis = [];
-          this.error = 'Format de données invalide';
-        }
+      next: (devisList) => {
+        this.devis = devisList;
+        this.filteredDevis = [...this.devis]; // Copie initiale pour les filtres
+        this.handleClientSidePagination();
         this.loading = false;
       },
       error: (err) => {
@@ -95,16 +80,9 @@ export class ClientDevisListComponent implements OnInit {
     // Pour les clients, nous utilisons l'endpoint client/devis
     // et appliquons les filtres côté client après réception des données
     this.devisService.getClientDevis().subscribe({
-      next: (response: any) => {
-        if (response && response.success && Array.isArray(response.data)) {
-          this.devis = response.data;
-          this.applyFilters();
-          this.pagination = response.pagination;
-        } else {
-          console.error('Données invalides :', response);
-          this.filteredDevis = [];
-          this.error = 'Format de données invalide';
-        }
+      next: (devisList) => {
+        this.devis = devisList;
+        this.applyFilters();
         this.loading = false;
       },
       error: (err) => {
@@ -197,7 +175,7 @@ export class ClientDevisListComponent implements OnInit {
       return;
     }
     this.currentPage = page;
-    this.loadDevisWithFilters();
+    this.applyFilters(); // Réappliquer les filtres avec la nouvelle pagination
   }
 
   getPageNumbers(): number[] {

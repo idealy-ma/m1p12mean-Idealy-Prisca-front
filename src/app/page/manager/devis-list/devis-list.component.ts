@@ -3,15 +3,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { Devis } from '../../../models/devis.model';
 import { DevisService } from '../../../services/devis/devis.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-
-interface Pagination {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-}
+import { ApiPagination } from '../../../models/api-response.model';
 
 @Component({
   selector: 'app-devis-list',
@@ -23,7 +15,7 @@ export class DevisListComponent implements OnInit {
   filteredDevis: Devis[] = [];
   loading: boolean = false;
   error: string | null = null;
-  pagination: Pagination | null = null;
+  pagination: ApiPagination | null = null;
   currentPage: number = 1;
   
   // Filtres
@@ -69,20 +61,13 @@ export class DevisListComponent implements OnInit {
     this.error = null;
     
     this.devisService.getDevis(page).subscribe({
-      next: (response: any) => {
-        if (response && response.success && Array.isArray(response.data)) {
-          this.devis = response.data;
-          this.filteredDevis = [...this.devis]; // Copie initiale pour les filtres
-          this.pagination = response.pagination;
-          
-          // Extraire la liste des clients uniques pour le filtre
-          this.extractUniqueClients();
-        } else {
-          console.error('Données invalides :', response);
-          this.devis = [];
-          this.filteredDevis = [];
-          this.error = 'Format de données invalide';
-        }
+      next: (response) => {
+        this.devis = response.devis;
+        this.filteredDevis = [...this.devis]; // Copie initiale pour les filtres
+        this.pagination = response.pagination;
+        
+        // Extraire la liste des clients uniques pour le filtre
+        this.extractUniqueClients();
         this.loading = false;
       },
       error: (err) => {
@@ -104,21 +89,15 @@ export class DevisListComponent implements OnInit {
     };
     
     this.devisService.getDevisWithFilters(filters).subscribe({
-      next: (response: any) => {
-        if (response && response.success && Array.isArray(response.data)) {
-          this.filteredDevis = response.data;
-          this.pagination = response.pagination;
-          
-          // Si c'est la première charge ou si les filtres sont réinitialisés, extraire les clients
-          if (!this.clients.length || 
-              (!filters.status && !filters.client && !filters.dateDebut && 
-               !filters.dateFin && !filters.search)) {
-            this.extractUniqueClients(response.data);
-          }
-        } else {
-          console.error('Données invalides :', response);
-          this.filteredDevis = [];
-          this.error = 'Format de données invalide';
+      next: (response) => {
+        this.filteredDevis = response.devis;
+        this.pagination = response.pagination;
+        
+        // Si c'est la première charge ou si les filtres sont réinitialisés, extraire les clients
+        if (!this.clients.length || 
+            (!filters.status && !filters.client && !filters.dateDebut && 
+             !filters.dateFin && !filters.search)) {
+          this.extractUniqueClients(response.devis);
         }
         this.loading = false;
       },
