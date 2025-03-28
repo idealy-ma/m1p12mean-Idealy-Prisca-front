@@ -53,43 +53,6 @@ export class DevisDetailsComponent implements OnInit {
   filterStatus: 'tous' | 'completed' | 'pending' = 'tous';
   filterPriority: 'tous' | 'basse' | 'moyenne' | 'haute' = 'tous';
 
-  // Données mockées
-  mockElements: Element[] = [
-    { nom: 'Filtre à huile', quantite: 1, prixUnitaire: 25.00 },
-    { nom: 'Plaquettes de frein', quantite: 2, prixUnitaire: 45.00 },
-    { nom: 'Huile moteur', quantite: 1, prixUnitaire: 35.00 }
-  ];
-
-  mockServices: Service[] = [
-    { nom: 'Diagnostic', prix: 50.00 },
-    { nom: 'Vidange', prix: 25.00 }
-  ];
-
-  // Données mockées pour les services présélectionnés par le client
-  mockServicesPreselectionnes = [
-    { 
-      _id: 's1', 
-      nom: 'Pack entretien standard', 
-      description: 'Inclut le changement d\'huile, de filtre et la vérification des niveaux', 
-      prix: 120.00, 
-      type: 'pack' as 'service' | 'pack'
-    },
-    { 
-      _id: 's2', 
-      nom: 'Diagnostic électronique avancé', 
-      description: 'Analyse complète du système électronique du véhicule', 
-      prix: 85.00, 
-      type: 'service' as 'service' | 'pack'
-    },
-    { 
-      _id: 's3', 
-      nom: 'Contrôle suspension', 
-      description: 'Vérification complète du système de suspension', 
-      prix: 60.00, 
-      type: 'service' as 'service' | 'pack'
-    }
-  ];
-
   mockMecaniciens: Mecanicien[] = [
     { id: '1', nom: 'Dupont', prenom: 'Jean', specialite: 'Moteur', tauxHoraire: 45, tempsEstime: 2.5 },
     { id: '2', nom: 'Martin', prenom: 'Pierre', specialite: 'Carrosserie', tauxHoraire: 40, tempsEstime: 1.5 },
@@ -105,58 +68,6 @@ export class DevisDetailsComponent implements OnInit {
     { contenu: 'D\'accord, merci. Pouvez-vous me dire approximativement combien de temps ça va prendre ?', date: new Date('2024-03-20T10:40:00'), type: 'client' }
   ];
 
-  // Items mockés (pièces et services sous forme de todos)
-  mockItems: DevisItem[] = [
-    { 
-      nom: 'Filtre à huile', 
-      type: 'piece', 
-      quantite: 1, 
-      prixUnitaire: 25.00,
-      completed: false,
-      priorite: 'haute'
-    },
-    { 
-      nom: 'Plaquettes de frein', 
-      type: 'piece', 
-      quantite: 2, 
-      prixUnitaire: 45.00,
-      completed: false,
-      priorite: 'moyenne',
-      note: 'Côté avant uniquement'
-    },
-    { 
-      nom: 'Huile moteur 5W30', 
-      type: 'piece', 
-      quantite: 5, 
-      prixUnitaire: 12.00,
-      completed: false,
-      priorite: 'haute'
-    },
-    { 
-      nom: 'Vidange', 
-      type: 'service', 
-      quantite: 1, 
-      prixUnitaire: 40.00,
-      completed: false,
-      priorite: 'haute'
-    },
-    { 
-      nom: 'Diagnostic électronique', 
-      type: 'service', 
-      quantite: 1, 
-      prixUnitaire: 50.00,
-      completed: false,
-      priorite: 'basse'
-    },
-    { 
-      nom: 'Main d\'oeuvre mécanicien', 
-      type: 'main_oeuvre', 
-      quantite: 2, 
-      prixUnitaire: 45.00,
-      completed: false,
-      priorite: 'moyenne'
-    }
-  ];
 
   // Propriété pour suivre l'élément en cours d'édition
   editingItemIndex: number | null = null;
@@ -186,10 +97,6 @@ export class DevisDetailsComponent implements OnInit {
     if (id) {
       this.loadDevisDetails(id);
     }
-    
-    // Initialiser le formulaire avec les éléments mockés
-    this.initElementsForm();
-    this.initTodoItemsForm();
   }
 
   // Getters pour accéder facilement au FormArray
@@ -197,18 +104,6 @@ export class DevisDetailsComponent implements OnInit {
     return this.elementsForm.get('elements') as FormArray;
   }
 
-  // Initialiser le formulaire avec les éléments mockés
-  initElementsForm(): void {
-    // Vider le FormArray
-    while (this.elementsArray.length) {
-      this.elementsArray.removeAt(0);
-    }
-    
-    // Ajouter les éléments mockés
-    this.mockElements.forEach(element => {
-      this.elementsArray.push(this.createElementFormGroup(element));
-    });
-  }
 
   // Créer un FormGroup pour un nouvel élément
   createElementFormGroup(element?: Element): FormGroup {
@@ -364,11 +259,6 @@ export class DevisDetailsComponent implements OnInit {
         }
       });
     }
-    
-    // Ajouter les éléments mockés seulement en développement ou si liste vide
-    if (this.todoItemsArray.length === 0) {
-      this.initTodoItemsForm();
-    }
   }
   
   // Méthode pour convertir la priorité du format API vers le format du modèle DevisItem
@@ -450,19 +340,6 @@ export class DevisDetailsComponent implements OnInit {
     return this.mecaniciensSelectionnes.reduce((total, mecanicien) => {
       return total + (mecanicien.tauxHoraire * mecanicien.tempsEstime);
     }, 0);
-  }
-
-  // Initialiser le formulaire des todos
-  initTodoItemsForm(): void {
-    // Vider le FormArray
-    while (this.todoItemsArray.length) {
-      this.todoItemsArray.removeAt(0);
-    }
-    
-    // Ajouter les items mockés
-    this.mockItems.forEach(item => {
-      this.todoItemsArray.push(this.createTodoItemFormGroup(item));
-    });
   }
 
   // Getter pour accéder au FormArray des todos
@@ -580,10 +457,6 @@ export class DevisDetailsComponent implements OnInit {
     }
   }
   
-  // Obtenir le mécanicien avec l'ID spécifié
-  getMecanicienById(id: string): Mecanicien | undefined {
-    return this.mockMecaniciens.find(m => m.id === id);
-  }
 
   // Sauvegarder les modifications d'un item
   saveTodoItem(): void {
