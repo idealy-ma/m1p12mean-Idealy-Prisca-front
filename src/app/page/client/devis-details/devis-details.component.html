@@ -1,0 +1,213 @@
+<div class="devis-details-container">
+  <div class="header">
+    <button class="btn-back" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i> Retour à la liste
+    </button>
+    <h1 class="page-title">Détails de ma demande</h1>
+  </div>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert-error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && devis" class="devis-content">
+    <!-- Message informatif -->
+    <div class="main-content">
+      <div *ngIf="devis.status === 'en_attente'" class="alert-info">
+        <div class="info-icon"><i class="fas fa-info-circle"></i></div>
+        <div class="info-content">
+          <h3>Votre demande est en cours de traitement</h3>
+          <p>Nos responsables sont en train d'analyser votre demande et de préparer un devis détaillé. Vous serez notifié dès que celui-ci sera disponible.</p>
+        </div>
+      </div>
+
+      <div *ngIf="devis.status === 'accepte'" class="alert-success">
+        <div class="info-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="info-content">
+          <h3>Devis accepté</h3>
+          <p>Vous avez accepté ce devis. Nos équipes vont prendre contact avec vous pour planifier les travaux.</p>
+        </div>
+      </div>
+
+      <div *ngIf="devis.status === 'refuse'" class="alert-warning">
+        <div class="info-icon"><i class="fas fa-times-circle"></i></div>
+        <div class="info-content">
+          <h3>Devis refusé</h3>
+          <p>Vous avez refusé ce devis. Si vous souhaitez réviser votre décision, veuillez nous contacter.</p>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <!-- Informations générales -->
+        <div class="section">
+          <h2>Informations générales</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Statut</label>
+              <span class="badge" 
+                    [ngClass]="{
+                      'badge-warning': devis.status === 'en_attente',
+                      'badge-success': devis.status === 'accepte',
+                      'badge-danger': devis.status === 'refuse'
+                    }">
+                {{ devis.status === 'en_attente' ? 'En attente' : 
+                   devis.status === 'accepte' ? 'Accepté' : 
+                   devis.status === 'refuse' ? 'Refusé' : devis.status }}
+              </span>
+            </div>
+            <div class="info-item">
+              <label>Date de création</label>
+              <span>{{ devis.dateCreation | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="info-item" *ngIf="devis?.preferredDate">
+              <label>Date d'intervention souhaitée</label>
+              <span>{{ devis.preferredDate | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Montant estimé</label>
+              <span>{{ devis.montantEstime | currency:'EUR':'symbol':'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informations véhicule -->
+        <div class="section">
+          <h2>Informations véhicule</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Marque</label>
+              <span>{{ devis.vehicule?.marque }}</span>
+            </div>
+            <div class="info-item">
+              <label>Modèle</label>
+              <span>{{ devis.vehicule?.modele }}</span>
+            </div>
+            <div class="info-item">
+              <label>Immatriculation</label>
+              <span>{{ devis.vehicule?.immatricule }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="section description-section">
+        <h2>Description de ma demande</h2>
+        <div class="description">
+          {{ devis.probleme }}
+        </div>
+        
+        <!-- Services choisis -->
+        <div class="services-preselectionnes" *ngIf="devis.servicesChoisis?.length || devis.packsChoisis?.length">
+          <h3>Services que j'ai choisis</h3>
+          <div class="preselection-list">
+            <!-- Services -->
+            <div *ngFor="let serviceChoisi of devis.servicesChoisis" class="preselection-item">
+              <div class="preselection-icon">
+                <i class="fas fa-tools"></i>
+              </div>
+              <div class="preselection-details">
+                <div class="preselection-name">{{ serviceChoisi.service.name }}</div>
+                <div class="preselection-description" *ngIf="serviceChoisi.service.descri">{{ serviceChoisi.service.descri }}</div>
+                <div class="preselection-type">Service</div>
+                <div class="preselection-note" *ngIf="serviceChoisi.note">Note: {{ serviceChoisi.note }}</div>
+              </div>
+              <div class="preselection-price">{{ serviceChoisi.service.prix | currency:'EUR':'symbol':'1.2-2' }}</div>
+            </div>
+            
+            <!-- Packs -->
+            <div *ngFor="let packChoisi of devis.packsChoisis" class="preselection-item">
+              <div class="preselection-icon">
+                <i class="fas fa-box"></i>
+              </div>
+              <div class="preselection-details">
+                <div class="preselection-name">Pack: {{ packChoisi.servicePack.name }}</div>
+                <div class="preselection-type">Pack de services</div>
+                <div class="preselection-note" *ngIf="packChoisi.note">Note: {{ packChoisi.note }}</div>
+              </div>
+              <div class="preselection-price">
+                {{ getPrixPack(packChoisi) | currency:'EUR':'symbol':'1.2-2' }}
+                <span *ngIf="packChoisi.servicePack.remise" class="remise-tag">-{{ packChoisi.servicePack.remise }}%</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="total-section">
+            <div class="total-label">Total des services choisis :</div>
+            <div class="total-amount">{{ (calculerTotalServicesChoisis() + calculerTotalPacksChoisis()) | currency:'EUR':'symbol':'1.2-2' }}</div>
+          </div>
+        </div>
+        
+        <!-- Image du problème -->
+        <div class="problem-image" *ngIf="devis.photoUrl">
+          <h3>Photos du problème</h3>
+          <div class="image-gallery">
+            <div class="image-container">
+              <img [src]="devis.photoUrl" alt="Photo du problème" class="problem-photo">
+            </div>
+            <div class="image-container" *ngIf="devis.secondPhotoUrl">
+              <img [src]="devis.secondPhotoUrl" alt="Photo du problème 2" class="problem-photo">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="section actions-section" *ngIf="devis.status === 'en_attente'">
+        <h2>Actions</h2>
+        <div class="actions-container">
+          <p class="actions-info">Vous pouvez accepter ou refuser ce devis. Une fois votre décision prise, elle sera définitive.</p>
+          <div class="buttons-container">
+            <button class="btn-success" (click)="accepterDevis()">
+              <i class="fas fa-check"></i> Accepter le devis
+            </button>
+            <button class="btn-danger" (click)="refuserDevis()">
+              <i class="fas fa-times"></i> Refuser le devis
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bouton flottant pour réafficher le chat -->
+  <button *ngIf="!isChatVisible" class="btn-show-chat" (click)="toggleChat()">
+    <i class="fas fa-comments"></i>
+  </button>
+
+  <!-- Chat sidebar -->
+  <div class="chat-sidebar" [class.visible]="isChatVisible">
+    <div class="chat-header">
+      <h2>Discussion avec le garage</h2>
+      <button class="btn-toggle-chat" (click)="toggleChat()">
+        <i class="fas" [ngClass]="{'fa-chevron-right': !isChatVisible, 'fa-chevron-left': isChatVisible}"></i>
+      </button>
+    </div>
+    <div class="chat-container">
+      <div class="chat-messages">
+        <div *ngFor="let message of mockMessages" 
+             class="message" 
+             [ngClass]="message.type">
+          <div class="message-content">
+            {{ message.contenu }}
+          </div>
+          <div class="message-info">
+            <span class="message-time">{{ message.date | date:'HH:mm' }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input">
+        <textarea [(ngModel)]="messageText" placeholder="Écrivez votre message..." (keyup.enter)="sendMessage()"></textarea>
+        <button class="btn-send" (click)="sendMessage()">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

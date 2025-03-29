@@ -19,11 +19,13 @@ import { AccueilMecanicienComponent } from './page/mecanicien/accueil/accueil-me
 import { ClientLayoutComponent } from './components/client/layout/client-layout/client-layout.component';
 import { LandingPageComponent } from './page/landing-page/landing-page.component';
 import { VehiculeListComponent } from './page/client/vehicule-list/vehicule-list.component';
-import { ClientDashboardComponent } from './page/client/dashboard/client-dashboard.component';
 import { AddVehiculeComponent } from './page/client/add-vehicule/add-vehicule.component';
-import { UserProfileComponent } from './page/client/profile/user-profile.component';
 import { DevisRequestComponent } from './page/client/devis-request/devis-request.component';
 import { ClientDevisListComponent } from './page/client/devis-list/devis-list.component';
+import { ClientDevisDetailsComponent } from './page/client/devis-details/devis-details.component';
+import { ClientDashboardComponent } from './page/client/dashboard/client-dashboard.component';
+import { UserProfileComponent } from './page/client/profile/user-profile.component';
+
 
 const routes: Routes = [
   // Landing page (page principale)
@@ -50,8 +52,11 @@ const routes: Routes = [
       { path: 'addvehicules', component: AddVehiculeComponent },
       { path: 'profil', component: UserProfileComponent },
       { path: 'devis/demande', component: DevisRequestComponent },
-      { path: 'devis', component: ClientDevisListComponent }
-      // D'autres routes client peuvent être ajoutées ici
+      { path: 'devis', component: ClientDevisListComponent },
+      { path: 'devis/:id', component: ClientDevisDetailsComponent },
+
+      
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },
   

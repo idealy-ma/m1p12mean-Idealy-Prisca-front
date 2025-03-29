@@ -175,6 +175,23 @@ export class DevisService {
       );
   }
   
+  // Récupérer un devis client par son ID
+  getClientDevisById(id: string): Observable<ApiResponse<Devis>> {
+    return this.http.get<ApiResponse<DevisDTO>>(`${this.apiUrl}/client/devis/${id}`, this.httpOptions)
+      .pipe(
+        map(response => {
+          if (response.success && response.data) {
+            return {
+              success: response.success,
+              message: response.message,
+              data: mapDevisDTOToDevis(response.data)
+            };
+          }
+          return response as ApiResponse<Devis>;
+        })
+      );
+  }
+  
   // Récupérer tous les services disponibles
   getServices(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/client/services`, this.httpOptions);
