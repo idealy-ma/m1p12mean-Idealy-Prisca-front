@@ -1125,4 +1125,27 @@ export class DevisDetailsComponent implements OnInit {
       }
     }, 100);
   }
+
+  // Obtenir la liste des mécaniciens disponibles non assignés
+  getMecaniciensDisponiblesNonAssignes(): Mecanicien[] {
+    const mecanicienIdActuel = this.editingItemIndex !== null ? 
+      this.todoItemsArray.at(this.editingItemIndex).value.mecanicienId : null;
+    
+    // Récupérer les IDs des mécaniciens déjà assignés (sauf celui de l'élément en cours d'édition)
+    const mecaniciensAssignesIds: string[] = this.todoItemsArray.controls
+      .filter(control => {
+        const item = control.value;
+        const indexControl = this.todoItemsArray.controls.indexOf(control);
+        return item.type === 'main_oeuvre' && 
+               item.mecanicienId && 
+               // Ne pas filtrer le mécanicien de l'élément en cours d'édition
+               (this.editingItemIndex === null || indexControl !== this.editingItemIndex);
+      })
+      .map(control => control.value.mecanicienId);
+    
+    // Retourner les mécaniciens qui ne sont pas déjà assignés à d'autres tâches
+    return this.mecaniciens.filter(mecanicien => 
+      !mecaniciensAssignesIds.includes(mecanicien._id)
+    );
+  }
 } 
