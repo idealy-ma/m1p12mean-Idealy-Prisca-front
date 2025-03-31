@@ -669,10 +669,18 @@ export class DevisDetailsComponent implements OnInit {
       if (item.type === 'main_oeuvre' && item.mecanicienId) {
         // Vérifier si le mécanicien est dans la liste des disponibles
         const mecanicienDisponible = mecaniciens.some(m => m._id === item.mecanicienId);
-        console.log(mecanicienDisponible);
         
         if (!mecanicienDisponible) {
+          // Le mécanicien n'est pas disponible, l'ajouter à la liste
           mecaniciensNonDisponibles.push(index);
+        } else {
+          // Le mécanicien est disponible, vérifier s'il était marqué comme indisponible avant
+          const note = item.note || '';
+          if (note.includes('[ATTENTION: Mécanicien non disponible à la nouvelle date]')) {
+            // Supprimer la note d'indisponibilité
+            const newNote = note.replace('[ATTENTION: Mécanicien non disponible à la nouvelle date]', '').trim();
+            control.get('note')?.setValue(newNote);
+          }
         }
       }
     });
