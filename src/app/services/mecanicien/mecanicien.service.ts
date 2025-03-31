@@ -15,6 +15,7 @@ interface MecanicienResponse {
   adresse: string;
   estActif: boolean;
   tarifHoraire: number;
+  specialite?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,7 +30,7 @@ export interface Mecanicien {
   telephone: string;
   adresse: string;
   estActif: boolean;
-  tauxHoraire: number;
+  tarifHoraire: number;
   specialite?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -47,7 +48,7 @@ export class MecanicienService {
   private mapMecanicienResponseToMecanicien(response: MecanicienResponse): Mecanicien {
     return {
       ...response,
-      tauxHoraire: response.tarifHoraire
+      specialite: response.specialite
     };
   }
 

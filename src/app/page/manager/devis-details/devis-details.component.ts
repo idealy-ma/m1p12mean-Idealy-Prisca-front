@@ -4,6 +4,8 @@ import { DevisService } from '../../../services/devis/devis.service';
 import { MecanicienService, Mecanicien } from '../../../services/mecanicien/mecanicien.service';
 import { Devis, DevisItem, ServiceChoisi, PackChoisi } from '../../../models/devis.model';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { Mecanicien as MecanicienModel } from '../../../models/mecanicien.model';
+import { Mecanicien as MecanicienServiceModel } from '../../../services/mecanicien/mecanicien.service';
 
 // Définir l'interface pour les données à envoyer
 interface FinaliserDevisData {
@@ -74,7 +76,7 @@ export class DevisDetailsComponent implements OnInit {
   filterPriority: 'tous' | 'basse' | 'moyenne' | 'haute' = 'tous';
 
   // Remplacer mockMecaniciens par mecaniciens
-  mecaniciens: Mecanicien[] = [];
+  mecaniciens: MecanicienServiceModel[] = [];
 
   mockMessages: Message[] = [
     { contenu: 'Bonjour, j\'ai un problème avec mes freins qui font un bruit étrange.', date: new Date('2024-03-20T10:30:00'), type: 'client' },
@@ -293,8 +295,8 @@ export class DevisDetailsComponent implements OnInit {
             _id: mecTravail._id,
             nom: `Main d'œuvre - ${mecanicien.prenom} ${mecanicien.nom}`,
             type: 'main_oeuvre',
-            quantite: mecTravail.tempsEstime || 1,
-            prixUnitaire: mecTravail.tauxHoraire || 0,
+            quantite: mecTravail.heureDeTravail || 1,
+            prixUnitaire: mecTravail.tarifHoraire || 0,
             completed: false,
             priorite: 'moyenne',
             mecanicienId: mecanicien._id
@@ -748,8 +750,8 @@ export class DevisDetailsComponent implements OnInit {
     // this.devisService.updatePreferredDate(this.devis._id, null)...
   }
   
-  // Méthode pour vérifier si les mécaniciens assignés sont disponibles à la nouvelle date
-  private verifierMecaniciensAssignes(mecaniciens: Mecanicien[]): number[] {
+  // Méthode pour vérifier les mécaniciens assignés
+  private verifierMecaniciensAssignes(mecaniciens: MecanicienServiceModel[]): number[] {
     const mecaniciensNonDisponibles: number[] = [];
     
     // Parcourir tous les éléments de type main_oeuvre
@@ -778,6 +780,15 @@ export class DevisDetailsComponent implements OnInit {
     this.mecaniciensNonDisponiblesCount = mecaniciensNonDisponibles.length;
     
     return mecaniciensNonDisponibles;
+  }
+
+  // Méthode pour mettre à jour la différence de taux horaire
+  private updateHourlyRateDiff(): void {
+    if (this.editingItemIndex === null) return;
+    
+    const item = this.todoItemsArray.at(this.editingItemIndex);
+    const currentRate = item.value.prixUnitaire;
+    this.hourlyRateDiff = currentRate - this.originalHourlyRate;
   }
 
   // Méthode pour ouvrir l'image en plein écran dans un modal
@@ -1200,29 +1211,20 @@ export class DevisDetailsComponent implements OnInit {
     });
   }
 
-  // Calculer la différence entre le taux horaire actuel et le taux original
-  updateHourlyRateDiff(): void {
-    if (this.editingItemIndex === null) return;
-    
-    const item = this.todoItemsArray.at(this.editingItemIndex);
-    const currentRate = item.value.prixUnitaire;
-    this.hourlyRateDiff = currentRate - this.originalHourlyRate;
-  }
-
   // Mettre à jour la méthode selectMecanicien pour utiliser le nouveau format de données
-  selectMecanicien(mecanicien: Mecanicien): void {
+  selectMecanicien(mecanicien: MecanicienServiceModel): void {
     if (this.editingItemIndex === null) return;
     
     this.selectedMecanicienId = mecanicien._id;
-    this.originalHourlyRate = mecanicien.tauxHoraire;
+    this.originalHourlyRate = mecanicien.tarifHoraire;
     
     // Mettre à jour le formulaire avec le taux horaire du mécanicien
     const item = this.todoItemsArray.at(this.editingItemIndex);
     item.patchValue({
       nom: `Main d'œuvre - ${mecanicien.prenom} ${mecanicien.nom}`,
-      prixUnitaire: mecanicien.tauxHoraire,
+      prixUnitaire: mecanicien.tarifHoraire,
       mecanicienId: mecanicien._id,
-      tauxStandard: mecanicien.tauxHoraire
+      tauxStandard: mecanicien.tarifHoraire
     });
     
     // Calculer la différence de taux horaire
@@ -1251,7 +1253,7 @@ export class DevisDetailsComponent implements OnInit {
   }
 
   // Obtenir la liste des mécaniciens disponibles non assignés
-  getMecaniciensDisponiblesNonAssignes(): Mecanicien[] {
+  getMecaniciensDisponiblesNonAssignes(): MecanicienServiceModel[] {
     const mecanicienIdActuel = this.editingItemIndex !== null ? 
       this.todoItemsArray.at(this.editingItemIndex).value.mecanicienId : null;
     

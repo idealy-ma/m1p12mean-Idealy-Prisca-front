@@ -19,6 +19,8 @@ export class ClientDevisDetailsComponent implements OnInit {
   devis: Devis | null = null;
   loading: boolean = false;
   error: string | null = null;
+  isAccepting: boolean = false;
+  isRejecting: boolean = false;
   // Propriétés pour le chat
   isChatVisible = false;
   mockMessages: Message[] = [
@@ -75,10 +77,11 @@ export class ClientDevisDetailsComponent implements OnInit {
   accepterDevis(): void {
     if (!this.devis || !this.devis._id) return;
     
+    this.isAccepting = true;
+    this.error = null;
+    
     this.devisService.updateDevis(this.devis._id, { status: 'accepte' }).subscribe({
       next: (response) => {
-        console.log(response);
-        
         if (response && response.success) {
           if (this.devis) {
             this.devis.status = 'accepte';
@@ -86,10 +89,12 @@ export class ClientDevisDetailsComponent implements OnInit {
         } else {
           this.error = 'Erreur lors de l\'acceptation du devis';
         }
+        this.isAccepting = false;
       },
       error: (err) => {
         console.error('Erreur lors de l\'acceptation du devis', err);
         this.error = 'Erreur lors de l\'acceptation du devis';
+        this.isAccepting = false;
       }
     });
   }
@@ -97,6 +102,9 @@ export class ClientDevisDetailsComponent implements OnInit {
   // Refuser le devis
   refuserDevis(): void {
     if (!this.devis || !this.devis._id) return;
+    
+    this.isRejecting = true;
+    this.error = null;
     
     this.devisService.updateDevis(this.devis._id, { status: 'refuse' }).subscribe({
       next: (response) => {
@@ -107,10 +115,12 @@ export class ClientDevisDetailsComponent implements OnInit {
         } else {
           this.error = 'Erreur lors du refus du devis';
         }
+        this.isRejecting = false;
       },
       error: (err) => {
         console.error('Erreur lors du refus du devis', err);
         this.error = 'Erreur lors du refus du devis';
+        this.isRejecting = false;
       }
     });
   }
@@ -174,5 +184,33 @@ export class ClientDevisDetailsComponent implements OnInit {
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
     }, 100);
+  }
+
+  // Calculer le total des lignes supplémentaires
+  calculerTotalLignesSupplementaires(): number {
+    if (!this.devis?.lignesSupplementaires?.length) return 0;
+    
+    return this.devis.lignesSupplementaires.reduce((total, ligne) => {
+      return total + ((ligne.prixUnitaire || 0) * (ligne.quantite || 1));
+    }, 0);
+  }
+
+  // Calculer le total de la main d'œuvre
+  calculerTotalMainOeuvre(): number {
+    if (!this.devis?.mecaniciensTravaillant?.length) return 0;
+    
+    return this.devis.mecaniciensTravaillant.reduce((total, mecanicien) => {
+      const tarifHoraire = mecanicien.mecanicien?.tarifHoraire || mecanicien.tarifHoraire || 0;
+      const heureDeTravail = mecanicien.heureDeTravail || 0;
+      return total + (tarifHoraire * heureDeTravail);
+    }, 0);
+  }
+
+  // Calculer le total général
+  calculerTotalGeneral(): number {
+    return this.calculerTotalServicesChoisis() + 
+           this.calculerTotalPacksChoisis() + 
+           this.calculerTotalLignesSupplementaires() + 
+           this.calculerTotalMainOeuvre();
   }
 }

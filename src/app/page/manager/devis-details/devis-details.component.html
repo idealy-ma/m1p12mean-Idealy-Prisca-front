@@ -411,7 +411,7 @@
                               <div class="mecanicien-name">{{ mecanicien.prenom }} {{ mecanicien.nom }}</div>
                               <div class="mecanicien-info">
                                 <span class="mecanicien-spec" *ngIf="mecanicien.specialite">{{ mecanicien.specialite }}</span>
-                                <span class="mecanicien-rate">{{ mecanicien.tauxHoraire | currency:'EUR':'symbol':'1.2-2' }}/h</span>
+                                <span class="mecanicien-rate">{{ mecanicien.tarifHoraire | currency:'EUR':'symbol':'1.2-2' }}/h</span>
                               </div>
                             </div>
                             <div class="selector-check">
