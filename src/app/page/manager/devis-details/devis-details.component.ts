@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DevisService } from '../../../services/devis/devis.service';
+import { MecanicienService, Mecanicien } from '../../../services/mecanicien/mecanicien.service';
 import { Devis, DevisItem, ServiceChoisi, PackChoisi } from '../../../models/devis.model';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 
@@ -19,15 +20,6 @@ interface Message {
   contenu: string;
   date: Date;
   type: 'client' | 'manager';
-}
-
-interface Mecanicien {
-  id: string;
-  nom: string;
-  prenom: string;
-  specialite: string;
-  tauxHoraire: number;
-  tempsEstime: number;
 }
 
 @Component({
@@ -53,21 +45,14 @@ export class DevisDetailsComponent implements OnInit {
   filterStatus: 'tous' | 'completed' | 'pending' = 'tous';
   filterPriority: 'tous' | 'basse' | 'moyenne' | 'haute' = 'tous';
 
-  mockMecaniciens: Mecanicien[] = [
-    { id: '1', nom: 'Dupont', prenom: 'Jean', specialite: 'Moteur', tauxHoraire: 45, tempsEstime: 2.5 },
-    { id: '2', nom: 'Martin', prenom: 'Pierre', specialite: 'Carrosserie', tauxHoraire: 40, tempsEstime: 1.5 },
-    { id: '3', nom: 'Bernard', prenom: 'Marie', specialite: 'Électronique', tauxHoraire: 50, tempsEstime: 3 }
-  ];
-
-  // Tableau vide pour les mécaniciens sélectionnés
-  mecaniciensSelectionnes: Mecanicien[] = [];
+  // Remplacer mockMecaniciens par mecaniciens
+  mecaniciens: Mecanicien[] = [];
 
   mockMessages: Message[] = [
     { contenu: 'Bonjour, j\'ai un problème avec mes freins qui font un bruit étrange.', date: new Date('2024-03-20T10:30:00'), type: 'client' },
     { contenu: 'Bonjour, je vais examiner votre véhicule et vous faire un devis détaillé.', date: new Date('2024-03-20T10:35:00'), type: 'manager' },
     { contenu: 'D\'accord, merci. Pouvez-vous me dire approximativement combien de temps ça va prendre ?', date: new Date('2024-03-20T10:40:00'), type: 'client' }
   ];
-
 
   // Propriété pour suivre l'élément en cours d'édition
   editingItemIndex: number | null = null;
@@ -81,6 +66,7 @@ export class DevisDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private devisService: DevisService,
+    private mecanicienService: MecanicienService,
     private fb: FormBuilder
   ) {
     this.elementsForm = this.fb.group({
@@ -103,7 +89,6 @@ export class DevisDetailsComponent implements OnInit {
   get elementsArray(): FormArray {
     return this.elementsForm.get('elements') as FormArray;
   }
-
 
   // Créer un FormGroup pour un nouvel élément
   createElementFormGroup(element?: Element): FormGroup {
@@ -148,7 +133,13 @@ export class DevisDetailsComponent implements OnInit {
             // Ajouter les services et packs choisis à la liste des items
             this.convertirServicesEtPacksEnItems();
             
-            // Les champs photoUrl et secondPhotoUrl sont déjà ajoutés par la fonction mapDevisDTOToDevis
+            // Charger les mécaniciens disponibles à la date d'intervention
+            if (this.devis.preferredDate) {
+              this.loadMecaniciensDisponibles();
+            } else {
+              // Si pas de date préférée, charger avec la date du jour
+              this.loadMecaniciensDisponibles();
+            }
           }
         } else {
           this.error = 'Format de données invalide';
@@ -159,6 +150,29 @@ export class DevisDetailsComponent implements OnInit {
         console.error('Erreur lors du chargement du devis', err);
         this.error = 'Erreur lors du chargement du devis';
         this.loading = false;
+      }
+    });
+  }
+
+  // Ajouter une méthode pour charger les mécaniciens disponibles
+  loadMecaniciensDisponibles(dateStr?: string): void {
+    // Si aucune date n'est fournie, utiliser la date d'intervention du devis
+    // ou la date actuelle formatée en YYYY-MM-DD
+    if (!dateStr && this.devis?.preferredDate) {
+      const preferredDate = new Date(this.devis.preferredDate);
+      dateStr = preferredDate.toISOString().split('T')[0];
+    } else if (!dateStr) {
+      const today = new Date();
+      dateStr = today.toISOString().split('T')[0];
+    }
+
+    this.mecanicienService.getMecaniciensDisponibles(dateStr).subscribe({
+      next: (mecaniciens) => {
+        this.mecaniciens = mecaniciens;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des mécaniciens disponibles', err);
+        this.error = "Impossible de charger la liste des mécaniciens disponibles";
       }
     });
   }
@@ -326,22 +340,6 @@ export class DevisDetailsComponent implements OnInit {
     this.router.navigate(['/manager/devis']);
   }
 
-  ajouterMecanicien(mecanicien: Mecanicien): void {
-    if (!this.mecaniciensSelectionnes.find(m => m.id === mecanicien.id)) {
-      this.mecaniciensSelectionnes.push({...mecanicien});
-    }
-  }
-
-  retirerMecanicien(mecanicienId: string): void {
-    this.mecaniciensSelectionnes = this.mecaniciensSelectionnes.filter(m => m.id !== mecanicienId);
-  }
-
-  calculerTotalMainOeuvre(): number {
-    return this.mecaniciensSelectionnes.reduce((total, mecanicien) => {
-      return total + (mecanicien.tauxHoraire * mecanicien.tempsEstime);
-    }, 0);
-  }
-
   // Getter pour accéder au FormArray des todos
   get todoItemsArray(): FormArray {
     return this.todoItemsForm.get('items') as FormArray;
@@ -410,36 +408,7 @@ export class DevisDetailsComponent implements OnInit {
     }
   }
   
-  // Sélectionner un mécanicien pour l'élément en cours d'édition
-  selectMecanicien(mecanicien: Mecanicien): void {
-    if (this.editingItemIndex === null) return;
-    
-    this.selectedMecanicienId = mecanicien.id;
-    this.originalHourlyRate = mecanicien.tauxHoraire;
-    
-    // Mettre à jour le formulaire avec le taux horaire du mécanicien
-    const item = this.todoItemsArray.at(this.editingItemIndex);
-    item.patchValue({
-      nom: `Main d'œuvre - ${mecanicien.prenom} ${mecanicien.nom}`,
-      prixUnitaire: mecanicien.tauxHoraire,
-      mecanicienId: mecanicien.id,
-      tauxStandard: mecanicien.tauxHoraire
-    });
-    
-    // Calculer la différence de taux horaire
-    this.updateHourlyRateDiff();
-  }
-  
-  // Calculer la différence entre le taux horaire actuel et le taux original
-  updateHourlyRateDiff(): void {
-    if (this.editingItemIndex === null) return;
-    
-    const item = this.todoItemsArray.at(this.editingItemIndex);
-    const currentRate = item.value.prixUnitaire;
-    this.hourlyRateDiff = currentRate - this.originalHourlyRate;
-  }
-  
-  // Mettre à jour la différence de taux horaire lorsque le taux change
+  // Méthode pour mettre à jour la différence de taux horaire lorsque le taux change
   onHourlyRateChange(event: any): void {
     const value = parseFloat(event.target.value);
     if (!isNaN(value)) {
@@ -457,7 +426,6 @@ export class DevisDetailsComponent implements OnInit {
     }
   }
   
-
   // Sauvegarder les modifications d'un item
   saveTodoItem(): void {
     if (this.editingItemIndex !== null) {
@@ -600,35 +568,32 @@ export class DevisDetailsComponent implements OnInit {
     this.isEditingDate = true;
     this.originalDate = this.devis?.preferredDate || null;
     
-    // Formater la date pour l'input de type date (YYYY-MM-DD)
     if (this.devis?.preferredDate) {
       const date = new Date(this.devis.preferredDate);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      this.dateInputValue = `${year}-${month}-${day}`;
+      this.dateInputValue = date.toISOString().split('T')[0];
     } else {
-      // Si pas de date, utiliser la date actuelle
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      this.dateInputValue = `${year}-${month}-${day}`;
+      this.dateInputValue = '';
+    }
+    
+    // Charger les mécaniciens disponibles à la date sélectionnée
+    if (this.dateInputValue) {
+      this.loadMecaniciensDisponibles(this.dateInputValue);
     }
   }
   
-  onDateChange(dateString: string): void {
-    this.dateInputValue = dateString;
+  onDateChange(event: any): void {
+    this.dateInputValue = event;
+    // Charger les mécaniciens disponibles à la nouvelle date
+    this.loadMecaniciensDisponibles(this.dateInputValue);
   }
   
   savePreferredDate(): void {
+    this.isEditingDate = false;
     if (this.devis && this.dateInputValue) {
       this.devis.preferredDate = new Date(this.dateInputValue);
+      // Charger les mécaniciens disponibles à la nouvelle date
+      this.loadMecaniciensDisponibles(this.dateInputValue);
     }
-    this.isEditingDate = false;
-    
-    // En production, appeler le service pour mettre à jour la date sur le serveur
-    // this.devisService.updatePreferredDate(this.devis._id, this.devis.preferredDate)...
   }
   
   cancelEditDate(): void {
@@ -1043,5 +1008,34 @@ export class DevisDetailsComponent implements OnInit {
         this.error = 'Erreur lors de la sauvegarde du devis';
       }
     });
+  }
+
+  // Calculer la différence entre le taux horaire actuel et le taux original
+  updateHourlyRateDiff(): void {
+    if (this.editingItemIndex === null) return;
+    
+    const item = this.todoItemsArray.at(this.editingItemIndex);
+    const currentRate = item.value.prixUnitaire;
+    this.hourlyRateDiff = currentRate - this.originalHourlyRate;
+  }
+
+  // Mettre à jour la méthode selectMecanicien pour utiliser le nouveau format de données
+  selectMecanicien(mecanicien: Mecanicien): void {
+    if (this.editingItemIndex === null) return;
+    
+    this.selectedMecanicienId = mecanicien._id;
+    this.originalHourlyRate = mecanicien.tauxHoraire;
+    
+    // Mettre à jour le formulaire avec le taux horaire du mécanicien
+    const item = this.todoItemsArray.at(this.editingItemIndex);
+    item.patchValue({
+      nom: `Main d'œuvre - ${mecanicien.prenom} ${mecanicien.nom}`,
+      prixUnitaire: mecanicien.tauxHoraire,
+      mecanicienId: mecanicien._id,
+      tauxStandard: mecanicien.tauxHoraire
+    });
+    
+    // Calculer la différence de taux horaire
+    this.updateHourlyRateDiff();
   }
 } 

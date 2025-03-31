@@ -383,9 +383,9 @@
                         <label>Sélectionner un mécanicien</label>
                         <div class="mecaniciens-picker">
                           <div 
-                            *ngFor="let mecanicien of mockMecaniciens" 
+                            *ngFor="let mecanicien of mecaniciens" 
                             class="mecanicien-option" 
-                            [class.selected]="selectedMecanicienId === mecanicien.id"
+                            [class.selected]="selectedMecanicienId === mecanicien._id"
                             (click)="selectMecanicien(mecanicien)"
                           >
                             <div class="mecanicien-avatar">
@@ -394,13 +394,17 @@
                             <div class="mecanicien-details">
                               <div class="mecanicien-name">{{ mecanicien.prenom }} {{ mecanicien.nom }}</div>
                               <div class="mecanicien-info">
-                                <span class="mecanicien-spec">{{ mecanicien.specialite }}</span>
+                                <span class="mecanicien-spec" *ngIf="mecanicien.specialite">{{ mecanicien.specialite }}</span>
                                 <span class="mecanicien-rate">{{ mecanicien.tauxHoraire | currency:'EUR':'symbol':'1.2-2' }}/h</span>
                               </div>
                             </div>
                             <div class="selector-check">
                               <i class="fas fa-check-circle"></i>
                             </div>
+                          </div>
+                          
+                          <div *ngIf="mecaniciens.length === 0" class="no-mecaniciens">
+                            Aucun mécanicien disponible à cette date. Veuillez sélectionner une autre date.
                           </div>
                         </div>
                       </div>
