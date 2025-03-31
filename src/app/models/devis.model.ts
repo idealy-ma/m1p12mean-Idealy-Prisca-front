@@ -78,10 +78,10 @@ export interface MecanicienTravailDTO {
     _id: string;
     nom: string;
     prenom: string;
-    tauxHoraire?: number;
+    tarifHoraire?: number;
   };
-  tempsEstime?: number;
-  tauxHoraire?: number;
+  heureDeTravail?: number;
+  tarifHoraire?: number;
   dateDebut?: Date;
   dateFin?: Date;
 }
@@ -198,10 +198,10 @@ export interface MecanicienTravail {
     _id: string;
     nom: string;
     prenom: string;
-    tauxHoraire?: number;
+    tarifHoraire?: number;
   };
-  tempsEstime?: number;
-  tauxHoraire?: number;
+  heureDeTravail?: number;
+  tarifHoraire?: number;
   dateDebut?: Date;
   dateFin?: Date;
 }

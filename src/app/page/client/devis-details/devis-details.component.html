@@ -144,6 +144,83 @@
           </div>
         </div>
         
+        <!-- Lignes supplémentaires -->
+        <div class="section lignes-supplementaires" *ngIf="devis.lignesSupplementaires?.length">
+          <h3>Lignes supplémentaires</h3>
+          <div class="lignes-list">
+            <div *ngFor="let ligne of devis.lignesSupplementaires" class="ligne-item">
+              <div class="ligne-icon">
+                <i class="fas" [ngClass]="{
+                  'fa-cog': ligne.typeElement === 'piece',
+                  'fa-tools': ligne.typeElement === 'service',
+                  'fa-user-tie': ligne.typeElement === 'main_oeuvre',
+                  'fa-box': ligne.typeElement === 'autre'
+                }"></i>
+              </div>
+              <div class="ligne-details">
+                <div class="ligne-name">{{ ligne.designation || 'Ligne supplémentaire' }}</div>
+                <div class="ligne-description" *ngIf="ligne.description">{{ ligne.description }}</div>
+                <div class="ligne-type">{{ ligne.typeElement }}</div>
+                <div class="ligne-quantity">Quantité: {{ ligne.quantite }}</div>
+              </div>
+              <div class="ligne-price">{{ (ligne.prixUnitaire || 0) * (ligne.quantite || 1) | currency:'EUR':'symbol':'1.2-2' }}</div>
+            </div>
+          </div>
+          <div class="total-section">
+            <div class="total-label">Total des lignes supplémentaires :</div>
+            <div class="total-amount">{{ calculerTotalLignesSupplementaires() | currency:'EUR':'symbol':'1.2-2' }}</div>
+          </div>
+        </div>
+
+        <!-- Équipe assignée -->
+        <div class="section equipe-assignee" *ngIf="devis.mecaniciensTravaillant?.length">
+          <h3>Équipe assignée</h3>
+          <div class="equipe-list">
+            <div *ngFor="let mecanicien of devis.mecaniciensTravaillant" class="mecanicien-item">
+              <div class="mecanicien-icon">
+                <i class="fas fa-user-tie"></i>
+              </div>
+              <div class="mecanicien-details">
+                <div class="mecanicien-name">{{ mecanicien.mecanicien?.prenom }} {{ mecanicien.mecanicien?.nom }}</div>
+                <div class="mecanicien-info">
+                  <span>Heures de travail: {{ mecanicien.heureDeTravail }}h</span>
+                  <span>Taux horaire: {{ mecanicien.mecanicien?.tarifHoraire || mecanicien.tarifHoraire | currency:'EUR':'symbol':'1.2-2' }}/h</span>
+                </div>
+              </div>
+              <div class="mecanicien-price">
+                {{ (mecanicien.mecanicien?.tarifHoraire || mecanicien.tarifHoraire || 0) * (mecanicien.heureDeTravail || 0) | currency:'EUR':'symbol':'1.2-2' }}
+              </div>
+            </div>
+          </div>
+          <div class="total-section">
+            <div class="total-label">Total main d'œuvre :</div>
+            <div class="total-amount">{{ calculerTotalMainOeuvre() | currency:'EUR':'symbol':'1.2-2' }}</div>
+          </div>
+        </div>
+
+        <!-- Total général -->
+        <div class="section total-general">
+          <h3>Total général</h3>
+          <div class="total-details">
+            <div class="total-line">
+              <span>Services et packs :</span>
+              <span>{{ (calculerTotalServicesChoisis() + calculerTotalPacksChoisis()) | currency:'EUR':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="total-line" *ngIf="devis.lignesSupplementaires?.length">
+              <span>Lignes supplémentaires :</span>
+              <span>{{ calculerTotalLignesSupplementaires() | currency:'EUR':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="total-line" *ngIf="devis.mecaniciensTravaillant?.length">
+              <span>Main d'œuvre :</span>
+              <span>{{ calculerTotalMainOeuvre() | currency:'EUR':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="total-line final">
+              <span>Total TTC :</span>
+              <span>{{ calculerTotalGeneral() | currency:'EUR':'symbol':'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Image du problème -->
         <div class="problem-image" *ngIf="devis.photoUrl">
           <h3>Photos du problème</h3>
@@ -159,16 +236,18 @@
       </div>
 
       <!-- Boutons d'action -->
-      <div class="section actions-section" *ngIf="devis.status === 'en_attente'">
+      <div class="section actions-section" *ngIf="devis.status === 'en_attente' || devis.status === 'termine'">
         <h2>Actions</h2>
         <div class="actions-container">
           <p class="actions-info">Vous pouvez accepter ou refuser ce devis. Une fois votre décision prise, elle sera définitive.</p>
-          <div class="buttons-container">
-            <button class="btn-success" (click)="accepterDevis()">
-              <i class="fas fa-check"></i> Accepter le devis
+          <div class="action-buttons" *ngIf="devis.status === 'en_attente' || devis.status === 'termine'">
+            <button class="btn-accept" (click)="accepterDevis()" [disabled]="isAccepting">
+              <i class="fas" [ngClass]="{'fa-check': !isAccepting, 'fa-spinner fa-spin': isAccepting}"></i>
+              {{ isAccepting ? 'Acceptation en cours...' : 'Accepter le devis' }}
             </button>
-            <button class="btn-danger" (click)="refuserDevis()">
-              <i class="fas fa-times"></i> Refuser le devis
+            <button class="btn-reject" (click)="refuserDevis()" [disabled]="isRejecting">
+              <i class="fas" [ngClass]="{'fa-times': !isRejecting, 'fa-spinner fa-spin': isRejecting}"></i>
+              {{ isRejecting ? 'Refus en cours...' : 'Refuser le devis' }}
             </button>
           </div>
         </div>

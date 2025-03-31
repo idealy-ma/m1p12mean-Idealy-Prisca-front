@@ -624,3 +624,213 @@
     bottom: 70px;
   }
 }
+
+/* Styles pour les lignes supplémentaires */
+.lignes-supplementaires {
+  margin-top: 20px;
+}
+
+.lignes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.ligne-item {
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.02);
+  padding: 12px;
+  border-radius: 4px;
+  border-left: 3px solid var(--primary-color);
+}
+
+.ligne-icon {
+  font-size: 20px;
+  color: var(--primary-color);
+  margin-right: 15px;
+  width: 30px;
+  text-align: center;
+}
+
+.ligne-details {
+  flex: 1;
+}
+
+.ligne-name {
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.ligne-description {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.ligne-type {
+  font-size: 12px;
+  color: var(--primary-color);
+  margin-bottom: 3px;
+}
+
+.ligne-quantity {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.ligne-price {
+  font-weight: 600;
+  color: var(--dark-color);
+  font-size: 16px;
+  padding: 0 15px;
+}
+
+/* Styles pour l'équipe assignée */
+.equipe-assignee {
+  margin-top: 20px;
+}
+
+.equipe-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mecanicien-item {
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.02);
+  padding: 12px;
+  border-radius: 4px;
+  border-left: 3px solid var(--primary-color);
+}
+
+.mecanicien-icon {
+  font-size: 20px;
+  color: var(--primary-color);
+  margin-right: 15px;
+  width: 30px;
+  text-align: center;
+}
+
+.mecanicien-details {
+  flex: 1;
+}
+
+.mecanicien-name {
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.mecanicien-info {
+  display: flex;
+  gap: 15px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.mecanicien-price {
+  font-weight: 600;
+  color: var(--dark-color);
+  font-size: 16px;
+  padding: 0 15px;
+}
+
+/* Styles pour le total général */
+.total-general {
+  margin-top: 20px;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.total-general h3 {
+  color: white;
+  margin-bottom: 15px;
+}
+
+.total-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.total-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.total-line.final {
+  border-bottom: none;
+  font-weight: 700;
+  font-size: 18px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  justify-content: flex-end;
+}
+
+.btn-accept, .btn-reject {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-accept:disabled, .btn-reject:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-accept {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.btn-accept:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-reject {
+  background-color: var(--error-color);
+  color: white;
+}
+
+.btn-reject:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-accept i, .btn-reject i {
+  font-size: 18px;
+}
+
+.fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
