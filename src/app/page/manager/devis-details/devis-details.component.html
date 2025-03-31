@@ -16,6 +16,13 @@
     {{ error }}
   </div>
 
+  <!-- Alerte pour les mécaniciens non disponibles -->
+  <div *ngIf="mecaniciensNonDisponiblesCount > 0" class="alert-warning">
+    <i class="fas fa-exclamation-triangle"></i>
+    Attention: {{ mecaniciensNonDisponiblesCount }} mécanicien(s) assigné(s) ne sont pas disponibles à la date d'intervention sélectionnée.
+    <button class="btn-link" (click)="scrollToMecaniciensNonDisponibles()">Voir les éléments concernés</button>
+  </div>
+
   <div *ngIf="!loading && devis" class="devis-content">
     <div class="main-content">
       <div class="content-grid">
@@ -240,7 +247,13 @@
             <!-- Liste des todos -->
             <form [formGroup]="todoItemsForm">
               <div class="todo-list" formArrayName="items">
-                <div *ngFor="let item of filteredTodoItems(); let i = index" class="todo-item" [ngClass]="{'todo-completed': item.value.completed, 'todo-editing': todoItemsArray.controls.indexOf(item) === editingItemIndex}">
+                <div *ngFor="let item of filteredTodoItems(); let i = index" 
+                     class="todo-item" 
+                     [ngClass]="{
+                       'todo-completed': item.value.completed, 
+                       'todo-editing': todoItemsArray.controls.indexOf(item) === editingItemIndex,
+                       'todo-warning': isMecanicienNonDisponible(todoItemsArray.controls.indexOf(item))
+                     }">
                   
                   <!-- Mode affichage -->
                   <div class="todo-item-header" 
@@ -255,6 +268,9 @@
                         {{ item.value.nom }}
                         <span *ngIf="item.value.estPreselectionne" class="preselection-badge">
                           <i class="fas fa-check-circle"></i> Présélectionné par le client
+                        </span>
+                        <span *ngIf="isMecanicienNonDisponible(todoItemsArray.controls.indexOf(item))" class="mecanicien-indisponible-badge">
+                          <i class="fas fa-exclamation-triangle"></i> Mécanicien non disponible
                         </span>
                       </div>
                       <div class="todo-details">
@@ -383,9 +399,9 @@
                         <label>Sélectionner un mécanicien</label>
                         <div class="mecaniciens-picker">
                           <div 
-                            *ngFor="let mecanicien of mockMecaniciens" 
+                            *ngFor="let mecanicien of getMecaniciensDisponiblesNonAssignes()" 
                             class="mecanicien-option" 
-                            [class.selected]="selectedMecanicienId === mecanicien.id"
+                            [class.selected]="selectedMecanicienId === mecanicien._id"
                             (click)="selectMecanicien(mecanicien)"
                           >
                             <div class="mecanicien-avatar">
@@ -394,13 +410,17 @@
                             <div class="mecanicien-details">
                               <div class="mecanicien-name">{{ mecanicien.prenom }} {{ mecanicien.nom }}</div>
                               <div class="mecanicien-info">
-                                <span class="mecanicien-spec">{{ mecanicien.specialite }}</span>
+                                <span class="mecanicien-spec" *ngIf="mecanicien.specialite">{{ mecanicien.specialite }}</span>
                                 <span class="mecanicien-rate">{{ mecanicien.tauxHoraire | currency:'EUR':'symbol':'1.2-2' }}/h</span>
                               </div>
                             </div>
                             <div class="selector-check">
                               <i class="fas fa-check-circle"></i>
                             </div>
+                          </div>
+                          
+                          <div *ngIf="getMecaniciensDisponiblesNonAssignes().length === 0" class="no-mecaniciens">
+                            Aucun mécanicien disponible pour cette tâche.
                           </div>
                         </div>
                       </div>
@@ -481,7 +501,13 @@
       <!-- Actions -->
       <div class="section actions-section">
         <div class="actions">
-          <button class="btn-primary" (click)="sendToClient()">
+          <div *ngIf="mecaniciensNonDisponiblesCount > 0" class="send-disabled-message">
+            Impossible d'envoyer le devis : certains mécaniciens assignés ne sont pas disponibles à la date d'intervention choisie. 
+            Veuillez réassigner ces tâches avant d'envoyer le devis.
+          </div>
+          <button class="btn-primary" 
+                  [disabled]="mecaniciensNonDisponiblesCount > 0" 
+                  (click)="sendToClient()">
             <i class="fas fa-paper-plane"></i> Envoyer le devis au client
           </button>
         </div>
