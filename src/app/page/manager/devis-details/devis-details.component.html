@@ -501,7 +501,13 @@
       <!-- Actions -->
       <div class="section actions-section">
         <div class="actions">
-          <button class="btn-primary" (click)="sendToClient()">
+          <div *ngIf="mecaniciensNonDisponiblesCount > 0" class="send-disabled-message">
+            Impossible d'envoyer le devis : certains mécaniciens assignés ne sont pas disponibles à la date d'intervention choisie. 
+            Veuillez réassigner ces tâches avant d'envoyer le devis.
+          </div>
+          <button class="btn-primary" 
+                  [disabled]="mecaniciensNonDisponiblesCount > 0" 
+                  (click)="sendToClient()">
             <i class="fas fa-paper-plane"></i> Envoyer le devis au client
           </button>
         </div>
