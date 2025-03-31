@@ -218,4 +218,38 @@ export class DevisService {
         })
       );
   }
+
+  // Accepter un devis (pour le client)
+  acceptDevis(id: string): Observable<ApiResponse<Devis>> {
+    return this.http.post<ApiResponse<DevisDTO>>(`${this.apiUrl}/client/devis/${id}/accept`, {}, this.httpOptions)
+      .pipe(
+        map(response => {
+          if (response.success && response.data) {
+            return {
+              success: response.success,
+              message: response.message,
+              data: mapDevisDTOToDevis(response.data)
+            };
+          }
+          return response as ApiResponse<Devis>;
+        })
+      );
+  }
+
+  // Refuser un devis (pour le client)
+  declineDevis(id: string): Observable<ApiResponse<Devis>> {
+    return this.http.post<ApiResponse<DevisDTO>>(`${this.apiUrl}/client/devis/${id}/decline`, {}, this.httpOptions)
+      .pipe(
+        map(response => {
+          if (response.success && response.data) {
+            return {
+              success: response.success,
+              message: response.message,
+              data: mapDevisDTOToDevis(response.data)
+            };
+          }
+          return response as ApiResponse<Devis>;
+        })
+      );
+  }
 } 

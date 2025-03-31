@@ -80,7 +80,7 @@ export class ClientDevisDetailsComponent implements OnInit {
     this.isAccepting = true;
     this.error = null;
     
-    this.devisService.updateDevis(this.devis._id, { status: 'accepte' }).subscribe({
+    this.devisService.acceptDevis(this.devis._id).subscribe({
       next: (response) => {
         if (response && response.success) {
           if (this.devis) {
@@ -106,7 +106,7 @@ export class ClientDevisDetailsComponent implements OnInit {
     this.isRejecting = true;
     this.error = null;
     
-    this.devisService.updateDevis(this.devis._id, { status: 'refuse' }).subscribe({
+    this.devisService.declineDevis(this.devis._id).subscribe({
       next: (response) => {
         if (response && response.success) {
           if (this.devis) {
