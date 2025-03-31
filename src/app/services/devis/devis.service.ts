@@ -203,7 +203,19 @@ export class DevisService {
   }
   
   // Envoyer un devis au client
-  sendDevisToClient(id: string, devisData: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/manager/devis/${id}/send`, devisData, this.httpOptions);
+  sendDevisToClient(id: string, devisData: any): Observable<ApiResponse<Devis>> {
+    return this.http.post<ApiResponse<DevisDTO>>(`${this.apiUrl}/manager/devis/${id}/finaliser`, devisData, this.httpOptions)
+      .pipe(
+        map(response => {
+          if (response.success && response.data) {
+            return {
+              success: response.success,
+              message: response.message,
+              data: mapDevisDTOToDevis(response.data)
+            };
+          }
+          return response as ApiResponse<Devis>;
+        })
+      );
   }
 } 

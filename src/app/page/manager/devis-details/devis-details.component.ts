@@ -5,6 +5,30 @@ import { MecanicienService, Mecanicien } from '../../../services/mecanicien/meca
 import { Devis, DevisItem, ServiceChoisi, PackChoisi } from '../../../models/devis.model';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 
+// Définir l'interface pour les données à envoyer
+interface FinaliserDevisData {
+  services: {
+    service: string;
+    prix: number;
+    note?: string;
+  }[];
+  packs: {
+    servicePack: string;
+    prix: number;
+  }[];
+  lignesSupplementaires: {
+    nom: string;
+    prix: number;
+    quantite: number;
+    type: string;
+  }[];
+  mecaniciens: {
+    mecanicien: string;
+    heureDeTravail: number;
+  }[];
+  dateIntervention: Date;
+}
+
 interface Element {
   nom: string;
   quantite: number;
@@ -32,6 +56,7 @@ export class DevisDetailsComponent implements OnInit {
   loading: boolean = true;
   error: string | null = null;
   isChatVisible = false;
+  isSending: boolean = false;
   elementsForm: FormGroup;
   todoItemsForm: FormGroup;
   
@@ -312,34 +337,98 @@ export class DevisDetailsComponent implements OnInit {
       return;
     }
     
-    // Préparer les données à envoyer
-    const devisData = {
-      _id: this.devis._id,
-      items: this.todoItemsArray.getRawValue(),
-      total: this.calculerTotalTodos(),
-      status: 'envoye'
-    };
+    this.isSending = true;
     
+    // Préparer les données selon le nouveau format attendu
+    const devisData: FinaliserDevisData = {
+      services: [],
+      packs: [],
+      lignesSupplementaires: [],
+      mecaniciens: [],
+      dateIntervention: this.devis.preferredDate || new Date()
+    };
+
+    // Récupérer uniquement les nouvelles lignes (celles qui ne sont pas préselection)
+    const todoItems = this.todoItemsArray.getRawValue();
+    todoItems.forEach(item => {
+       if (item.type === 'service') {
+        devisData.services.push({
+          service: item.mecanicienId,
+          prix: item.prixUnitaire,
+          note: item.note
+        });
+      } else if (item.type === 'pack') {
+        devisData.packs.push({
+          servicePack: item.mecanicienId,
+          prix: item.prixUnitaire
+        });
+      } else if (item.type === 'main_oeuvre') {
+        devisData.mecaniciens.push({
+          mecanicien: item.mecanicienId,
+          heureDeTravail: item.quantite
+        });
+      } else {
+        devisData.lignesSupplementaires.push({
+          nom: item.nom,
+          prix: item.prixUnitaire,
+          quantite: item.quantite,
+          type: item.type
+        });
+      }
+      
+    });
+
+    // Récupérer les mécaniciens depuis les items de type 'main_oeuvre'
+    const mecanicienItems = todoItems.filter(item => item.type === 'main_oeuvre' && item.mecanicienId);
+    mecanicienItems.forEach(item => {
+      devisData.mecaniciens.push({
+        mecanicien: item.mecanicienId,
+        heureDeTravail: item.quantite // Utiliser quantite comme heureDeTravail
+      });
+    });
     // Appeler le service pour envoyer le devis au client
     this.devisService.sendDevisToClient(this.devis._id, devisData).subscribe({
       next: (response: any) => {
         if (response && response.success) {
-          // Mise à jour du statut local
+          console.log(response);
+          
+          // Mettre à jour uniquement le statut du devis
           if (this.devis) {
-            this.devis.status = 'envoye';
+            this.devis.status = response.devis.status;
           }
           
-          // Afficher un message de succès (à implémenter selon votre UI)
-          alert('Devis envoyé au client avec succès!');
+          // Afficher un message de succès léger
+          const successMessage = document.createElement('div');
+          successMessage.className = 'success-message';
+          successMessage.textContent = 'Devis envoyé avec succès!';
+          document.body.appendChild(successMessage);
+          
+          // Supprimer le message après 3 secondes
+          setTimeout(() => {
+            successMessage.remove();
+          }, 3000);
         } else {
           this.error = response?.message || 'Erreur lors de l\'envoi du devis';
         }
+        this.isSending = false;
       },
       error: (error: Error) => {
         console.error('Erreur lors de l\'envoi du devis', error);
         this.error = 'Erreur lors de l\'envoi du devis au client';
+        this.isSending = false;
       }
     });
+  }
+
+  // Méthode helper pour obtenir le prix d'un pack
+  private getPrixForPack(pack: PackChoisi): number {
+    // Si le pack a déjà un prix défini, l'utiliser
+    if (pack.servicePack.remise) {
+      // Retourner la remise comme prix (à adapter selon votre logique métier)
+      return pack.servicePack.remise;
+    }
+    // Sinon retourner une valeur par défaut
+    return 0; // À adapter selon votre logique métier
   }
 
   goBack(): void {
@@ -1038,37 +1127,64 @@ export class DevisDetailsComponent implements OnInit {
     // Récupérer les données du formulaire
     const items = this.todoItemsArray.getRawValue();
     
-    // Préparer les données à envoyer
-    const updateData = {
-      // Regrouper les items par type pour les envoyer au backend
-      lignesSupplementaires: items.filter(item => item.type !== 'main_oeuvre')
-        .map(item => ({
-          _id: item._id,
-          designation: item.nom,
-          description: item.note,
-          quantite: item.quantite,
-          prixUnitaire: item.prixUnitaire,
-          typeElement: item.type,
-          priorite: item.priorite,
-          completed: item.completed
-        })),
-      // Gérer les mécaniciens séparément
-      mecaniciensTravaillant: items.filter(item => item.type === 'main_oeuvre')
-        .map(item => ({
-          _id: item._id,
-          mecanicien: item.mecanicienId,
-          tempsEstime: item.quantite,
-          tauxHoraire: item.prixUnitaire
-        })),
-      total: this.calculerTotalTodos()
+    // Préparer les données selon le format attendu par l'API
+    const devisData: FinaliserDevisData = {
+      services: [],
+      packs: [],
+      lignesSupplementaires: [],
+      mecaniciens: [],
+      dateIntervention: this.devis.preferredDate || new Date()
     };
+
+    // Récupérer les services du devis
+    if (this.devis.servicesChoisis && this.devis.servicesChoisis.length > 0) {
+      this.devis.servicesChoisis.forEach(service => {
+        devisData.services.push({
+          service: service.service._id || '',
+          prix: service.service.prix,
+          note: service.note
+        });
+      });
+    }
+
+    // Récupérer les packs du devis
+    if (this.devis.packsChoisis && this.devis.packsChoisis.length > 0) {
+      this.devis.packsChoisis.forEach(pack => {
+        devisData.packs.push({
+          servicePack: pack.servicePack._id || '',
+          prix: this.getPrixForPack(pack)
+        });
+      });
+    }
+
+    // Récupérer les lignes supplémentaires
+    items.forEach(item => {
+      if (item.type !== 'main_oeuvre') {
+        devisData.lignesSupplementaires.push({
+          nom: item.nom,
+          prix: item.prixUnitaire,
+          quantite: item.quantite,
+          type: item.type
+        });
+      }
+    });
+
+    // Récupérer les mécaniciens
+    const mecanicienItems = items.filter(item => item.type === 'main_oeuvre' && item.mecanicienId);
+    mecanicienItems.forEach(item => {
+      devisData.mecaniciens.push({
+        mecanicien: item.mecanicienId,
+        heureDeTravail: item.quantite
+      });
+    });
     
-    this.devisService.updateDevis(this.devis._id, updateData).subscribe({
+    // Utiliser le même endpoint que sendToClient
+    this.devisService.sendDevisToClient(this.devis._id, devisData).subscribe({
       next: (response: any) => {
         if (response && response.success) {
           // Mise à jour des données locales
           if (this.devis) {
-            this.devis.total = updateData.total;
+            this.devis = response.data;
           }
           
           // Afficher un message de succès
