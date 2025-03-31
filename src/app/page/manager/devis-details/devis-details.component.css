@@ -1595,4 +1595,21 @@ textarea.form-control {
 
 .todo-forfait i {
   margin-right: 0.3rem;
+}
+
+.todo-warning {
+  border-left: 4px solid #fc8d00 !important;
+  background-color: #fff1e5 !important;
+}
+
+.mecanicien-indisponible-badge {
+  background-color: #fc8d00;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  margin-left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 } 

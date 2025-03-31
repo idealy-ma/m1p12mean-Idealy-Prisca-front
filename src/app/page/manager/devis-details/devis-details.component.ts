@@ -40,6 +40,9 @@ export class DevisDetailsComponent implements OnInit {
   dateInputValue = '';
   private originalDate: Date | null = null;
 
+  // Propriété pour compter les mécaniciens non disponibles
+  mecaniciensNonDisponiblesCount = 0;
+
   // Filtres pour les todos
   filterType: 'tous' | 'piece' | 'service' | 'main_oeuvre' | 'autre' = 'tous';
   filterStatus: 'tous' | 'completed' | 'pending' = 'tous';
@@ -169,6 +172,9 @@ export class DevisDetailsComponent implements OnInit {
     this.mecanicienService.getMecaniciensDisponibles(dateStr).subscribe({
       next: (mecaniciens) => {
         this.mecaniciens = mecaniciens;
+        
+        // Vérifier les mécaniciens déjà assignés et mettre à jour le compteur
+        this.verifierMecaniciensAssignes(mecaniciens);
       },
       error: (err) => {
         console.error('Erreur lors du chargement des mécaniciens disponibles', err);
@@ -590,9 +596,45 @@ export class DevisDetailsComponent implements OnInit {
   savePreferredDate(): void {
     this.isEditingDate = false;
     if (this.devis && this.dateInputValue) {
+      const previousDate = this.devis.preferredDate ? new Date(this.devis.preferredDate) : undefined;
       this.devis.preferredDate = new Date(this.dateInputValue);
+      
       // Charger les mécaniciens disponibles à la nouvelle date
-      this.loadMecaniciensDisponibles(this.dateInputValue);
+      this.mecanicienService.getMecaniciensDisponibles(this.dateInputValue).subscribe({
+        next: (mecaniciens) => {
+          this.mecaniciens = mecaniciens;
+          
+          // Vérifier les mécaniciens déjà assignés
+          const mecaniciensNonDisponibles = this.verifierMecaniciensAssignes(mecaniciens);
+          
+          if (mecaniciensNonDisponibles.length > 0) {
+            // Alerter l'utilisateur que certains mécaniciens ne sont plus disponibles
+            const confirmation = confirm(`Attention : ${mecaniciensNonDisponibles.length} mécanicien(s) assigné(s) ne sont plus disponibles à cette nouvelle date. Souhaitez-vous conserver cette date et réassigner ces tâches à d'autres mécaniciens ?`);
+            
+            if (!confirmation) {
+              // L'utilisateur refuse la nouvelle date, revenir à la date précédente
+              this.devis!.preferredDate = previousDate;
+              if (previousDate) {
+                const dateStr = previousDate.toISOString().split('T')[0];
+                this.loadMecaniciensDisponibles(dateStr);
+              }
+              return;
+            }
+            
+            // L'utilisateur accepte, marquer visuellement les éléments à réaffecter
+            mecaniciensNonDisponibles.forEach(index => {
+              const item = this.todoItemsArray.at(index);
+              item.patchValue({
+                note: (item.value.note ? item.value.note + ' ' : '') + '[ATTENTION: Mécanicien non disponible à la nouvelle date]'
+              });
+            });
+          }
+        },
+        error: (err) => {
+          console.error('Erreur lors du chargement des mécaniciens disponibles', err);
+          this.error = "Impossible de charger la liste des mécaniciens disponibles";
+        }
+      });
     }
   }
   
@@ -607,7 +649,7 @@ export class DevisDetailsComponent implements OnInit {
     }
     this.isEditingDate = false;
   }
-  
+
   removePreferredDate(): void {
     if (this.devis) {
       this.devis.preferredDate = undefined;
@@ -615,6 +657,30 @@ export class DevisDetailsComponent implements OnInit {
     
     // En production, appeler le service pour mettre à jour la date sur le serveur
     // this.devisService.updatePreferredDate(this.devis._id, null)...
+  }
+  
+  // Méthode pour vérifier si les mécaniciens assignés sont disponibles à la nouvelle date
+  private verifierMecaniciensAssignes(mecaniciens: Mecanicien[]): number[] {
+    const mecaniciensNonDisponibles: number[] = [];
+    
+    // Parcourir tous les éléments de type main_oeuvre
+    this.todoItemsArray.controls.forEach((control, index) => {
+      const item = control.value;
+      if (item.type === 'main_oeuvre' && item.mecanicienId) {
+        // Vérifier si le mécanicien est dans la liste des disponibles
+        const mecanicienDisponible = mecaniciens.some(m => m._id === item.mecanicienId);
+        console.log(mecanicienDisponible);
+        
+        if (!mecanicienDisponible) {
+          mecaniciensNonDisponibles.push(index);
+        }
+      }
+    });
+    
+    // Mettre à jour le compteur global pour l'affichage de l'alerte
+    this.mecaniciensNonDisponiblesCount = mecaniciensNonDisponibles.length;
+    
+    return mecaniciensNonDisponibles;
   }
 
   // Méthode pour ouvrir l'image en plein écran dans un modal
@@ -1037,5 +1103,26 @@ export class DevisDetailsComponent implements OnInit {
     
     // Calculer la différence de taux horaire
     this.updateHourlyRateDiff();
+  }
+
+  // Méthode pour vérifier si un item a un mécanicien non disponible
+  isMecanicienNonDisponible(index: number): boolean {
+    if (this.todoItemsArray.length <= index) return false;
+    
+    const item = this.todoItemsArray.at(index).value;
+    if (item.type !== 'main_oeuvre' || !item.mecanicienId) return false;
+    
+    // Vérifier si le mécanicien assigné est dans la liste des disponibles
+    return !this.mecaniciens.some(m => m._id === item.mecanicienId);
+  }
+
+  // Méthode pour faire défiler vers les éléments avec des mécaniciens non disponibles
+  scrollToMecaniciensNonDisponibles(): void {
+    setTimeout(() => {
+      const elements = document.querySelectorAll('.todo-warning');
+      if (elements.length > 0) {
+        elements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   }
 } 
