@@ -505,10 +505,15 @@
             Impossible d'envoyer le devis : certains mécaniciens assignés ne sont pas disponibles à la date d'intervention choisie. 
             Veuillez réassigner ces tâches avant d'envoyer le devis.
           </div>
-          <button class="btn-primary" 
-                  [disabled]="mecaniciensNonDisponiblesCount > 0" 
-                  (click)="sendToClient()">
-            <i class="fas fa-paper-plane"></i> Envoyer le devis au client
+          <button 
+            class="btn-send" 
+            (click)="sendToClient()"
+            [disabled]="isSending"
+          >
+            <span *ngIf="!isSending">
+              <i class="fas fa-paper-plane me-2"></i> Envoyer au client
+            </span>
+            <span *ngIf="isSending">Envoi en cours...</span>
           </button>
         </div>
       </div>
