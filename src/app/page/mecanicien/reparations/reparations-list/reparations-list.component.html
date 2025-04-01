@@ -1,0 +1,142 @@
+<div class="reparations-container">
+  <div class="header">
+    <h1>Mes Réparations</h1>
+    <div class="filters">
+      <div class="search-box">
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm" 
+          (keyup)="onSearch()"
+          placeholder="Rechercher une réparation..."
+          class="search-input"
+        >
+        <button (click)="onSearch()" class="search-button">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement des réparations...</p>
+  </div>
+
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <div *ngIf="!loading && !error" class="reparations-grid">
+    <div *ngFor="let reparation of paginatedReparations" class="reparation-card">
+      <div class="reparation-header">
+        <div class="vehicle-info">
+          <h3>{{ reparation.vehicule.marque }} {{ reparation.vehicule.modele }}</h3>
+          <p class="registration">{{ reparation.vehicule.immatricule }}</p>
+        </div>
+        <div class="status-badge" [ngClass]="getStatusClass(reparation.status)">
+          {{ getStatusLabel(reparation.status) }}
+        </div>
+      </div>
+
+      <div class="reparation-content">
+        <div class="client-info">
+          <p><i class="fas fa-user"></i> {{ reparation.client.nom }} {{ reparation.client.prenom }}</p>
+          <p><i class="fas fa-phone"></i> {{ reparation.client.telephone }}</p>
+        </div>
+
+        <div class="progress-section">
+          <div class="progress-label">Progression</div>
+          <div class="progress-bar">
+            <div class="progress" [style.width.%]="reparation.progression"></div>
+          </div>
+          <div class="progress-text">{{ reparation.progression }}%</div>
+        </div>
+
+        <div class="steps-preview">
+          <div *ngFor="let etape of reparation.etapes.slice(0, 3)" class="step-item">
+            <i class="fas" [ngClass]="{
+              'fa-circle': etape.status === 'a_faire',
+              'fa-play-circle': etape.status === 'en_cours',
+              'fa-check-circle': etape.status === 'termine'
+            }"></i>
+            <span>{{ etape.nom }}</span>
+          </div>
+          <div *ngIf="reparation.etapes.length > 3" class="more-steps">
+            +{{ reparation.etapes.length - 3 }} autres
+          </div>
+        </div>
+      </div>
+
+      <div class="reparation-footer">
+        <div class="dates">
+          <p *ngIf="reparation.dateDebut">
+            <i class="fas fa-calendar-alt"></i>
+            Début: {{ reparation.dateDebut | date:'dd/MM/yyyy' }}
+          </p>
+          <p *ngIf="reparation.dateFin">
+            <i class="fas fa-calendar-check"></i>
+            Fin: {{ reparation.dateFin | date:'dd/MM/yyyy' }}
+          </p>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" (click)="viewDetails(reparation._id)">
+            <i class="fas fa-eye"></i> Voir les détails
+          </button>
+          <button *ngIf="reparation.status === 'en_attente'"
+                  class="btn btn-success"
+                  (click)="updateStatus(reparation._id, 'en_cours')">
+            <i class="fas fa-play"></i> Démarrer
+          </button>
+          <button *ngIf="reparation.status === 'en_cours'"
+                  class="btn btn-warning"
+                  (click)="updateStatus(reparation._id, 'en_pause')">
+            <i class="fas fa-pause"></i> Mettre en pause
+          </button>
+          <button *ngIf="reparation.status === 'en_pause'"
+                  class="btn btn-success"
+                  (click)="updateStatus(reparation._id, 'en_cours')">
+            <i class="fas fa-play"></i> Reprendre
+          </button>
+          <button *ngIf="reparation.status === 'en_cours'"
+                  class="btn btn-success"
+                  (click)="updateStatus(reparation._id, 'termine')">
+            <i class="fas fa-check"></i> Terminer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && !error && filteredReparations.length === 0" class="no-results">
+    <p>Aucune réparation trouvée</p>
+  </div>
+
+  <div *ngIf="!loading && !error && filteredReparations.length > 0" class="pagination">
+    <button 
+      [disabled]="currentPage === 1" 
+      (click)="goToPage(currentPage - 1)"
+      class="pagination-button"
+    >
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    
+    <div class="page-numbers">
+      <button 
+        *ngFor="let page of [].constructor(totalPages); let i = index"
+        (click)="goToPage(i + 1)"
+        [class.active]="currentPage === i + 1"
+        class="pagination-button"
+      >
+        {{ i + 1 }}
+      </button>
+    </div>
+
+    <button 
+      [disabled]="currentPage === totalPages" 
+      (click)="goToPage(currentPage + 1)"
+      class="pagination-button"
+    >
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+</div> 
