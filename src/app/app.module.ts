@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -37,6 +38,8 @@ import { UserProfileComponent } from './page/client/profile/user-profile.compone
 import { DevisRequestComponent } from './page/client/devis-request/devis-request.component';
 import { ClientDevisListComponent } from './page/client/devis-list/devis-list.component';
 import { ClientDevisDetailsComponent } from './page/client/devis-details/devis-details.component';
+import { ReparationsListComponent } from './page/mecanicien/reparations/reparations-list/reparations-list.component';
+import { ReparationDetailsComponent } from './page/mecanicien/reparations/reparation-details/reparation-details.component';
 
 @NgModule({
   declarations: [
@@ -70,14 +73,17 @@ import { ClientDevisDetailsComponent } from './page/client/devis-details/devis-d
     VehiculeListComponent,
     DevisRequestComponent,
     ClientDevisListComponent,
-    ClientDevisDetailsComponent
+    ClientDevisDetailsComponent,
+    ReparationsListComponent,
+    ReparationDetailsComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     FormsModule,
     ReactiveFormsModule,
-    HttpClientModule
+    HttpClientModule,
+    CommonModule
   ],
   providers: [
     {

@@ -25,6 +25,8 @@ import { ClientDevisListComponent } from './page/client/devis-list/devis-list.co
 import { ClientDevisDetailsComponent } from './page/client/devis-details/devis-details.component';
 import { ClientDashboardComponent } from './page/client/dashboard/client-dashboard.component';
 import { UserProfileComponent } from './page/client/profile/user-profile.component';
+import { ReparationsListComponent } from './page/mecanicien/reparations/reparations-list/reparations-list.component';
+import { ReparationDetailsComponent } from './page/mecanicien/reparations/reparation-details/reparation-details.component';
 
 
 const routes: Routes = [
@@ -85,6 +87,8 @@ const routes: Routes = [
     data: { role: 'mecanicien' },
     children: [
       { path: '', component: AccueilMecanicienComponent },
+      { path: 'reparations', component: ReparationsListComponent },
+      { path: 'reparations/:id', component: ReparationDetailsComponent },
       { path: 'profil', component: UserProfileComponent }
       // Ajoutez les autres routes des mécaniciens ici lorsqu'elles seront créées
     ]
