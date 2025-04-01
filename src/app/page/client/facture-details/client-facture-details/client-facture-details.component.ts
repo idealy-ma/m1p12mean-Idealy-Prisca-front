@@ -3,6 +3,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Facture } from '../../../../models/facture.model';
 import { FactureService } from '../../../../services/facture.service';
 import { Location } from '@angular/common';
+// Remove pdfmake imports, they are now in the service
+// import * as pdfMake from "pdfmake/build/pdfmake";
+// import * as pdfFonts from 'pdfmake/build/vfs_fonts'; 
+// (pdfMake as any).vfs = pdfFonts.vfs;
+
+// Import the new service
+import { PdfGenerationService } from '../../../../services/pdf-generation.service';
 
 @Component({
   selector: 'app-client-facture-details',
@@ -18,7 +25,8 @@ export class ClientFactureDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private factureService: FactureService,
-    private location: Location
+    private location: Location,
+    private pdfGenerationService: PdfGenerationService // Inject the service
   ) { }
 
   ngOnInit(): void {
@@ -60,11 +68,13 @@ export class ClientFactureDetailsComponent implements OnInit {
   }
 
   downloadPDF(): void {
-    if (!this.facture) return;
-    console.log('Téléchargement PDF pour facture:', this.facture.id);
-    // Logique future: utiliser une librairie comme jsPDF ou appeler une API de génération
-    alert('Fonctionnalité de téléchargement PDF à implémenter.');
-    // window.print(); // Alternative simple pour l'instant
+    if (!this.facture) {
+      console.error("Facture data not loaded, cannot generate PDF.");
+      // Optionally show a user-friendly error
+      return;
+    }
+    // Call the service to generate the PDF
+    this.pdfGenerationService.generateFacturePdf(this.facture);
   }
 
   goBack(): void {
@@ -134,7 +144,7 @@ export class ClientFactureDetailsComponent implements OnInit {
     if (!facture || facture.statut === 'payee' || facture.statut === 'annulee') {
       return 0;
     }
-    const totalPaid = facture.transactions
+    const totalPaid = (facture.transactions || []) // Add safety check
                       .filter(t => t.statut === 'validee')
                       .reduce((sum, t) => sum + t.montant, 0);
     return Math.max(0, facture.montantTTC - totalPaid);

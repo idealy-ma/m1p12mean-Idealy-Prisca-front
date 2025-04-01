@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Facture, FactureFilters } from '../../../../models/facture.model';
 import { FactureService } from '../../../../services/facture.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { PdfGenerationService } from '../../../../services/pdf-generation.service';
 
 @Component({
   selector: 'app-client-factures-list',
@@ -29,7 +30,8 @@ export class ClientFacturesListComponent implements OnInit {
   constructor(
     private factureService: FactureService,
     private router: Router,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private pdfGenerationService: PdfGenerationService
   ) {
     this.filterForm = this.fb.group({
       statut: [''],
@@ -242,11 +244,24 @@ export class ClientFacturesListComponent implements OnInit {
     return facture.statut === 'emise' || facture.statut === 'partiellement_payee' || (facture.statut !== 'payee' && facture.statut !== 'annulee' && this.isPastDue(facture));
   }
   
-  // Fonctionnalité PDF à implémenter
+  /**
+   * Finds the corresponding invoice and calls the PDF generation service.
+   * Stops event propagation to prevent card click navigation.
+   * @param factureId The ID of the invoice to download.
+   * @param event The click event.
+   */
   downloadPDF(factureId: string, event: Event): void {
     event.stopPropagation(); // Empêcher la navigation au clic sur la carte
-    console.log('Téléchargement PDF pour facture:', factureId); 
-    // Logique future: Générer ou récupérer le PDF
+
+    // Find the full invoice object in the currently displayed list
+    const facture = this.filteredFactures.find(f => f.id === factureId);
+
+    if (facture) {
+      this.pdfGenerationService.generateFacturePdf(facture);
+    } else {
+      console.error(`Facture with ID ${factureId} not found in the list for PDF generation.`);
+      // Optionally show a user-friendly error message
+    }
   }
 
   // Logique pour le bouton "Payer" (redirige vers les détails pour l'instant)
