@@ -72,6 +72,9 @@ export class AuthService extends BaseService {
   logout(): void {
     this.tokenService.token = '';
     this.router.navigate(['/']);
+    localStorage.clear(); // Nettoyer les données locales
+    sessionStorage.clear();
+    
   }
 
   register(userData: any): Observable<any> {
