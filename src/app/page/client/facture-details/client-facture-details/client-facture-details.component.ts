@@ -10,6 +10,8 @@ import { Location } from '@angular/common';
 
 // Import the new service
 import { PdfGenerationService } from '../../../../services/pdf-generation.service';
+// Import PaymentInfo model if not already implicitly available via FactureService
+import { PaymentInfo } from '../../../../models/facture.model';
 
 @Component({
   selector: 'app-client-facture-details',
@@ -20,6 +22,9 @@ export class ClientFactureDetailsComponent implements OnInit {
   facture: Facture | null = null;
   loading: boolean = true;
   error: string | null = null;
+  // Add properties for payment feedback
+  paymentMessage: string | null = null;
+  paymentError: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -62,9 +67,42 @@ export class ClientFactureDetailsComponent implements OnInit {
 
   payOnline(): void {
     if (!this.facture) return;
-    console.log('Tentative de paiement en ligne pour facture:', this.facture.id);
-    // Logique future : ouvrir une modale de paiement, rediriger vers une page de paiement...
-    alert('Fonctionnalité de paiement en ligne à implémenter.');
+    
+    this.paymentMessage = null;
+    this.paymentError = null;
+    this.loading = true; // Show loading indicator during payment simulation
+
+    const remainingDue = this.calculateRemainingDue(this.facture);
+
+    if (remainingDue <= 0) {
+      this.paymentError = "Cette facture est déjà payée.";
+      this.loading = false;
+      return;
+    }
+
+    const paymentInfo: PaymentInfo = {
+      montant: remainingDue,
+      modePaiement: 'en_ligne', // Use a valid mode for simulation
+      reference: `SIM_${Date.now()}` // Simple simulated reference
+    };
+
+    console.log('Simulating payment for facture:', this.facture.id, ' Amount: ', remainingDue);
+
+    this.factureService.payFacture(this.facture.id, paymentInfo).subscribe({
+      next: (transaction) => {
+        console.log('Simulated payment successful, transaction:', transaction);
+        this.paymentMessage = `Paiement simulé de ${this.formatMontant(remainingDue)} effectué avec succès.`;
+        // Reload invoice data to show updated status and transaction
+        this.loadFacture(this.facture!.id); // Non-null assertion ok because we checked facture above
+        // Keep loading = true until loadFacture finishes in its own finalize/error block
+      },
+      error: (err) => {
+        console.error('Error during simulated payment:', err);
+        this.paymentError = `Erreur lors de la simulation du paiement: ${err.message || 'Erreur inconnue'}`;
+        this.loading = false; // Stop loading on error
+      }
+      // No finalize here, loadFacture handles the final loading state
+    });
   }
 
   downloadPDF(): void {

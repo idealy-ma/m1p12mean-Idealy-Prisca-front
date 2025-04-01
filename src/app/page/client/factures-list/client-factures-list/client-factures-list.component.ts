@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Facture, FactureFilters } from '../../../../models/facture.model';
+import { Facture, FactureFilters, PaymentInfo } from '../../../../models/facture.model';
 import { FactureService } from '../../../../services/facture.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { PdfGenerationService } from '../../../../services/pdf-generation.service';
@@ -15,6 +15,8 @@ export class ClientFacturesListComponent implements OnInit {
   filteredFactures: Facture[] = [];
   loading: boolean = true;
   error: string | null = null;
+  paymentMessage: string | null = null;
+  paymentError: string | null = null;
   
   filterForm: FormGroup;
   
@@ -264,10 +266,71 @@ export class ClientFacturesListComponent implements OnInit {
     }
   }
 
-  // Logique pour le bouton "Payer" (redirige vers les détails pour l'instant)
-  goToPayment(factureId: string, event: Event): void {
+  /**
+   * Simulates paying the full remaining amount for a given invoice.
+   * Stops event propagation to prevent card click navigation.
+   * @param factureId The ID of the invoice to simulate payment for.
+   * @param event The click event.
+   */
+  payInvoice(factureId: string, event: Event): void {
     event.stopPropagation();
-    this.viewFactureDetails(factureId);
-    // Plus tard, pourrait ouvrir une modale de paiement ou rediriger vers une page de paiement externe
+
+    this.paymentMessage = null;
+    this.paymentError = null;
+    // We don't set global loading here, maybe just disable the specific button?
+    // Or show a spinner on the specific card? For simplicity, no loading indicator for now.
+
+    const facture = this.filteredFactures.find(f => f.id === factureId);
+
+    if (!facture) {
+      this.paymentError = `Facture ${factureId} non trouvée pour le paiement.`;
+      return;
+    }
+
+    const remainingDue = this.calculateRemainingDue(facture);
+
+    if (remainingDue <= 0) {
+      this.paymentError = `La facture ${facture.numeroFacture} est déjà payée.`;
+      return;
+    }
+
+    const paymentInfo: PaymentInfo = {
+      montant: remainingDue,
+      modePaiement: 'en_ligne', // Use a valid mode
+      reference: `SIM_LIST_${Date.now()}`
+    };
+
+    console.log('Simulating payment from list for facture:', factureId, ' Amount: ', remainingDue);
+
+    this.factureService.payFacture(factureId, paymentInfo).subscribe({
+      next: (transaction) => {
+        console.log('Simulated payment successful from list, transaction:', transaction);
+        this.paymentMessage = `Paiement simulé pour la facture ${facture.numeroFacture} (${this.formatMontant(remainingDue)}) effectué.`;
+        // Reload the entire list to reflect changes
+        // A more optimized approach could update only the specific card data
+        this.loadFactures(); 
+      },
+      error: (err) => {
+        console.error('Error during simulated payment from list:', err);
+        this.paymentError = `Erreur lors du paiement simulé de la facture ${facture.numeroFacture}: ${err.message || 'Erreur inconnue'}`;
+        // Potentially re-enable button if it was disabled
+      }
+    });
   }
+
+  // --- Add Helper method needed by payInvoice ---
+
+  private calculateRemainingDue(facture: Facture | null): number {
+    if (!facture || facture.statut === 'payee' || facture.statut === 'annulee') {
+      return 0;
+    }
+    // Ensure transactions array exists before filtering/reducing
+    const totalPaid = (facture.transactions || []) 
+                      .filter(t => t.statut === 'validee')
+                      .reduce((sum, t) => sum + t.montant, 0);
+    return Math.max(0, facture.montantTTC - totalPaid);
+  }
+
+  // isPastDue is already defined earlier in the class
+  
 }

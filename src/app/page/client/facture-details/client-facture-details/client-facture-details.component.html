@@ -34,6 +34,15 @@
           <div>Date d'émission : {{ formatDate(facture.dateEmission) }}</div>
           <div>Date d'échéance : {{ formatDate(facture.dateEcheance) }}</div>
         </div>
+
+        <!-- Payment Feedback Messages -->
+        <div *ngIf="paymentMessage" class="payment-feedback success">
+          <i class="fas fa-check-circle"></i> {{ paymentMessage }}
+        </div>
+        <div *ngIf="paymentError" class="payment-feedback error">
+          <i class="fas fa-exclamation-circle"></i> {{ paymentError }}
+        </div>
+
         <div class="actions print-hide">
           <button *ngIf="canPayOnline(facture)" (click)="payOnline()" class="action-btn pay-btn">
             <i class="fas fa-credit-card"></i> Payer {{ formatMontant(calculateRemainingDue(facture)) }}

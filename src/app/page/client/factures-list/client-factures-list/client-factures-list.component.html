@@ -21,6 +21,14 @@
       <p class="factures-subtitle">Consultez et gérez l'historique de vos factures</p>
     </div>
 
+    <!-- Payment Feedback Messages (Global) -->
+    <div *ngIf="paymentMessage" class="payment-feedback success global-feedback">
+      <i class="fas fa-check-circle"></i> {{ paymentMessage }}
+    </div>
+    <div *ngIf="paymentError" class="payment-feedback error global-feedback">
+      <i class="fas fa-exclamation-circle"></i> {{ paymentError }}
+    </div>
+
     <!-- Filtres -->
     <div class="filters-container">
       <form [formGroup]="filterForm">
@@ -96,7 +104,7 @@
           <button type="button" class="action-btn view-details-btn" title="Voir les détails">
             <i class="fas fa-eye"></i> Détails
           </button>
-          <button *ngIf="canPayOnline(facture)" type="button" class="action-btn pay-btn" (click)="goToPayment(facture.id, $event)" title="Payer la facture">
+          <button *ngIf="canPayOnline(facture)" type="button" class="action-btn pay-btn" (click)="payInvoice(facture.id, $event)" title="Payer la facture">
             <i class="fas fa-credit-card"></i> Payer
           </button>
           <button type="button" class="action-btn download-btn" (click)="downloadPDF(facture.id, $event)" title="Télécharger en PDF">
