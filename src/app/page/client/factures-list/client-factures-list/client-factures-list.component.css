@@ -1,0 +1,420 @@
+/* Styles généraux et chargement/erreur (similaires à manager) */
+.factures-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.loading-container, .error-container {
+  /* ... (copier depuis manager-factures-list.css) ... */
+  display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; padding: 20px; text-align: center;
+}
+.spinner { /* ... */ width: 50px; height: 50px; border: 5px solid rgba(0, 0, 0, 0.1); border-radius: 50%; border-top-color: #3498db; animation: spin 1s ease-in-out infinite; margin-bottom: 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-icon { /* ... */ color: #e74c3c; font-size: 48px; margin-bottom: 20px; }
+.error-container button { /* ... */ margin-top: 15px; padding: 8px 16px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
+.error-container button:hover { background-color: #2980b9; }
+
+/* En-tête */
+.factures-header {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.factures-header h1 {
+  font-size: 28px;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.factures-subtitle {
+  color: #7f8c8d;
+  font-size: 16px;
+}
+
+/* Filtres (similaires à manager mais peut-être simplifiés) */
+.filters-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: flex-end;
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 150px;
+  position: relative;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.filter-group select,
+.filter-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #f9f9f9;
+  transition: all 0.2s;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  background-color: white;
+}
+
+.search-group {
+  flex: 2;
+  display: flex;
+  align-items: center;
+}
+
+.search-group input {
+  padding-right: 40px;
+}
+
+.search-button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 40px;
+  background: none;
+  border: none;
+  color: #7f8c8d;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.search-button:hover {
+  color: #3498db;
+}
+
+.reset-filters {
+  padding: 12px 15px;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #7f8c8d;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+}
+
+.reset-filters:hover {
+  background-color: #e9ecef;
+  color: #e74c3c;
+}
+
+/* Grille des cartes */
+.factures-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 25px;
+  margin-bottom: 25px;
+}
+
+.facture-card {
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #eee;
+}
+
+.facture-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.facture-card-header {
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.facture-number {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 15px;
+}
+
+.facture-date {
+  font-size: 13px;
+  color: #7f8c8d;
+}
+
+.facture-status {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-align: center;
+}
+/* Statuts (copier depuis manager-list ou adapter) */
+.status-issued { background-color: #fff8e1; color: #ff8f00; }
+.status-paid { background-color: #e8f5e9; color: #2e7d32; }
+.status-partial { background-color: #f3e5f5; color: #7b1fa2; }
+.status-cancelled { background-color: #ffebee; color: #c62828; }
+.status-late { background-color: #ffebee; color: #c62828; animation: pulse 1.5s infinite alternate; }
+@keyframes pulse { from { opacity: 0.7; } to { opacity: 1; } }
+
+.facture-card-body {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.facture-vehicle {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.facture-vehicle i {
+  font-size: 24px;
+  color: #3498db;
+  background-color: #ecf0f1;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vehicle-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.vehicle-plate {
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.facture-amount, .facture-due {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 10px;
+  border-top: 1px dashed #eee;
+}
+
+.amount-label, .due-label {
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.amount-value {
+  font-weight: 700;
+  font-size: 18px;
+  color: #2c3e50;
+}
+
+.due-value {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.facture-due.past-due .due-value {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
+.facture-card-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e9ecef;
+  background-color: #f8f9fa;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.action-btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.view-details-btn {
+  background-color: #ecf0f1;
+  color: #7f8c8d;
+}
+.view-details-btn:hover { background-color: #d6dbdf; color: #2c3e50; }
+
+.pay-btn {
+  background-color: #2ecc71; /* Vert pour paiement */
+  color: white;
+}
+.pay-btn:hover { background-color: #27ae60; }
+
+.download-btn {
+  background-color: #ecf0f1;
+  color: #7f8c8d;
+}
+.download-btn:hover { background-color: #d6dbdf; color: #2c3e50; }
+
+/* Pas de factures */
+.no-factures {
+  padding: 50px 20px;
+  text-align: center;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.no-factures-icon {
+  font-size: 60px;
+  color: #bdc3c7;
+  margin-bottom: 20px;
+}
+
+.no-factures h3 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.no-factures p {
+  color: #7f8c8d;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px;
+  padding-bottom: 20px;
+}
+
+.pagination-btn {
+  width: 40px;
+  height: 40px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #7f8c8d;
+  margin: 0 5px;
+}
+
+.pagination-btn:hover:not([disabled]) {
+  background-color: #f0f0f0;
+  border-color: #ccc;
+  color: #333;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 5px;
+  margin: 0 10px;
+}
+
+.page-numbers span {
+  min-width: 35px;
+  height: 35px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s;
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.page-numbers span:not(.ellipsis):hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.page-numbers span.active {
+  background-color: #3498db;
+  color: white;
+  font-weight: 600;
+  cursor: default;
+}
+
+.page-numbers span.ellipsis {
+  cursor: default;
+  padding: 0 5px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .filters-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .filter-group {
+    min-width: 100%;
+  }
+  .factures-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .pagination {
+    flex-wrap: wrap;
+  }
+  .page-numbers span {
+     min-width: 30px;
+     height: 30px;
+     font-size: 13px;
+  }
+  .pagination-btn {
+    width: 35px;
+    height: 35px;
+  }
+}

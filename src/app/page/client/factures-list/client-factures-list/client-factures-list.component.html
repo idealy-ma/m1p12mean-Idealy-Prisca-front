@@ -1,0 +1,150 @@
+<div class="factures-container">
+  <!-- Section de chargement -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Chargement de vos factures...</p>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div class="error-container" *ngIf="error">
+    <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+    <p>{{ error }}</p>
+    <button (click)="loadFactures()">Réessayer</button>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="factures-content" *ngIf="!loading && !error">
+    
+    <!-- En-tête et info -->
+    <div class="factures-header">
+      <h1>Mes factures</h1>
+      <p class="factures-subtitle">Consultez et gérez l'historique de vos factures</p>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters-container">
+      <form [formGroup]="filterForm">
+        <div class="filters-row">
+          <div class="filter-group">
+            <label for="statut">Statut</label>
+            <select id="statut" formControlName="statut">
+              <option value="">Tous les statuts</option>
+              <option value="emise">À payer</option>
+              <option value="payee">Payées</option>
+              <option value="partiellement_payee">Partiellement payées</option>
+              <option value="en_retard">En retard</option>
+              <option value="annulee">Annulées</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="dateDebut">Du</label>
+            <input type="date" id="dateDebut" formControlName="dateDebut">
+          </div>
+
+          <div class="filter-group">
+            <label for="dateFin">Au</label>
+            <input type="date" id="dateFin" formControlName="dateFin">
+          </div>
+
+          <div class="filter-group search-group">
+            <input type="text" id="recherche" formControlName="recherche" placeholder="Rechercher (N°, Véhicule...)">
+            <button type="button" class="search-button">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+
+          <button type="button" class="reset-filters" (click)="resetFilters()">
+            <i class="fas fa-times"></i> Réinitialiser
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Grille des factures -->
+    <div class="factures-grid" *ngIf="paginatedFactures.length > 0">
+      <div class="facture-card" *ngFor="let facture of paginatedFactures" (click)="viewFactureDetails(facture.id)">
+        <div class="facture-card-header">
+          <div class="facture-number">{{ facture.numeroFacture }}</div>
+          <div class="facture-date">{{ formatDate(facture.dateEmission) }}</div>
+          <div class="facture-status" [ngClass]="getStatusClass(facture.statut)">
+            {{ getStatusLabel(facture.statut) }}
+          </div>
+        </div>
+        
+        <div class="facture-card-body">
+          <div class="facture-vehicle">
+            <i class="fas fa-car"></i>
+            <div class="vehicle-info">
+              <div class="vehicle-name">{{ facture.vehicule.marque }} {{ facture.vehicule.modele }}</div>
+              <div class="vehicle-plate">{{ facture.vehicule.immatriculation }}</div>
+            </div>
+          </div>
+          
+          <div class="facture-amount">
+            <div class="amount-label">Montant Total</div>
+            <div class="amount-value">{{ formatMontant(facture.montantTTC) }}</div>
+          </div>
+          
+          <div class="facture-due" [class.past-due]="isPastDue(facture)">
+            <div class="due-label">Échéance</div>
+            <div class="due-value">{{ formatDate(facture.dateEcheance) }}</div>
+          </div>
+        </div>
+        
+        <div class="facture-card-footer">
+          <button type="button" class="action-btn view-details-btn" title="Voir les détails">
+            <i class="fas fa-eye"></i> Détails
+          </button>
+          <button *ngIf="canPayOnline(facture)" type="button" class="action-btn pay-btn" (click)="goToPayment(facture.id, $event)" title="Payer la facture">
+            <i class="fas fa-credit-card"></i> Payer
+          </button>
+          <button type="button" class="action-btn download-btn" (click)="downloadPDF(facture.id, $event)" title="Télécharger en PDF">
+            <i class="fas fa-download"></i> PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message pas de factures -->
+    <div class="no-factures" *ngIf="!loading && filteredFactures.length === 0">
+      <div class="no-factures-icon">
+        <i class="fas fa-file-invoice-dollar"></i>
+      </div>
+      <h3>Aucune facture trouvée</h3>
+      <p>Vous n'avez pas encore de factures disponibles ou correspondant à vos critères.</p>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button 
+        [disabled]="currentPage === 1" 
+        (click)="changePage(currentPage - 1)"
+        class="pagination-btn prev"
+        aria-label="Page précédente"
+      >
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      
+      <div class="page-numbers">
+        <ng-container *ngFor="let page of getPageNumbers()">
+           <span *ngIf="page !== -1" 
+                 [class.active]="currentPage === page"
+                 (click)="changePage(page)">
+              {{ page }}
+            </span>
+            <span *ngIf="page === -1" class="ellipsis">...</span>
+        </ng-container>
+      </div>
+      
+      <button 
+        [disabled]="currentPage === totalPages" 
+        (click)="changePage(currentPage + 1)"
+        class="pagination-btn next"
+        aria-label="Page suivante"
+      >
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
