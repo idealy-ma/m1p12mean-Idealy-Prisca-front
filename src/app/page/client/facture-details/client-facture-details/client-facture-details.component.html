@@ -1,1 +1,167 @@
-<p>client-facture-details works!</p>
+<div class="facture-details-container">
+  <!-- Bouton Retour -->
+  <div class="header-actions print-hide">
+    <button class="back-button" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i> Retour à mes factures
+    </button>
+  </div>
+
+  <!-- Chargement -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Chargement des détails de la facture...</p>
+  </div>
+
+  <!-- Erreur -->
+  <div class="error-container" *ngIf="error && !loading">
+    <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+    <p>{{ error }}</p>
+    <button (click)="goBack()">Retour</button>
+  </div>
+
+  <!-- Détails de la facture -->
+  <div class="facture-content" *ngIf="facture && !loading">
+    <!-- En-tête de la facture -->
+    <div class="facture-header">
+      <div class="left-section">
+        <h1>Facture N° {{ facture.numeroFacture }}</h1>
+        <div class="status-badge" [ngClass]="getStatusClass(facture.statut)">
+          {{ getStatusLabel(facture.statut) }}
+        </div>
+      </div>
+      <div class="right-section">
+        <div class="dates">
+          <div>Date d'émission : {{ formatDate(facture.dateEmission) }}</div>
+          <div>Date d'échéance : {{ formatDate(facture.dateEcheance) }}</div>
+        </div>
+        <div class="actions print-hide">
+          <button *ngIf="canPayOnline(facture)" (click)="payOnline()" class="action-btn pay-btn">
+            <i class="fas fa-credit-card"></i> Payer {{ formatMontant(calculateRemainingDue(facture)) }}
+          </button>
+          <button (click)="downloadPDF()" class="action-btn download-btn">
+            <i class="fas fa-download"></i> Télécharger PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Informations Véhicule et Garage -->
+    <div class="info-section">
+      <!-- Infos Client (Optionnel, peut être retiré car c'est l'espace du client) -->
+      <!-- 
+      <div class="info-card client-info">
+        <h3>Mes Informations</h3>
+        <p><strong>{{ facture.client.prenom }} {{ facture.client.nom }}</strong></p>
+        ...
+      </div> 
+      -->
+      <div class="info-card vehicle-info">
+        <h3>Véhicule concerné</h3>
+        <p><strong>{{ facture.vehicule.marque }} {{ facture.vehicule.modele }}</strong></p>
+        <p>Immatriculation : {{ facture.vehicule.immatriculation }}</p>
+        <p *ngIf="facture.vehicule.annee">Année : {{ facture.vehicule.annee }}</p>
+      </div>
+      <div class="info-card garage-info">
+        <h3>Votre Garage</h3>
+        <p><strong>Garage V. Parrot</strong></p>
+        <p>12 Rue de la Réparation</p>
+        <p>31000 Toulouse, France</p>
+        <p>Téléphone: 05 61 23 45 67</p>
+      </div>
+    </div>
+
+    <!-- Tableau des lignes de la facture -->
+    <div class="lines-section">
+      <h3>Détail des prestations et pièces</h3>
+      <table class="lines-table">
+        <thead>
+          <tr>
+            <th>Désignation</th>
+            <th class="center">Quantité</th>
+            <th class="right">Prix Unit. HT</th>
+            <th class="right">Montant HT</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ligne of facture.lignesFacture">
+            <td>
+              {{ ligne.designation }}
+              <span *ngIf="ligne.type === 'piece' && ligne.reference" class="reference"> (Réf: {{ ligne.reference }})</span>
+            </td>
+            <td class="center">{{ ligne.quantite }}</td>
+            <td class="right">{{ formatMontant(ligne.prixUnitaireHT) }}</td>
+            <td class="right">{{ formatMontant(ligne.montantHT) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totaux -->
+    <div class="totals-section">
+      <div class="totals-table">
+        <div class="total-row">
+          <div class="label">Total HT</div>
+          <div class="value">{{ formatMontant(facture.montantHT) }}</div>
+        </div>
+        <div class="total-row">
+          <div class="label">Montant TVA (20%)</div>
+          <div class="value">{{ formatMontant(facture.montantTVA) }}</div>
+        </div>
+        <div class="total-row" *ngIf="facture.remise">
+          <div class="label">Remise ({{ facture.remise.description }})</div>
+          <div class="value remise">- {{ formatMontant(facture.remise.montant) }}</div>
+        </div>
+        <div class="total-row grand-total">
+          <div class="label">Total TTC</div>
+          <div class="value">{{ formatMontant(facture.montantTTC) }}</div>
+        </div>
+         <!-- Afficher le montant déjà payé si paiement partiel -->
+        <div class="total-row paid-amount" *ngIf="facture.statut === 'partiellement_payee'">
+            <div class="label">Montant Payé</div>
+            <div class="value">{{ formatMontant(facture.montantTTC - calculateRemainingDue(facture)) }}</div>
+        </div>
+        <div class="total-row remaining-due" *ngIf="canPayOnline(facture) && calculateRemainingDue(facture) > 0">
+          <div class="label">Reste à payer</div>
+          <div class="value">{{ formatMontant(calculateRemainingDue(facture)) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historique des Transactions -->
+    <div class="transactions-section" *ngIf="facture.transactions && facture.transactions.length > 0">
+      <h3>Vos paiements effectués</h3>
+      <table class="transactions-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Mode de paiement</th>
+            <th>Référence</th>
+            <th class="right">Montant</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let tx of facture.transactions | slice:0:10"> <!-- Limiter l'affichage si besoin -->
+            <td>{{ formatDate(tx.date) }}</td>
+            <td>{{ tx.modePaiement }}</td>
+            <td>{{ tx.reference || '-' }}</td>
+            <td class="right">{{ formatMontant(tx.montant) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Commentaires éventuels (si on décide de les montrer au client) -->
+    <!-- 
+    <div class="comments-section" *ngIf="facture.commentaires">
+      <h3>Commentaires</h3>
+      <p>{{ facture.commentaires }}</p>
+    </div>
+    -->
+
+    <!-- Pied de page -->
+    <div class="facture-footer">
+      <p>Merci de votre confiance.</p>
+      <p>Pour toute question concernant cette facture, veuillez contacter le garage.</p>
+    </div>
+  </div>
+</div>
