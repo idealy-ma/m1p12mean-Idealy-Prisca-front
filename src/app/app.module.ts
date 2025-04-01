@@ -40,6 +40,8 @@ import { ClientDevisListComponent } from './page/client/devis-list/devis-list.co
 import { ClientDevisDetailsComponent } from './page/client/devis-details/devis-details.component';
 import { ReparationsListComponent } from './page/mecanicien/reparations/reparations-list/reparations-list.component';
 import { ReparationDetailsComponent } from './page/mecanicien/reparations/reparation-details/reparation-details.component';
+import { ClientReparationListComponent } from './page/client/reparations/reparation-list/client-reparation-list.component';
+import { ClientReparationDetailsComponent } from './page/client/reparations/reparation-details/client-reparation-details.component';
 
 @NgModule({
   declarations: [
@@ -75,7 +77,9 @@ import { ReparationDetailsComponent } from './page/mecanicien/reparations/repara
     ClientDevisListComponent,
     ClientDevisDetailsComponent,
     ReparationsListComponent,
-    ReparationDetailsComponent
+    ReparationDetailsComponent,
+    ClientReparationListComponent,
+    ClientReparationDetailsComponent
   ],
   imports: [
     BrowserModule,

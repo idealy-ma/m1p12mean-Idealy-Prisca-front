@@ -1,0 +1,330 @@
+<div class="client-reparation-details-container">
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement des détails de votre réparation...</p>
+  </div>
+
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <div *ngIf="!loading && !error && reparation" class="content">
+    <!-- En-tête -->
+    <div class="header">
+      <div class="back-button" (click)="goBack()">
+        <i class="fas fa-arrow-left"></i>
+        Retour à mes réparations
+      </div>
+      <div class="title-section">
+        <h1>
+          <span class="vehicle-name">{{ reparation.vehicule.marque }} {{ reparation.vehicule.modele }}</span>
+          <span class="immatriculation">{{ reparation.vehicule.immatricule }}</span>
+        </h1>
+        <div class="status-badge" [ngClass]="getStatusClass(reparation.status)">
+          {{ getStatusLabel(reparation.status) }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Infos principales -->
+    <div class="main-info">
+      <div class="vehicle-info">
+        <div class="vehicle-image" [style.background-image]="'url(' + reparation.vehicule.photo + ')'"></div>
+        <div class="details">
+          <div class="info-item">
+            <label>Kilométrage</label>
+            <span>{{ reparation.vehicule.kilometrage }} km</span>
+          </div>
+          <div class="info-item">
+            <label>Année</label>
+            <span>{{ reparation.vehicule.annee }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="garage-info">
+        <h2>Garage</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Nom</label>
+            <span>{{ reparation.garage.nom }}</span>
+          </div>
+          <div class="info-item">
+            <label>Téléphone</label>
+            <span>{{ reparation.garage.telephone }}</span>
+          </div>
+          <div class="info-item">
+            <label>Mécanicien</label>
+            <span>{{ reparation.mecanicien.prenom }} {{ reparation.mecanicien.nom }}</span>
+          </div>
+          <div class="info-item">
+            <label>Adresse</label>
+            <span>{{ reparation.garage.adresse }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description et progression -->
+    <div class="description-section">
+      <h2>Problème signalé</h2>
+      <p>{{ reparation.description }}</p>
+      
+      <div class="status-info">
+        <div class="status-item">
+          <label>Date de début</label>
+          <span>{{ reparation.dateDebut | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="status-item" *ngIf="reparation.dateEstimee">
+          <label>Fin estimée</label>
+          <span>{{ reparation.dateEstimee | date:'dd/MM/yyyy' }}</span>
+        </div>
+      </div>
+      
+      <div class="progress-section">
+        <div class="progress-header">
+          <div class="progress-label">Progression globale</div>
+          <div class="progress-percentage" [ngClass]="{'completed': reparation.progression === 100}">
+            <span class="percentage-value">{{ reparation.progression }}%</span>
+            <span class="percentage-icon" *ngIf="reparation.progression === 100"><i class="fas fa-check-circle"></i></span>
+          </div>
+        </div>
+        
+        <div class="progress-bar-container">
+          <div class="progress-bar">
+            <div class="progress" [style.width.%]="reparation.progression"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation des onglets -->
+    <div class="tabs">
+      <button [class.active]="activeTab === 'timeline'"
+              (click)="activeTab = 'timeline'">
+        <i class="fas fa-stream"></i> Suivi des travaux
+      </button>
+      <button [class.active]="activeTab === 'photos'"
+              (click)="activeTab = 'photos'">
+        <i class="fas fa-camera"></i> Documentation visuelle
+      </button>
+      <button [class.active]="activeTab === 'devis'"
+              (click)="activeTab = 'devis'">
+        <i class="fas fa-file-invoice-dollar"></i> Devis
+      </button>
+    </div>
+
+    <!-- Contenu des onglets -->
+    <div class="tab-content">
+      <!-- Onglet Timeline -->
+      <div *ngIf="activeTab === 'timeline'" class="timeline-tab">
+        <div class="timeline">
+          <div *ngFor="let etape of reparation.etapes; let i = index" class="timeline-item"
+               [ngClass]="{
+                 'completed': etape.status === 'termine',
+                 'active': etape.status === 'en_cours',
+                 'pending': etape.status === 'a_faire'
+               }">
+            <div class="timeline-marker">
+              <div class="marker-circle">
+                <i *ngIf="etape.status === 'termine'" class="fas fa-check"></i>
+                <i *ngIf="etape.status === 'en_cours'" class="fas fa-wrench"></i>
+              </div>
+              <div class="timeline-line" *ngIf="i < reparation.etapes.length - 1"></div>
+            </div>
+            
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <h3>{{ etape.nom }}</h3>
+                <div class="etape-status" [ngClass]="getStatusClass(etape.status)">
+                  {{ getStatusLabel(etape.status) }}
+                </div>
+              </div>
+              
+              <div class="timeline-body">
+                <p class="description">{{ etape.description }}</p>
+                
+                <div class="details-row">
+                  <div class="timeline-dates">
+                    <div class="date-item" *ngIf="etape.dateDebut">
+                      <i class="fas fa-calendar-day"></i>
+                      <span>Début: {{ etape.dateDebut | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                    <div class="date-item" *ngIf="etape.dateFin">
+                      <i class="fas fa-calendar-check"></i>
+                      <span>Fin: {{ etape.dateFin | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                    <div class="date-item" *ngIf="etape.dateEstimee && !etape.dateFin">
+                      <i class="fas fa-clock"></i>
+                      <span>Estimé: {{ etape.dateEstimee | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="photos-link" *ngIf="countPhotosForEtape(etape._id) > 0" (click)="activeTab = 'photos'; photoFilterEtapeId = etape._id; filterPhotosByEtape(etape._id)">
+                    <i class="fas fa-camera"></i>
+                    {{ countPhotosForEtape(etape._id) }} photo{{ countPhotosForEtape(etape._id) > 1 ? 's' : '' }}
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Commentaires -->
+              <div class="timeline-comments">
+                <div class="comment-header" (click)="toggleCommentairesVisibilite(etape._id)">
+                  <i class="fas" [ngClass]="{'fa-chevron-down': commentairesVisibles[etape._id], 'fa-chevron-right': !commentairesVisibles[etape._id]}"></i>
+                  <h4>Commentaires ({{ etape.commentaires.length }})</h4>
+                </div>
+                
+                <div class="comments-container" *ngIf="commentairesVisibles[etape._id]">
+                  <div *ngFor="let commentaire of etape.commentaires" 
+                       class="comment-item" 
+                       [ngClass]="{'client-comment': commentaire.isClient, 'garage-comment': !commentaire.isClient}">
+                    <div class="comment-bubble">
+                      <div class="comment-header">
+                        <div class="author">
+                          <i [class]="commentaire.isClient ? 'fas fa-user' : 'fas fa-user-cog'"></i>
+                          {{ commentaire.auteur }}
+                        </div>
+                        <div class="date">{{ commentaire.date | date:'dd/MM/yyyy HH:mm' }}</div>
+                      </div>
+                      <div class="comment-body" [class.expanded]="commentaire.expanded">
+                        <p>{{ commentaire.texte }}</p>
+                        <button *ngIf="commentaire.texte.length > 150" 
+                                class="expand-btn" 
+                                (click)="toggleCommentExpand(commentaire)">
+                          {{ commentaire.expanded ? 'Voir moins' : 'Voir plus' }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="add-comment">
+                    <textarea [(ngModel)]="newComment" 
+                              placeholder="Ajouter un commentaire..."
+                              (keyup.enter)="addComment(etape._id)"></textarea>
+                    <button (click)="addComment(etape._id)">
+                      <i class="fas fa-paper-plane"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglet Photos -->
+      <div *ngIf="activeTab === 'photos'" class="photos-tab">
+        <h2>Documentation visuelle</h2>
+        
+        <!-- Filtres pour les photos -->
+        <div class="photos-filters">
+          <div class="filter-group">
+            <label>Filtrer par étape:</label>
+            <select [(ngModel)]="photoFilterEtapeId" (change)="filterPhotosByEtape(photoFilterEtapeId)">
+              <option value="">Toutes les photos</option>
+              <option *ngFor="let etape of reparation.etapes" [value]="etape._id">
+                {{ etape.nom }} ({{ countPhotosForEtape(etape._id) }})
+              </option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="photos-grid">
+          <div *ngFor="let photo of filteredPhotos" class="photo-card" [attr.data-type]="photo.type">
+            <div class="photo-type-badge">{{ photo.type === 'probleme' ? 'Problème' : 
+                                          photo.type === 'diagnostic' ? 'Diagnostic' : 
+                                          photo.type === 'reparation' ? 'Réparation' : 
+                                          'Résultat' }}</div>
+            <img [src]="photo.url" [alt]="photo.description">
+            <div class="photo-info">
+              <p>{{ photo.description }}</p>
+              <span class="date">{{ photo.date | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span *ngIf="photo.etapeId" class="etape-associee">
+                Étape: {{ getEtapeNomById(photo.etapeId) }}
+              </span>
+            </div>
+          </div>
+          
+          <div *ngIf="filteredPhotos.length === 0" class="no-photos">
+            <p *ngIf="!photoFilterEtapeId">Aucune photo n'a été ajoutée pour cette réparation.</p>
+            <p *ngIf="photoFilterEtapeId">Aucune photo n'est associée à cette étape.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglet Devis -->
+      <div *ngIf="activeTab === 'devis'" class="devis-tab">
+        <div class="devis-header">
+          <h2>Détail de votre devis</h2>
+          <div class="status-badge" [ngClass]="getStatusClass(reparation.devis.status)">
+            {{ reparation.devis.status === 'valide' ? 'Validé' : 
+               reparation.devis.status === 'refuse' ? 'Refusé' : 'En attente' }}
+          </div>
+        </div>
+        
+        <div class="devis-date">
+          <i class="fas fa-calendar-alt"></i>
+          Établi le {{ reparation.devis.date | date:'dd/MM/yyyy' }}
+        </div>
+        
+        <div class="devis-sections">
+          <!-- Pièces -->
+          <div class="devis-section">
+            <h3>Pièces détachées</h3>
+            <div class="devis-table">
+              <div class="table-header">
+                <div>Désignation</div>
+                <div>Quantité</div>
+                <div>Prix unitaire</div>
+                <div>Total</div>
+              </div>
+              <div *ngFor="let piece of reparation.devis.detailPieces" class="table-row">
+                <div>{{ piece.nom }}</div>
+                <div>{{ piece.quantite }}</div>
+                <div>{{ piece.prixUnitaire | currency:'EUR':'symbol':'1.2-2' }}</div>
+                <div>{{ piece.prixUnitaire * piece.quantite | currency:'EUR':'symbol':'1.2-2' }}</div>
+              </div>
+              <div class="table-footer">
+                <div>Total pièces</div>
+                <div></div>
+                <div></div>
+                <div>{{ calculateTotalPieces() | currency:'EUR':'symbol':'1.2-2' }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Main d'œuvre -->
+          <div class="devis-section">
+            <h3>Main d'œuvre</h3>
+            <div class="devis-table">
+              <div class="table-header">
+                <div>Désignation</div>
+                <div>Heures</div>
+                <div>Taux horaire</div>
+                <div>Total</div>
+              </div>
+              <div *ngFor="let main of reparation.devis.detailMain" class="table-row">
+                <div>{{ main.description }}</div>
+                <div>{{ main.heures }}</div>
+                <div>{{ main.tauxHoraire | currency:'EUR':'symbol':'1.2-2' }}</div>
+                <div>{{ main.tauxHoraire * main.heures | currency:'EUR':'symbol':'1.2-2' }}</div>
+              </div>
+              <div class="table-footer">
+                <div>Total main d'œuvre</div>
+                <div></div>
+                <div></div>
+                <div>{{ calculateTotalMainOeuvre() | currency:'EUR':'symbol':'1.2-2' }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Total général -->
+          <div class="devis-total">
+            <h3>Total</h3>
+            <div class="montant">{{ reparation.devis.montant | currency:'EUR':'symbol':'1.2-2' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

@@ -27,6 +27,8 @@ import { ClientDashboardComponent } from './page/client/dashboard/client-dashboa
 import { UserProfileComponent } from './page/client/profile/user-profile.component';
 import { ReparationsListComponent } from './page/mecanicien/reparations/reparations-list/reparations-list.component';
 import { ReparationDetailsComponent } from './page/mecanicien/reparations/reparation-details/reparation-details.component';
+import { ClientReparationListComponent } from './page/client/reparations/reparation-list/client-reparation-list.component';
+import { ClientReparationDetailsComponent } from './page/client/reparations/reparation-details/client-reparation-details.component';
 
 
 const routes: Routes = [
@@ -42,7 +44,7 @@ const routes: Routes = [
   { path: 'manager/login', component: ManagerLoginComponent, canActivate: [AuthGuard] },
   { path: 'mecanicien/login', component: MecanicienLoginComponent, canActivate: [AuthGuard] },
   
-  // Route pour les clients (rôle: client) avec mise en page partagée
+  // Routes client avec mise en page partagée
   {
     path: 'client',
     component: ClientLayoutComponent,
@@ -56,8 +58,8 @@ const routes: Routes = [
       { path: 'devis/demande', component: DevisRequestComponent },
       { path: 'devis', component: ClientDevisListComponent },
       { path: 'devis/:id', component: ClientDevisDetailsComponent },
-
-      
+      { path: 'reparations', component: ClientReparationListComponent },
+      { path: 'reparations/:id', component: ClientReparationDetailsComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },
@@ -84,13 +86,12 @@ const routes: Routes = [
     path: 'mecanicien',
     component: MecanicienLayoutComponent,
     canActivate: [RoleGuard],
-    data: { role: 'mecanicien' },
+    data: { roles: ['mecanicien'] },
     children: [
       { path: '', component: AccueilMecanicienComponent },
       { path: 'reparations', component: ReparationsListComponent },
       { path: 'reparations/:id', component: ReparationDetailsComponent },
-      { path: 'profil', component: UserProfileComponent }
-      // Ajoutez les autres routes des mécaniciens ici lorsqu'elles seront créées
+      { path: 'profile', component: UserProfileComponent }
     ]
   },
   
