@@ -173,6 +173,18 @@ export class FactureService {
     return of({ totalFactures, totalMontant, nombrePayees, nombreEnRetard, tempsMoyenPaiement }).pipe(delay(700));
   }
 
+  // Mettre à jour une facture existante (principalement pour l'édition en mode brouillon)
+  updateFacture(updatedFacture: Facture): Observable<Facture> {
+    const factureIndex = this.mockFactures.findIndex(f => f.id === updatedFacture.id);
+    if (factureIndex === -1) {
+      return throwError(() => new Error('Facture non trouvée pour mise à jour'));
+    }
+    // Remplacer l'ancienne facture par la nouvelle dans notre tableau mocké
+    this.mockFactures[factureIndex] = updatedFacture;
+    console.log("Facture mise à jour dans le service:", updatedFacture);
+    return of(updatedFacture).pipe(delay(400)); // Simuler délai réseau
+  }
+
   private initMockData() {
     this.mockFactures = [
       // Facture payée
