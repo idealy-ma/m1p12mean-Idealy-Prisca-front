@@ -136,10 +136,6 @@ body {
   font-weight: 500;
 }
 
-.content-area {
-  /* Container for grid and pagination */
-}
-
 .reparations-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -393,9 +389,6 @@ body {
    .filters {
       flex-direction: column;
       align-items: stretch;
-   }
-   .filter-group {
-     /* Let gap handle spacing */
    }
    .search-input {
      min-width: auto;

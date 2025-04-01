@@ -246,7 +246,7 @@
                           placeholder="Ajouter un commentaire..."
                           rows="2"
                           (keyup.enter)="addComment(etape._id)"></textarea>
-                <button class="btn-send" (click)="addComment(etape._id)" [disabled]="!newComment[etape._id]?.trim()">
+                <button class="btn-send" (click)="addComment(etape._id)" [disabled]="!newComment[etape._id].trim()">
                   <i class="fas fa-paper-plane"></i>
                 </button>
               </div>
