@@ -1,28 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-
-interface Reparation {
-  _id: string;
-  vehicule: {
-    marque: string;
-    modele: string;
-    immatricule: string;
-  };
-  client: {
-    nom: string;
-    prenom: string;
-    telephone: string;
-  };
-  status: 'en_attente' | 'en_cours' | 'en_pause' | 'termine' | 'annule';
-  dateDebut?: Date;
-  dateFin?: Date;
-  etapes: {
-    _id: string;
-    nom: string;
-    status: 'a_faire' | 'en_cours' | 'termine';
-  }[];
-  progression: number;
-}
+// Import necessary models, enums, and the service
+import { finalize, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { EtapeStatus, Reparation, ReparationStatus } from '../../../../models/reparation.model';
+import { ReparationService } from '../../../../services/reparation.service';
 
 @Component({
   selector: 'app-reparations-list',
@@ -30,181 +12,121 @@ interface Reparation {
   styleUrls: ['./reparations-list.component.css']
 })
 export class ReparationsListComponent implements OnInit {
+  // Use imported types
   reparations: Reparation[] = [];
   filteredReparations: Reparation[] = [];
   loading: boolean = true;
   error: string | null = null;
-  filterStatus: string = 'tous';
+  filterStatus: string = 'tous'; // Keep 'tous' or use ReparationStatus values
   filterDate: string = 'tous';
   searchTerm: string = '';
 
   // Pagination
   currentPage: number = 1;
-  itemsPerPage: number = 6;
+  itemsPerPage: number = 8; // Adjusted for potentially better layout
   totalPages: number = 1;
   totalItems: number = 0;
 
-  constructor(private router: Router) {}
+  // Make enums accessible in template
+  public ReparationStatus = ReparationStatus;
+  public EtapeStatus = EtapeStatus;
+
+  // Inject ReparationService
+  constructor(private router: Router, private reparationService: ReparationService) {}
 
   ngOnInit(): void {
-    setTimeout(() => {
-      this.loadReparations();
-    }, 1000);
+    this.loadReparations();
   }
 
+  // Load reparations using the service
   loadReparations(): void {
-    // Données mockées
-    this.reparations = [
-      {
-        _id: '1',
-        vehicule: {
-          marque: 'Renault',
-          modele: 'Clio',
-          immatricule: 'AB-123-CD'
-        },
-        client: {
-          nom: 'Dupont',
-          prenom: 'Jean',
-          telephone: '0123456789'
-        },
-        status: 'en_cours',
-        dateDebut: new Date('2024-03-20'),
-        etapes: [
-          { _id: '1', nom: 'Diagnostic initial', status: 'termine' },
-          { _id: '2', nom: 'Remplacement des freins', status: 'en_cours' },
-          { _id: '3', nom: 'Vérification des niveaux', status: 'a_faire' },
-          { _id: '4', nom: 'Test de route', status: 'a_faire' }
-        ],
-        progression: 25
-      },
-      {
-        _id: '2',
-        vehicule: {
-          marque: 'Peugeot',
-          modele: '208',
-          immatricule: 'XY-789-ZW'
-        },
-        client: {
-          nom: 'Martin',
-          prenom: 'Sophie',
-          telephone: '0123456789'
-        },
-        status: 'en_attente',
-        dateDebut: new Date('2024-03-21'),
-        etapes: [
-          { _id: '1', nom: 'Diagnostic initial', status: 'a_faire' },
-          { _id: '2', nom: 'Remplacement de la batterie', status: 'a_faire' },
-          { _id: '3', nom: 'Test de charge', status: 'a_faire' }
-        ],
-        progression: 0
-      },
-      {
-        _id: '3',
-        vehicule: {
-          marque: 'Citroën',
-          modele: 'C3',
-          immatricule: 'DE-456-FG'
-        },
-        client: {
-          nom: 'Bernard',
-          prenom: 'Marie',
-          telephone: '0123456789'
-        },
-        status: 'en_pause',
-        dateDebut: new Date('2024-03-19'),
-        dateFin: new Date('2024-03-22'),
-        etapes: [
-          { _id: '1', nom: 'Diagnostic initial', status: 'termine' },
-          { _id: '2', nom: 'Remplacement des plaquettes', status: 'termine' },
-          { _id: '3', nom: 'Vérification des disques', status: 'termine' },
-          { _id: '4', nom: 'Test de freinage', status: 'en_cours' }
-        ],
-        progression: 75
-      },
-      {
-        _id: '4',
-        vehicule: {
-          marque: 'Volkswagen',
-          modele: 'Golf',
-          immatricule: 'GH-789-IJ'
-        },
-        client: {
-          nom: 'Petit',
-          prenom: 'Lucas',
-          telephone: '0123456789'
-        },
-        status: 'termine',
-        dateDebut: new Date('2024-03-18'),
-        dateFin: new Date('2024-03-20'),
-        etapes: [
-          { _id: '1', nom: 'Diagnostic initial', status: 'termine' },
-          { _id: '2', nom: 'Remplacement du filtre à huile', status: 'termine' },
-          { _id: '3', nom: 'Vidange', status: 'termine' },
-          { _id: '4', nom: 'Test moteur', status: 'termine' }
-        ],
-        progression: 100
-      }
-    ];
-    this.filteredReparations = [...this.reparations];
-    this.totalItems = this.filteredReparations.length;
-    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    this.loading = false;
+    this.loading = true;
+    this.error = null;
+    this.reparationService.getReparations()
+      .pipe(
+        catchError(err => {
+          console.error('Error loading reparations:', err);
+          this.error = `Erreur lors du chargement des réparations: ${err.message || err}`;
+          return of([]); // Return empty array on error
+        }),
+        finalize(() => this.loading = false)
+      )
+      .subscribe(reparations => {
+        this.reparations = reparations;
+        this.applyFilters(); // Apply initial filters (or lack thereof)
+      });
   }
 
   applyFilters(): void {
-    this.filteredReparations = this.reparations.filter(reparation => {
-      // Filtre par statut
-      if (this.filterStatus !== 'tous' && reparation.status !== this.filterStatus) {
-        return false;
-      }
+    let tempReparations = [...this.reparations];
 
-      // Filtre par date
-      if (this.filterDate !== 'tous') {
-        const today = new Date();
-        const reparationDate = new Date(reparation.dateDebut || '');
-        const diffTime = Math.abs(today.getTime() - reparationDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // Filtre par statut
+    if (this.filterStatus !== 'tous') {
+      tempReparations = tempReparations.filter(reparation => reparation.status === this.filterStatus);
+    }
 
-        switch (this.filterDate) {
-          case 'aujourdhui':
-            if (diffDays > 1) return false;
-            break;
-          case 'semaine':
-            if (diffDays > 7) return false;
-            break;
-          case 'mois':
-            if (diffDays > 30) return false;
-            break;
-        }
-      }
+    // Filtre par date (using dateCreation now as dateDebut might be undefined)
+    if (this.filterDate !== 'tous') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Start of today
 
-      // Recherche
-      if (this.searchTerm) {
-        const searchLower = this.searchTerm.toLowerCase();
-        return (
+      tempReparations = tempReparations.filter(reparation => {
+          const reparationDate = reparation.dateCreation; // Use dateCreation
+          if (!reparationDate) return false; // Skip if no creation date
+
+          const repDateOnly = new Date(reparationDate);
+          repDateOnly.setHours(0, 0, 0, 0);
+
+          const diffTime = today.getTime() - repDateOnly.getTime();
+          const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+          switch (this.filterDate) {
+            case 'aujourdhui':
+              return diffDays >= 0 && diffDays < 1;
+            case 'semaine':
+              return diffDays >= 0 && diffDays < 7;
+            case 'mois':
+               // Check if the date is within the last 30 days from today
+               return diffDays >= 0 && diffDays < 30;
+          }
+          return true; // Should not happen if filterDate is valid
+      });
+    }
+
+    // Recherche (Adjust based on available fields in Reparation model)
+    if (this.searchTerm) {
+      const searchLower = this.searchTerm.toLowerCase();
+      tempReparations = tempReparations.filter(reparation => (
           reparation.vehicule.marque.toLowerCase().includes(searchLower) ||
           reparation.vehicule.modele.toLowerCase().includes(searchLower) ||
-          reparation.vehicule.immatricule.toLowerCase().includes(searchLower) ||
+          reparation.vehicule.immatriculation.toLowerCase().includes(searchLower) ||
           reparation.client.nom.toLowerCase().includes(searchLower) ||
-          reparation.client.prenom.toLowerCase().includes(searchLower)
-        );
-      }
+          reparation.client.prenom.toLowerCase().includes(searchLower) ||
+          reparation._id.toLowerCase().includes(searchLower) // Allow searching by ID
+          // Add other searchable fields if needed, e.g., telephone
+          // (reparation.client.telephone?.includes(searchLower) ?? false)
+      ));
+    }
 
-      return true;
-    });
-
+    this.filteredReparations = tempReparations;
     this.totalItems = this.filteredReparations.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    this.currentPage = 1; // Réinitialiser à la première page lors d'un nouveau filtre
+    // Ensure current page is valid after filtering
+    if(this.currentPage > this.totalPages && this.totalPages > 0) {
+        this.currentPage = this.totalPages;
+    } else if (this.totalPages === 0) {
+        this.currentPage = 1;
+    }
   }
 
   get paginatedReparations(): Reparation[] {
+    if (!this.filteredReparations) return [];
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     return this.filteredReparations.slice(startIndex, endIndex);
   }
 
-  onSearch(): void {
+  onSearchChange(): void {
     this.applyFilters();
   }
 
@@ -218,37 +140,40 @@ export class ReparationsListComponent implements OnInit {
     }
   }
 
-  getStatusClass(status: string): string {
+   // Calculate progress based on etapes status
+   calculateProgress(reparation: Reparation): number {
+    if (!reparation.etapes || reparation.etapes.length === 0) {
+      return 0;
+    }
+    const completedSteps = reparation.etapes.filter(e => e.status === EtapeStatus.Terminee).length;
+    return Math.round((completedSteps / reparation.etapes.length) * 100);
+  }
+
+  // Use imported ReparationStatus enum
+  getStatusClass(status: ReparationStatus | string): string {
     switch (status) {
-      case 'en_attente':
-        return 'status-waiting';
-      case 'en_cours':
-        return 'status-in-progress';
-      case 'en_pause':
-        return 'status-paused';
-      case 'termine':
-        return 'status-completed';
-      case 'annule':
-        return 'status-cancelled';
-      default:
-        return '';
+      case ReparationStatus.EnAttenteValidation: return 'status-pending';
+      case ReparationStatus.Validee: return 'status-validated';
+      case ReparationStatus.EnCours: return 'status-progress';
+      case ReparationStatus.EnPause: return 'status-paused';
+      case ReparationStatus.Terminee: return 'status-completed';
+      case ReparationStatus.Annulee: return 'status-cancelled';
+      case ReparationStatus.Refusee: return 'status-refused';
+      default: return 'status-unknown';
     }
   }
 
-  getStatusLabel(status: string): string {
+  // Use imported ReparationStatus enum
+  getStatusLabel(status: ReparationStatus | string): string {
     switch (status) {
-      case 'en_attente':
-        return 'En attente';
-      case 'en_cours':
-        return 'En cours';
-      case 'en_pause':
-        return 'En pause';
-      case 'termine':
-        return 'Terminé';
-      case 'annule':
-        return 'Annulé';
-      default:
-        return status;
+      case ReparationStatus.EnAttenteValidation: return 'En attente validation';
+      case ReparationStatus.Validee: return 'Validée';
+      case ReparationStatus.EnCours: return 'En cours';
+      case ReparationStatus.EnPause: return 'En pause';
+      case ReparationStatus.Terminee: return 'Terminée';
+      case ReparationStatus.Annulee: return 'Annulée';
+      case ReparationStatus.Refusee: return 'Refusée';
+      default: return status; // Return the raw status if unknown
     }
   }
 
@@ -256,25 +181,50 @@ export class ReparationsListComponent implements OnInit {
     this.router.navigate(['/mecanicien/reparations', id]);
   }
 
-  viewReparation(id: string): void {
-    this.viewDetails(id);
-  }
+  // Helper to get the page numbers for pagination control
+  getPageNumbers(): number[] {
+      const totalPages = this.totalPages;
+      const currentPage = this.currentPage;
+      const maxPagesToShow = 5;
+      const pages: number[] = [];
 
-  updateStatus(id: string, newStatus: string): void {
-    const reparation = this.reparations.find(r => r._id === id);
-    if (reparation) {
-      reparation.status = newStatus as Reparation['status'];
-      if (newStatus === 'en_cours' && !reparation.dateDebut) {
-        reparation.dateDebut = new Date();
-      } else if (newStatus === 'termine') {
-        reparation.dateFin = new Date();
+      if (totalPages <= maxPagesToShow) {
+          // Show all pages
+          for (let i = 1; i <= totalPages; i++) {
+              pages.push(i);
+          }
+      } else {
+          // Show ellipsis
+          let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+          let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+          // Adjust if we are near the beginning or end
+          if (endPage - startPage + 1 < maxPagesToShow) {
+              if (currentPage < totalPages / 2) {
+                  endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+              } else {
+                  startPage = Math.max(1, endPage - maxPagesToShow + 1);
+              }
+          }
+
+          if (startPage > 1) {
+              pages.push(1);
+              if (startPage > 2) {
+                  pages.push(-1); // Ellipsis marker
+              }
+          }
+
+          for (let i = startPage; i <= endPage; i++) {
+              pages.push(i);
+          }
+
+          if (endPage < totalPages) {
+              if (endPage < totalPages - 1) {
+                  pages.push(-1); // Ellipsis marker
+              }
+              pages.push(totalPages);
+          }
       }
-    }
-  }
-
-  calculateProgress(etapes: any[]): number {
-    if (!etapes || etapes.length === 0) return 0;
-    const completedSteps = etapes.filter(etape => etape.status === 'termine').length;
-    return Math.round((completedSteps / etapes.length) * 100);
+      return pages;
   }
 } 

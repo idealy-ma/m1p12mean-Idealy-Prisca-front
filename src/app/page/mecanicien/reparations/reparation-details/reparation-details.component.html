@@ -22,10 +22,15 @@
         </div>
       </div>
       <div class="actions">
-        <button *ngIf="reparation.status !== 'termine' && reparation.status !== 'annule'"
+        <button *ngIf="reparation.status !== ReparationStatus.Terminee && reparation.status !== ReparationStatus.Annulee"
                 class="btn btn-primary"
-                (click)="updateStatus('termine')">
-          <i class="fas fa-check"></i> Terminer
+                (click)="finishReparation()">
+          <i class="fas fa-check"></i> Terminer la Réparation
+        </button>
+         <button *ngIf="reparation.status !== ReparationStatus.Annulee"
+                class="btn btn-danger"
+                (click)="updateStatus(ReparationStatus.Annulee)">
+          <i class="fas fa-times"></i> Annuler
         </button>
       </div>
     </div>
@@ -41,16 +46,19 @@
           </div>
           <div class="info-item">
             <label>Immatriculation</label>
-            <span>{{ reparation.vehicule.immatricule }}</span>
+            <span>{{ reparation.vehicule.immatriculation }}</span>
           </div>
           <div class="info-item">
             <label>Année</label>
-            <span>{{ reparation.vehicule.annee }}</span>
+            <span>{{ reparation.vehicule.annee || 'N/A' }}</span>
           </div>
           <div class="info-item">
             <label>Kilométrage</label>
-            <span>{{ reparation.vehicule.kilometrage }} km</span>
+            <span>{{ (reparation.vehicule.kilometrage | number) || 'N/A' }} km</span>
           </div>
+        </div>
+        <div *ngIf="reparation.vehicule.photoUrl" class="vehicle-photo">
+           <img [src]="reparation.vehicule.photoUrl" alt="Photo du véhicule">
         </div>
       </div>
 
@@ -59,15 +67,36 @@
         <div class="info-grid">
           <div class="info-item">
             <label>Nom</label>
-            <span>{{ reparation.client.nom }} {{ reparation.client.prenom }}</span>
+            <span>{{ reparation.client.prenom }} {{ reparation.client.nom }}</span>
           </div>
           <div class="info-item">
             <label>Email</label>
-            <span>{{ reparation.client.email }}</span>
+            <span>{{ reparation.client.email || 'N/A' }}</span>
           </div>
           <div class="info-item">
             <label>Téléphone</label>
-            <span>{{ reparation.client.telephone }}</span>
+            <span>{{ reparation.client.telephone || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+       <div class="garage-info">
+        <h2>Garage</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Nom</label>
+            <span>{{ reparation.garage.nom }}</span>
+          </div>
+           <div class="info-item">
+            <label>Adresse</label>
+            <span>{{ reparation.garage.adresse }}</span>
+          </div>
+          <div class="info-item">
+            <label>Téléphone</label>
+            <span>{{ reparation.garage.telephone || 'N/A' }}</span>
+          </div>
+           <div class="info-item" *ngIf="reparation['mecanicienAssigné']">
+            <label>Mécanicien</label>
+            <span>{{ reparation['mecanicienAssigné'].prenom }} {{ reparation['mecanicienAssigné'].nom }}</span>
           </div>
         </div>
       </div>
@@ -75,21 +104,24 @@
 
     <!-- Description et progression -->
     <div class="description-section">
-      <h2>Description</h2>
-      <p>{{ reparation.description }}</p>
-      
+      <h2>Description initiale du problème</h2>
+      <p>{{ reparation.problemeDeclare }}</p>
+      <div *ngIf="reparation.descriptionTravaux">
+        <h2>Description des travaux (par le mécanicien)</h2>
+        <p>{{ reparation.descriptionTravaux }}</p>
+      </div>
+
       <div class="progress-section">
         <div class="progress-header">
-          <div class="progress-label">Progression globale</div>
-          <div class="progress-percentage" [ngClass]="{'completed': reparation.progression === 100}">
-            <span class="percentage-value">{{ reparation.progression }}%</span>
-            <span class="percentage-icon" *ngIf="reparation.progression === 100"><i class="fas fa-check-circle"></i></span>
+          <div class="progress-label">Progression globale des étapes</div>
+          <div class="progress-percentage" [ngClass]="{'completed': calculateProgress() === 100}">
+            <span class="percentage-value">{{ calculateProgress() }}%</span>
+            <span class="percentage-icon" *ngIf="calculateProgress() === 100"><i class="fas fa-check-circle"></i></span>
           </div>
         </div>
-        
         <div class="progress-bar-container">
           <div class="progress-bar">
-            <div class="progress" [style.width.%]="reparation.progression"></div>
+            <div class="progress" [style.width.%]="calculateProgress()"></div>
           </div>
         </div>
       </div>
@@ -103,7 +135,7 @@
       </button>
       <button [class.active]="activeTab === 'photos'"
               (click)="activeTab = 'photos'">
-        <i class="fas fa-camera"></i> Documentation visuelle
+        <i class="fas fa-camera"></i> Documentation Visuelle
       </button>
     </div>
 
@@ -111,130 +143,117 @@
     <div class="tab-content">
       <!-- Onglet Étapes -->
       <div *ngIf="activeTab === 'etapes'" class="etapes-tab">
-        <!-- Filtres d'étape -->
-        <div class="etape-filters">
-          <div class="filter-group">
-            <label>Statut:</label>
-            <div class="btn-group">
-              <button type="button" class="btn" [class.btn-active]="filterStatus === 'tous'" (click)="updateStatusFilter('tous')">Tous</button>
-              <button type="button" class="btn" [class.btn-active]="filterStatus === 'a_faire'" (click)="updateStatusFilter('a_faire')">À faire</button>
-              <button type="button" class="btn" [class.btn-active]="filterStatus === 'en_cours'" (click)="updateStatusFilter('en_cours')">En cours</button>
-              <button type="button" class="btn" [class.btn-active]="filterStatus === 'termine'" (click)="updateStatusFilter('termine')">Terminés</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Liste des étapes, inspirée de la todo-list -->
+        <!-- Liste des étapes -->
         <div class="todo-list">
-          <div *ngFor="let etape of reparation.etapes" 
+          <div *ngFor="let etape of reparation.etapes; let i = index" 
                class="todo-item" 
                [ngClass]="{
-                 'todo-completed': etape.status === 'termine',
-                 'todo-in-progress': etape.status === 'en_cours',
-                 'todo-pending': etape.status === 'a_faire'
+                 'todo-completed': etape.status === EtapeStatus.Terminee,
+                 'todo-in-progress': etape.status === EtapeStatus.EnCours,
+                 'todo-pending': etape.status === EtapeStatus.EnAttente,
+                 'todo-cancelled': etape.status === EtapeStatus.Annulee
                }">
-            
+
             <div class="todo-item-header">
               <div class="todo-checkbox">
-                <input type="checkbox" [checked]="etape.status === 'termine'" (change)="updateEtapeStatus(etape._id, etape.status === 'termine' ? 'a_faire' : 'termine')">
+                <input type="checkbox" 
+                       [checked]="etape.status === EtapeStatus.Terminee" 
+                       [disabled]="etape.status === EtapeStatus.Annulee" 
+                       (change)="finishStep(etape)">
               </div>
-              
+
               <div class="todo-content">
                 <div class="todo-name">
-                  {{ etape.nom }}
-                  <span class="photo-indicator" *ngIf="countPhotosForEtape(etape._id) > 0" (click)="activeTab = 'photos'; photoFilterEtapeId = etape._id; filterPhotosByEtape(etape._id)">
+                  {{ i + 1 }}. {{ etape.titre }}
+                  <span class="photo-indicator" *ngIf="countPhotosForEtape(etape._id) > 0" (click)="activeTab = 'photos'; filterPhotosByEtape(etape._id)">
                     <i class="fas fa-camera"></i> {{ countPhotosForEtape(etape._id) }}
                   </span>
                 </div>
                 <div class="todo-details">
-                  <span class="todo-type">
-                    <i class="fas fa-tasks"></i> Étape
-                  </span>
                   <span class="todo-status" [ngClass]="getStatusClass(etape.status)">
                     <i class="fas" 
                       [ngClass]="{
-                        'fa-clock': etape.status === 'a_faire',
-                        'fa-spinner fa-spin': etape.status === 'en_cours',
-                        'fa-check-circle': etape.status === 'termine'
+                        'fa-clock': etape.status === EtapeStatus.EnAttente,
+                        'fa-spinner fa-spin': etape.status === EtapeStatus.EnCours,
+                        'fa-check-circle': etape.status === EtapeStatus.Terminee,
+                        'fa-times-circle': etape.status === EtapeStatus.Annulee
                       }"></i>
                     {{ getStatusLabel(etape.status) }}
                   </span>
-                  
                   <span class="todo-timing" *ngIf="etape.dateDebut">
-                    <i class="fas fa-calendar-alt"></i>
-                    Début: {{ etape.dateDebut | date:'dd/MM/yyyy HH:mm' }}
+                    <i class="far fa-calendar-alt"></i>
+                    Début: {{ etape.dateDebut | date:'dd/MM/yy HH:mm' }}
                   </span>
-                  
                   <span class="todo-timing" *ngIf="etape.dateFin">
-                    <i class="fas fa-calendar-check"></i>
-                    Fin: {{ etape.dateFin | date:'dd/MM/yyyy HH:mm' }}
+                    <i class="far fa-calendar-check"></i>
+                    Fin: {{ etape.dateFin | date:'dd/MM/yy HH:mm' }}
                   </span>
                 </div>
-                
-                <div class="todo-description">
+                <div class="todo-description" *ngIf="etape.description">
                   <i class="fas fa-info-circle"></i> {{ etape.description }}
                 </div>
               </div>
-              
+
               <div class="todo-actions">
-                <button *ngIf="etape.status === 'a_faire'"
+                <button *ngIf="etape.status === EtapeStatus.EnAttente"
                         class="btn-action btn-start"
-                        (click)="updateEtapeStatus(etape._id, 'en_cours')">
-                  <i class="fas fa-play"></i> Démarrer
+                        (click)="updateEtapeStatus(etape._id, EtapeStatus.EnCours)">
+                  <i class="fas fa-play"></i>
                 </button>
-                <button *ngIf="etape.status === 'en_cours'"
+                <button *ngIf="etape.status === EtapeStatus.EnCours"
                         class="btn-action btn-complete"
-                        (click)="updateEtapeStatus(etape._id, 'termine')">
-                  <i class="fas fa-check"></i> Terminer
+                        (click)="finishStep(etape)">
+                  <i class="fas fa-check"></i>
                 </button>
-                <button *ngIf="etape.status === 'termine'"
+                 <button *ngIf="etape.status === EtapeStatus.Terminee"
                         class="btn-action btn-restart"
-                        (click)="updateEtapeStatus(etape._id, 'en_cours')">
-                  <i class="fas fa-redo"></i> Rouvrir
+                        (click)="updateEtapeStatus(etape._id, EtapeStatus.EnCours)">
+                  <i class="fas fa-redo"></i>
                 </button>
               </div>
             </div>
-            
-            <!-- Bouton pour afficher/masquer les commentaires -->
+
+            <!-- Comments Section -->
             <div class="toggle-comments">
               <button class="btn-toggle" (click)="toggleCommentairesVisibilite(etape._id)">
                 <i class="fas" [ngClass]="{'fa-chevron-down': commentairesVisibles[etape._id], 'fa-chevron-right': !commentairesVisibles[etape._id]}"></i>
-                {{ commentairesVisibles[etape._id] ? 'Masquer les commentaires' : 'Afficher les commentaires' }}
-                <span class="comment-count" *ngIf="etape.commentaires.length > 0">({{ etape.commentaires.length }})</span>
+                Commentaires
+                <span class="comment-count" *ngIf="(etape.commentaires?.length ?? 0) > 0">({{ etape.commentaires.length }})</span>
               </button>
             </div>
-            
-            <!-- Commentaires - conditionnés par l'état de visibilité -->
             <div class="todo-comments" *ngIf="commentairesVisibles[etape._id]">
-              <h4>Commentaires</h4>
               <div class="commentaires-list">
-                <div *ngFor="let commentaire of etape.commentaires" class="commentaire" [class.expanded]="commentaire.expanded">
+                <div *ngFor="let commentaire of etape.commentaires" class="commentaire" [ngClass]="{'expanded': commentExpandedState[getCommentId(etape._id, commentaire)]}">
                   <div class="commentaire-header">
-                    <span class="auteur">{{ commentaire.auteur }}</span>
-                    <span class="date">{{ commentaire.date | date:'dd/MM/yyyy HH:mm' }}</span>
+                    <span class="auteur" [ngClass]="{'auteur-client': commentaire.auteur === 'client', 'auteur-mecanicien': commentaire.auteur === 'mecanicien'}">{{ commentaire.auteur === 'client' ? 'Client' : 'Mécanicien' }}</span>
+                    <span class="date">{{ commentaire.date | date:'dd/MM/yy HH:mm' }}</span>
                   </div>
                   <div class="text-container">
-                    <p>{{ commentaire.texte }}</p>
-                    <button *ngIf="commentaire.texte.length > 150" 
+                    <p>{{ commentaire.message }}</p>
+                    <button *ngIf="(commentaire.message?.length ?? 0) > 100" 
                             class="expand-btn" 
-                            (click)="toggleCommentExpand(commentaire)">
-                      {{ commentaire.expanded ? 'Voir moins' : 'Voir plus' }}
+                            (click)="toggleCommentExpand(etape._id, commentaire)">
+                      {{ commentExpandedState[getCommentId(etape._id, commentaire)] ? 'Voir moins' : 'Voir plus' }}
                     </button>
                   </div>
                 </div>
+                <div *ngIf="!etape.commentaires || etape.commentaires.length === 0" class="no-comments">
+                   Aucun commentaire pour cette étape.
+                </div>
               </div>
               <div class="nouveau-commentaire">
-                <textarea [(ngModel)]="newComment"
+                <textarea [(ngModel)]="newComment[etape._id]"
                           placeholder="Ajouter un commentaire..."
+                          rows="2"
                           (keyup.enter)="addComment(etape._id)"></textarea>
-                <button class="btn-send" (click)="addComment(etape._id)">
+                <button class="btn-send" (click)="addComment(etape._id)" [disabled]="!newComment[etape._id].trim()">
                   <i class="fas fa-paper-plane"></i>
                 </button>
               </div>
             </div>
           </div>
-          
-          <div *ngIf="reparation.etapes.length === 0" class="no-todos">
+
+          <div *ngIf="!reparation.etapes || reparation.etapes.length === 0" class="no-todos">
             Aucune étape n'a été définie pour cette réparation.
           </div>
         </div>
@@ -243,95 +262,91 @@
       <!-- Onglet Photos -->
       <div *ngIf="activeTab === 'photos'" class="photos-tab">
         <h2>Documentation visuelle</h2>
-        
-        <!-- Filtres pour les photos -->
+
         <div class="photos-filters">
           <div class="filter-group">
             <label>Filtrer par étape:</label>
             <select [(ngModel)]="photoFilterEtapeId" (change)="filterPhotosByEtape(photoFilterEtapeId)">
               <option value="">Toutes les photos</option>
               <option *ngFor="let etape of reparation.etapes" [value]="etape._id">
-                {{ etape.nom }} ({{ countPhotosForEtape(etape._id) }})
+                {{ etape.titre }} ({{ countPhotosForEtape(etape._id) }})
               </option>
             </select>
           </div>
         </div>
-        
+
         <div class="upload-section">
           <h3>Ajouter une nouvelle photo</h3>
-          
           <div class="upload-form">
             <div class="file-input-group">
-              <label for="photo-file">Sélectionner une image</label>
+              <label for="photo-file" class="btn btn-secondary">Choisir une image</label>
               <input type="file" 
                      id="photo-file"
                      accept="image/*" 
                      (change)="handleFileChange($event)"
-                     #fileInput>
-              <span *ngIf="newPhoto" class="file-selected">
-                {{ newPhoto.name }}
-              </span>
+                     #fileInput
+                     style="display: none;">
+               <span *ngIf="newPhotoFile" class="file-selected">
+                 Fichier sélectionné: {{ newPhotoFile.name }}
+               </span>
+               <span *ngIf="!newPhotoFile" class="file-selected">
+                 Aucun fichier choisi
+               </span>
             </div>
-            
+             <div *ngIf="photoPreview" class="photo-preview">
+                <img [src]="photoPreview" alt="Aperçu de la photo">
+            </div>
+
             <div class="photo-details">
-              <div class="input-group">
-                <label for="photo-type">Type de photo</label>
-                <select id="photo-type" [(ngModel)]="photoType">
-                  <option value="probleme">Problème identifié</option>
-                  <option value="diagnostic">Diagnostic</option>
-                  <option value="reparation">Réparation en cours</option>
-                  <option value="resultat">Résultat final</option>
-                </select>
-              </div>
-              
-              <div class="input-group">
-                <label for="photo-etape">Associer à une étape</label>
-                <select id="photo-etape" [(ngModel)]="photoEtapeId">
-                  <option value="">Aucune étape spécifique</option>
-                  <option *ngFor="let etape of reparation.etapes" [value]="etape._id">
-                    {{ etape.nom }}
-                  </option>
-                </select>
-              </div>
-              
-              <div class="input-group">
-                <label for="photo-description">Description détaillée</label>
-                <textarea id="photo-description" 
-                          [(ngModel)]="photoDescription"
-                          placeholder="Décrivez ce que montre cette photo et le problème identifié..."></textarea>
-              </div>
-            </div>
-            
-            <button class="btn btn-primary upload-btn" 
-                    (click)="uploadPhoto(); fileInput.value = ''"
-                    [disabled]="!newPhoto || !photoDescription.trim()">
-              <i class="fas fa-upload"></i> Ajouter la photo
-            </button>
-          </div>
-        </div>
+               <div class="input-group">
+                 <label for="photo-etape">Associer à une étape (Optionnel)</label>
+                 <select id="photo-etape" [(ngModel)]="photoEtapeId">
+                   <option value="">Aucune étape spécifique</option>
+                   <option *ngFor="let etape of reparation.etapes" [value]="etape._id">
+                     {{ etape.titre }}
+                   </option>
+                 </select>
+               </div>
+ 
+               <div class="input-group">
+                 <label for="photo-description">Description</label>
+                 <textarea id="photo-description" 
+                           [(ngModel)]="photoDescription"
+                           rows="3"
+                           placeholder="Décrivez ce que montre cette photo..."></textarea>
+               </div>
+             </div>
+ 
+             <button class="btn btn-primary upload-btn" 
+                     (click)="uploadPhoto(); fileInput.value = ''" 
+                     [disabled]="!newPhotoFile || !photoDescription.trim() || photoUploading">
+                 <i class="fas fa-upload"></i> {{ photoUploading ? 'Envoi en cours...' : 'Ajouter la photo' }}
+             </button>
+             <div *ngIf="photoUploading" class="upload-spinner">
+               <div class="spinner small"></div>
+             </div>
+             <div *ngIf="photoError" class="text-danger small mt-1">{{ photoError }}</div>
+           </div>
+         </div>
 
         <div class="photos-grid">
-          <div *ngFor="let photo of filteredPhotos" class="photo-card" [attr.data-type]="photo.type">
-            <div class="photo-type-badge">{{ photo.type === 'probleme' ? 'Problème' : 
-                                            photo.type === 'diagnostic' ? 'Diagnostic' : 
-                                            photo.type === 'reparation' ? 'Réparation' : 
-                                            'Résultat' }}</div>
-            <img [src]="photo.url" [alt]="photo.description">
+          <div *ngFor="let photo of filteredPhotos" class="photo-card">
+            <img [src]="photo.url" [alt]="photo.description || 'Photo de réparation'" (error)="photo.url='assets/placeholder-image.png'">
             <div class="photo-info">
-              <p>{{ photo.description }}</p>
-              <span class="date">{{ photo.date | date:'dd/MM/yyyy HH:mm' }}</span>
-              <span *ngIf="photo.etapeId" class="etape-associee">
-                Étape: {{ getEtapeNomById(photo.etapeId) }}
+              <p>{{ photo.description || 'Pas de description' }}</p>
+              <span class="date">Ajoutée le: {{ photo.dateAjout | date:'dd/MM/yy HH:mm' }}</span>
+              <span *ngIf="photo.etapeAssociee" class="etape-associee">
+                <i class="fas fa-link"></i> Étape: {{ getEtapeNomById(photo.etapeAssociee) }}
               </span>
             </div>
           </div>
-          
           <div *ngIf="filteredPhotos.length === 0" class="no-photos">
-            <p *ngIf="!photoFilterEtapeId">Aucune photo n'a été ajoutée pour cette réparation.</p>
-            <p *ngIf="photoFilterEtapeId">Aucune photo n'est associée à cette étape.</p>
+            <p *ngIf="!photoFilterEtapeId">Aucune photo pour cette réparation.</p>
+            <p *ngIf="photoFilterEtapeId">Aucune photo associée à l'étape "{{ getEtapeNomById(photoFilterEtapeId) }}".</p>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </div> 

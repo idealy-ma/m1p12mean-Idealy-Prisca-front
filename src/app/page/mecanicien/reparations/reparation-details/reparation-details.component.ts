@@ -1,57 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-
-interface Reparation {
-  _id: string;
-  vehicule: {
-    marque: string;
-    modele: string;
-    immatricule: string;
-    annee: number;
-    kilometrage: number;
-  };
-  client: {
-    nom: string;
-    prenom: string;
-    email: string;
-    telephone: string;
-  };
-  status: 'en_attente' | 'en_cours' | 'en_pause' | 'termine' | 'annule';
-  dateDebut?: Date;
-  dateFin?: Date;
-  description: string;
-  etapes: {
-    _id: string;
-    nom: string;
-    description: string;
-    status: 'a_faire' | 'en_cours' | 'termine';
-    dateDebut?: Date;
-    dateFin?: Date;
-    commentaires: CommentaireEtape[];
-  }[];
-  progression: number;
-  photos: {
-    _id: string;
-    url: string;
-    description: string;
-    date: Date;
-    type: string;
-    etapeId?: string;
-  }[];
-  devis: {
-    montant: number;
-    date: Date;
-    status: 'en_attente' | 'valide' | 'refuse';
-  };
-}
-
-interface CommentaireEtape {
-  _id: string;
-  texte: string;
-  date: Date;
-  auteur: string;
-  expanded?: boolean; // Propriété pour suivre l'état d'expansion
-}
+import { Reparation, EtapeReparation, CommentaireEtape, ReparationStatus, EtapeStatus, PhotoReparation } from '../../../../models/reparation.model';
+import { ReparationService } from '../../../../services/reparation.service';
+import { FactureService } from '../../../../services/facture.service';
+import { Facture } from '../../../../models/facture.model';
+import { switchMap, catchError, tap, finalize } from 'rxjs/operators';
+import { of, throwError } from 'rxjs';
 
 @Component({
   selector: 'app-reparation-details',
@@ -59,298 +13,335 @@ interface CommentaireEtape {
   styleUrls: ['./reparation-details.component.css']
 })
 export class ReparationDetailsComponent implements OnInit {
+  public ReparationStatus = ReparationStatus;
+  public EtapeStatus = EtapeStatus;
+
   reparation: Reparation | null = null;
   loading: boolean = true;
   error: string | null = null;
   activeTab: string = 'etapes';
-  newComment: string = '';
-  newPhoto: File | null = null;
+  newComment: { [etapeId: string]: string } = {};
+  newPhotoFile: File | null = null;
+  photoPreview: string | ArrayBuffer | null = null;
+  photoError: string | null = null;
+  photoUploading: boolean = false;
   photoDescription: string = '';
-  photoType: string = 'probleme';
   photoEtapeId: string = '';
-  filteredPhotos: any[] = [];
+  filteredPhotos: PhotoReparation[] = [];
   photoFilterEtapeId: string = '';
-  filterStatus: string = 'tous';
   commentairesVisibles: { [etapeId: string]: boolean } = {};
+  commentExpandedState: { [commentId: string]: boolean } = {};
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private reparationService: ReparationService,
+    private factureService: FactureService
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.loadReparation(id);
-    }
+    this.route.paramMap.pipe(
+      tap(() => {
+        this.loading = true;
+        this.error = null;
+        this.reparation = null;
+      }),
+      switchMap(params => {
+        const id = params.get('id');
+        if (id) {
+          return this.reparationService.getReparationById(id).pipe(
+            catchError(err => {
+              console.error('Error loading reparation:', err);
+              this.error = `Erreur lors du chargement de la réparation: ${err.message || err}`;
+              return of(undefined);
+            })
+          );
+        } else {
+          this.error = "ID de réparation manquant dans l'URL.";
+          return of(undefined);
+        }
+      }),
+      finalize(() => this.loading = false)
+    ).subscribe(reparation => {
+      if (reparation) {
+        this.reparation = reparation;
+        this.initializeComponentState();
+      } else if (!this.error) {
+        this.error = "Réparation non trouvée.";
+      }
+    });
   }
 
-  loadReparation(id: string): void {
-    setTimeout(() => {
-      this.reparation = {
-        _id: id,
-        vehicule: {
-          marque: 'Renault',
-          modele: 'Clio',
-          immatricule: 'AB-123-CD',
-          annee: 2018,
-          kilometrage: 45000
-        },
-        client: {
-          nom: 'Dupont',
-          prenom: 'Jean',
-          email: 'jean.dupont@email.com',
-          telephone: '06 12 34 56 78'
-        },
-        status: 'en_cours',
-        dateDebut: new Date('2024-03-20'),
-        description: 'Réparation suite à un problème de freinage. Le client a signalé des bruits inhabituels lors du freinage.',
-        etapes: [
-          {
-            _id: '1',
-            nom: 'Diagnostic initial',
-            description: 'Vérification complète du système de freinage',
-            status: 'termine',
-            dateDebut: new Date('2024-03-20T09:00:00'),
-            dateFin: new Date('2024-03-20T10:30:00'),
-            commentaires: [
-              {
-                _id: '1',
-                texte: 'Diagnostic terminé. Usure excessive des plaquettes de frein avant.',
-                date: new Date('2024-03-20T10:30:00'),
-                auteur: 'Mécanicien',
-                expanded: false
-              }
-            ]
-          },
-          {
-            _id: '2',
-            nom: 'Remplacement des freins',
-            description: 'Remplacement des plaquettes et des disques de frein avant',
-            status: 'en_cours',
-            dateDebut: new Date('2024-03-20T11:00:00'),
-            commentaires: [
-              {
-                _id: '2',
-                texte: 'Début du remplacement des plaquettes avant.',
-                date: new Date('2024-03-20T11:00:00'),
-                auteur: 'Mécanicien',
-                expanded: false
-              }
-            ]
-          },
-          {
-            _id: '3',
-            nom: 'Vérification des niveaux',
-            description: 'Contrôle des niveaux de liquide de frein',
-            status: 'a_faire',
-            commentaires: []
-          },
-          {
-            _id: '4',
-            nom: 'Test de route',
-            description: 'Test de freinage sur route',
-            status: 'a_faire',
-            commentaires: []
-          }
-        ],
-        progression: 25,
-        photos: [
-          {
-            _id: '1',
-            url: 'assets/mock/photos/freins1.jpg',
-            description: 'État des plaquettes avant',
-            date: new Date('2024-03-20T10:00:00'),
-            type: 'probleme',
-            etapeId: '1'
-          }
-        ],
-        devis: {
-          montant: 450.00,
-          date: new Date('2024-03-20'),
-          status: 'valide'
-        }
-      };
-      
-      if (this.reparation) {
+  initializeComponentState(): void {
+    if (this.reparation) {
+      this.filteredPhotos = this.reparation.photos ? [...this.reparation.photos] : [];
+      this.commentairesVisibles = {};
+      this.commentExpandedState = {};
+      if (this.reparation.etapes) {
         this.reparation.etapes.forEach(etape => {
           this.commentairesVisibles[etape._id] = false;
+          if (etape.commentaires) {
+            etape.commentaires.forEach(comment => {
+              this.commentExpandedState[this.getCommentId(etape._id, comment)] = (comment.message?.length || 0) <= 100;
+            });
+          }
         });
-        
-        this.filteredPhotos = [...this.reparation.photos];
-      }
-      
-      this.loading = false;
-    }, 1000);
-  }
-
-  updateStatus(newStatus: string): void {
-    if (this.reparation) {
-      this.reparation.status = newStatus as Reparation['status'];
-      if (newStatus === 'en_cours' && !this.reparation.dateDebut) {
-        this.reparation.dateDebut = new Date();
-      } else if (newStatus === 'termine') {
-        this.reparation.dateFin = new Date();
       }
     }
   }
 
-  updateEtapeStatus(etapeId: string, newStatus: string): void {
+  updateStatus(newStatusValue: string): void {
+    const newStatus = newStatusValue as ReparationStatus;
+    if (this.reparation && this.reparation.status !== newStatus) {
+      this.loading = true;
+      this.reparationService.updateReparationStatus(this.reparation._id, newStatus)
+        .pipe(
+          finalize(() => this.loading = false)
+        )
+        .subscribe({
+          next: updatedReparation => {
+            this.reparation = updatedReparation;
+            this.initializeComponentState();
+            console.log('Reparation status updated successfully');
+          },
+          error: err => {
+            console.error('Error updating reparation status:', err);
+            this.error = `Erreur lors de la mise à jour du statut: ${err.message || err}`;
+          }
+        });
+    }
+  }
+
+  updateEtapeStatus(etapeId: string, newStatusValue: string): void {
+    const newStatus = newStatusValue as EtapeStatus;
     if (this.reparation) {
       const etape = this.reparation.etapes.find(e => e._id === etapeId);
-      if (etape) {
-        etape.status = newStatus as 'a_faire' | 'en_cours' | 'termine';
-        if (newStatus === 'en_cours' && !etape.dateDebut) {
-          etape.dateDebut = new Date();
-        } else if (newStatus === 'termine') {
-          etape.dateFin = new Date();
-        }
-        this.reparation.progression = this.calculateProgress();
+      if (etape && etape.status !== newStatus) {
+        this.loading = true;
+        this.reparationService.updateStepStatus(this.reparation._id, etapeId, newStatus)
+          .pipe(
+            finalize(() => this.loading = false)
+          )
+          .subscribe({
+            next: updatedEtape => {
+              const index = this.reparation!.etapes.findIndex(e => e._id === etapeId);
+              if (index !== -1) {
+                this.reparation!.etapes[index] = updatedEtape;
+              }
+              console.log(`Step ${etapeId} status updated successfully`);
+            },
+            error: err => {
+              console.error(`Error updating step ${etapeId} status:`, err);
+              this.error = `Erreur lors de la mise à jour de l'étape: ${err.message || err}`;
+            }
+          });
       }
     }
   }
 
   addComment(etapeId: string): void {
-    if (this.reparation && this.newComment.trim()) {
-      const etape = this.reparation.etapes.find(e => e._id === etapeId);
-      if (etape) {
-        etape.commentaires.push({
-          _id: Date.now().toString(),
-          texte: this.newComment.trim(),
-          date: new Date(),
-          auteur: 'Mécanicien',
-          expanded: false
+    const message = this.newComment[etapeId]?.trim();
+    if (this.reparation && etapeId && message) {
+      this.loading = true;
+      this.reparationService.addCommentToStep(this.reparation._id, etapeId, 'Mécanicien', message)
+        .pipe(
+          finalize(() => this.loading = false)
+        )
+        .subscribe({
+          next: updatedEtape => {
+            const index = this.reparation!.etapes.findIndex(e => e._id === etapeId);
+            if (index !== -1) {
+              this.reparation!.etapes[index] = updatedEtape;
+              const newComment = updatedEtape.commentaires[updatedEtape.commentaires.length - 1];
+              this.commentExpandedState[this.getCommentId(etapeId, newComment)] = true;
+            }
+            this.newComment[etapeId] = '';
+            console.log(`Comment added to step ${etapeId} successfully`);
+          },
+          error: err => {
+            console.error(`Error adding comment to step ${etapeId}:`, err);
+            this.error = `Erreur lors de l'ajout du commentaire: ${err.message || err}`;
+          }
         });
-        this.newComment = '';
-      }
     }
   }
 
   uploadPhoto(): void {
-    if (this.newPhoto && this.photoDescription.trim()) {
-      setTimeout(() => {
-        if (this.reparation) {
-          this.reparation.photos.push({
-            _id: Date.now().toString(),
-            url: 'assets/mock/photos/new-photo.jpg',
-            description: this.photoDescription.trim(),
-            date: new Date(),
-            type: this.photoType,
-            etapeId: this.photoEtapeId || undefined
-          });
-          
-          this.filterPhotosByEtape(this.photoFilterEtapeId);
-          
-          this.newPhoto = null;
-          this.photoDescription = '';
-          this.photoType = 'probleme';
-          this.photoEtapeId = '';
-        }
-      }, 1000);
-    } else if (!this.photoDescription.trim()) {
-      this.error = "Veuillez ajouter une description pour la photo";
-      setTimeout(() => this.error = null, 3000);
+    const description = this.photoDescription?.trim();
+    const mockPhotoUrl = 'assets/mock/photos/newly-uploaded.jpg';
+
+    if (this.reparation && description) {
+      this.photoUploading = true;
+      this.photoError = null;
+      this.reparationService.addPhotoToReparation(this.reparation._id, mockPhotoUrl, description, this.photoEtapeId || undefined)
+        .pipe(
+          finalize(() => this.photoUploading = false)
+        )
+        .subscribe({
+          next: updatedReparation => {
+            this.reparation = updatedReparation;
+            this.filteredPhotos = this.reparation.photos ? [...this.reparation.photos] : [];
+            this.newPhotoFile = null;
+            this.photoPreview = null;
+            this.photoDescription = '';
+            this.photoEtapeId = '';
+            console.log('Photo added successfully (mock URL)');
+          },
+          error: err => {
+            console.error('Error adding photo:', err);
+            this.photoError = `Erreur lors de l'ajout de la photo: ${err.message || err}`;
+          }
+        });
+    } else if (!description) {
+      this.photoError = "La description de la photo est requise.";
     }
   }
 
   calculateProgress(): number {
-    if (!this.reparation || !this.reparation.etapes.length) return 0;
-    const completedSteps = this.reparation.etapes.filter(etape => etape.status === 'termine').length;
+    if (!this.reparation || !this.reparation.etapes || this.reparation.etapes.length === 0) {
+      return 0;
+    }
+    const completedSteps = this.reparation.etapes.filter(e => e.status === EtapeStatus.Terminee).length;
     return Math.round((completedSteps / this.reparation.etapes.length) * 100);
   }
 
-  getStatusClass(status: string): string {
+  getStatusClass(status: ReparationStatus | EtapeStatus | string): string {
     switch (status) {
-      case 'en_attente':
-      case 'a_faire':
-        return 'status-waiting';
-      case 'en_cours':
-        return 'status-in-progress';
-      case 'en_pause':
-        return 'status-paused';
-      case 'termine':
-        return 'status-completed';
-      case 'annule':
-        return 'status-cancelled';
-      case 'valide':
-        return 'status-approved';
-      case 'refuse':
-        return 'status-rejected';
-      default:
-        return '';
+      case ReparationStatus.EnAttenteValidation: return 'status-pending';
+      case ReparationStatus.Validee: return 'status-validated';
+      case ReparationStatus.EnCours: return 'status-progress';
+      case ReparationStatus.EnPause: return 'status-paused';
+      case ReparationStatus.Terminee: return 'status-completed';
+      case ReparationStatus.Annulee: return 'status-cancelled';
+      case ReparationStatus.Refusee: return 'status-refused';
+      case EtapeStatus.EnAttente: return 'status-pending';
+      case EtapeStatus.EnCours: return 'status-progress';
+      case EtapeStatus.Terminee: return 'status-completed';
+      case EtapeStatus.Annulee: return 'status-cancelled';
+      default: return 'status-unknown';
     }
   }
 
-  getStatusLabel(status: string): string {
+  getStatusLabel(status: ReparationStatus | EtapeStatus | string): string {
     switch (status) {
-      case 'en_attente':
-        return 'En attente';
-      case 'en_cours':
-        return 'En cours';
-      case 'en_pause':
-        return 'En pause';
-      case 'termine':
-        return 'Terminé';
-      case 'annule':
-        return 'Annulé';
-      default:
-        return status;
+      case ReparationStatus.EnAttenteValidation: return 'En attente validation';
+      case ReparationStatus.Validee: return 'Validée';
+      case ReparationStatus.EnCours: return 'En cours';
+      case ReparationStatus.EnPause: return 'En pause';
+      case ReparationStatus.Terminee: return 'Terminée';
+      case ReparationStatus.Annulee: return 'Annulée';
+      case ReparationStatus.Refusee: return 'Refusée';
+      case EtapeStatus.EnAttente: return 'À faire';
+      case EtapeStatus.EnCours: return 'En cours';
+      case EtapeStatus.Terminee: return 'Terminée';
+      case EtapeStatus.Annulee: return 'Annulée';
+      default: return 'Inconnu';
     }
   }
 
   goBack(): void {
-    this.router.navigate(['/mecanicien/reparations']);
+    this.router.navigate(['../'], { relativeTo: this.route });
   }
 
   handleFileChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.newPhoto = input.files[0];
+    const element = event.currentTarget as HTMLInputElement;
+    let fileList: FileList | null = element.files;
+    if (fileList && fileList.length > 0) {
+      this.newPhotoFile = fileList[0];
+      this.photoError = null;
+      const reader = new FileReader();
+      reader.onload = (e) => this.photoPreview = reader.result;
+      reader.onerror = (e) => this.photoError = "Erreur lors de la lecture du fichier.";
+      reader.readAsDataURL(this.newPhotoFile);
+    } else {
+      this.newPhotoFile = null;
+      this.photoPreview = null;
     }
-  }
-
-  updateStatusFilter(status: string): void {
-    this.filterStatus = status;
   }
 
   toggleCommentairesVisibilite(etapeId: string): void {
     this.commentairesVisibles[etapeId] = !this.commentairesVisibles[etapeId];
   }
 
-  toggleCommentExpand(commentaire: CommentaireEtape): void {
-    commentaire.expanded = !commentaire.expanded;
+  toggleCommentExpand(etapeId: string, commentaire: CommentaireEtape): void {
+    const commentFullId = this.getCommentId(etapeId, commentaire);
+    this.commentExpandedState[commentFullId] = !this.commentExpandedState[commentFullId];
   }
-  
+
+  getCommentId(etapeId: string, commentaire: CommentaireEtape): string {
+    const commentIdentifier = commentaire.date.getTime().toString();
+    return `${etapeId}-${commentIdentifier}`;
+  }
+
   getEtapeProgressThreshold(index: number): number {
-    if (!this.reparation || this.reparation.etapes.length === 0) return 0;
-    
-    const totalEtapes = this.reparation.etapes.length;
-    
-    const segmentSize = 100 / (totalEtapes + 1);
-    
-    return Math.round((index + 1) * segmentSize);
+    if (!this.reparation || !this.reparation.etapes || this.reparation.etapes.length === 0) {
+      return 0;
+    }
+    return (index / this.reparation.etapes.length) * 100;
   }
 
   filterPhotosByEtape(etapeId: string): void {
-    if (!this.reparation) return;
-    
     this.photoFilterEtapeId = etapeId;
-    
-    if (!etapeId) {
+    if (!this.reparation || !this.reparation.photos) {
+      this.filteredPhotos = [];
+      return;
+    }
+    if (etapeId === '') {
       this.filteredPhotos = [...this.reparation.photos];
     } else {
-      this.filteredPhotos = this.reparation.photos.filter(photo => photo.etapeId === etapeId);
+      this.filteredPhotos = this.reparation.photos.filter(photo => photo.etapeAssociee === etapeId);
     }
   }
 
   countPhotosForEtape(etapeId: string): number {
-    if (!this.reparation) return 0;
-    return this.reparation.photos.filter(photo => photo.etapeId === etapeId).length;
+    if (!this.reparation || !this.reparation.photos) return 0;
+    return this.reparation.photos.filter(photo => photo.etapeAssociee === etapeId).length;
   }
-  
+
   getEtapeNomById(etapeId: string): string {
-    if (!this.reparation) return '';
+    if (!this.reparation || !this.reparation.etapes) return 'Étape inconnue';
     const etape = this.reparation.etapes.find(e => e._id === etapeId);
-    return etape ? etape.nom : '';
+    return etape ? etape.titre : 'Étape inconnue';
+  }
+
+  finishStep(etape: EtapeReparation): void {
+    if (this.reparation && etape.status !== EtapeStatus.Terminee) {
+      this.updateEtapeStatus(etape._id, EtapeStatus.Terminee);
+    }
+  }
+
+  finishReparation(): void {
+    if (this.reparation && this.reparation.status !== ReparationStatus.Terminee) {
+      this.loading = true;
+      this.reparationService.updateReparationStatus(this.reparation._id, ReparationStatus.Terminee)
+        .pipe(
+          switchMap(updatedReparation => {
+            this.reparation = updatedReparation;
+            console.log('Reparation marked as completed. Attempting to generate invoice...');
+            return this.factureService.generateFromReparation(this.reparation!._id).pipe(
+              catchError(invoiceError => {
+                console.error('Error generating invoice:', invoiceError);
+                this.error = `Réparation terminée, mais erreur lors de la génération de la facture brouillon: ${invoiceError.message || invoiceError}`;
+                return of(null);
+              })
+            );
+          }),
+          finalize(() => this.loading = false)
+        )
+        .subscribe({
+          next: (facture: Facture | null) => {
+            if (facture) {
+              console.log('Draft invoice generated successfully:', facture);
+            } else {
+              console.log('Invoice generation failed, but reparation status was updated.');
+            }
+            this.initializeComponentState();
+          },
+          error: err => {
+            console.error('Error finishing reparation:', err);
+            this.error = `Erreur lors de la finalisation de la réparation: ${err.message || err}`;
+          }
+        });
+    }
   }
 } 
