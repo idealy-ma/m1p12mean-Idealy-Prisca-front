@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Vehicule } from '../../../models/vehicule.model';
+import { SupabaseService } from '../../../services/supabase/supabase.service';
 import { VehiculeService } from '../../../services/vehicules/vehicule.service';
 
 @Component({
@@ -18,6 +19,7 @@ export class AddVehiculeComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private vehiculeService: VehiculeService,
+    private supaBaseService: SupabaseService,
     private router: Router
   ) {}
 
@@ -27,6 +29,7 @@ export class AddVehiculeComponent implements OnInit {
       marque: ['', Validators.required],
       modele: ['', Validators.required],
       carburant: ['', Validators.required],
+      photos:['']
     });
   }
 
@@ -34,7 +37,7 @@ export class AddVehiculeComponent implements OnInit {
     this.selectedFiles = Array.from(event.target.files);
   }
 
-  onSubmit() {
+  async onSubmit() {
     if (this.vehiculeForm.valid) {
       this.isLoading = true;
       const vehiculeData: Vehicule = {
@@ -45,7 +48,10 @@ export class AddVehiculeComponent implements OnInit {
         dateAjout: new Date(), // Date actuelle au format Date
         photos: this.selectedFiles.map(file => file.name)
       };
-  
+      if (this.selectedFiles) {
+        // Upload des images et récupération des URLs publiques
+        vehiculeData.photos = await this.supaBaseService.uploadMultipleImages(this.selectedFiles);
+      }
       this.vehiculeService.createVehicule(vehiculeData).subscribe({
         next: (response) => {
           console.log('Véhicule ajouté avec succès', response);

@@ -19,7 +19,7 @@
 
       <div class="photo-grid" *ngIf="vehicule.photos && vehicule.photos.length > 0">
         <img *ngFor="let photo of vehicule.photos" 
-             [src]="'http://localhost:3000/uploads/' + photo" 
+             [src]="photo" 
              alt="Photo du véhicule" />
       </div>
       

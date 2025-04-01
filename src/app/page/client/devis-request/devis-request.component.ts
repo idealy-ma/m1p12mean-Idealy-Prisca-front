@@ -5,6 +5,7 @@ import { VehiculeService } from '../../../services/vehicules/vehicule.service';
 import { DevisService } from '../../../services/devis/devis.service';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { SupabaseService } from '../../../services/supabase/supabase.service';
 
 @Component({
   selector: 'app-devis-request',
@@ -47,6 +48,7 @@ export class DevisRequestComponent implements OnInit {
     private fb: FormBuilder,
     private vehiculeService: VehiculeService,
     private devisService: DevisService,
+    private supaBaseService: SupabaseService,
     private router: Router
   ) {
     this.vehiculeForm = this.fb.group({
@@ -399,7 +401,9 @@ export class DevisRequestComponent implements OnInit {
       if (this.devisForm.get('photoUrl')?.value) {
         devisData.urlPhotos.push(this.devisForm.get('photoUrl')?.value);
       }
-      
+      if(devisData.urlPhotos){
+      await this.supaBaseService.uploadMultipleImages( devisData.urlPhotos);
+      }
       // Ajouter les services sélectionnés
       if (this.includeServices) {
         this.availableServices

@@ -222,17 +222,15 @@
         </div>
 
         <!-- Image du problème -->
-        <div class="problem-image" *ngIf="devis.photoUrl">
+        <div class="problem-image" *ngIf="devis.urlPhotos?.length">
           <h3>Photos du problème</h3>
           <div class="image-gallery">
-            <div class="image-container">
-              <img [src]="devis.photoUrl" alt="Photo du problème" class="problem-photo">
-            </div>
-            <div class="image-container" *ngIf="devis.secondPhotoUrl">
-              <img [src]="devis.secondPhotoUrl" alt="Photo du problème 2" class="problem-photo">
+            <div class="image-container" *ngFor="let photoUrl of devis.urlPhotos">
+              <img [src]="photoUrl" alt="Photo du problème" class="problem-photo">
             </div>
           </div>
         </div>
+        
       </div>
 
       <!-- Boutons d'action -->
