@@ -30,6 +30,9 @@ import { ReparationDetailsComponent } from './page/mecanicien/reparations/repara
 import { ClientReparationListComponent } from './page/client/reparations/reparation-list/client-reparation-list.component';
 import { ClientReparationDetailsComponent } from './page/client/reparations/reparation-details/client-reparation-details.component';
 
+// Ajout des imports pour les composants de facturation Manager
+import { ManagerFacturesListComponent } from './page/manager/factures-list/manager-factures-list/manager-factures-list.component';
+import { ManagerFactureDetailsComponent } from './page/manager/facture-details/manager-facture-details/manager-facture-details.component';
 
 const routes: Routes = [
   // Landing page (page principale)
@@ -77,7 +80,10 @@ const routes: Routes = [
       { path: 'service', component: AddServiceComponent },
       { path: 'employee', component: AddEmployeeComponent },
       { path: 'employees', component: EmployeeListComponent },
-      { path: 'profil', component: UserProfileComponent }
+      { path: 'profil', component: UserProfileComponent },
+      { path: 'factures', component: ManagerFacturesListComponent },
+      { path: 'factures/:id', component: ManagerFactureDetailsComponent },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },
   

@@ -1,0 +1,183 @@
+<div class="factures-container">
+  <!-- Section de chargement -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Chargement des factures...</p>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div class="error-container" *ngIf="error">
+    <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+    <p>{{ error }}</p>
+    <button (click)="loadFactures()">Réessayer</button>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="factures-content" *ngIf="!loading && !error">
+    
+    <!-- Statistiques -->
+    <div class="stats-row" *ngIf="stats">
+      <div class="stat-card">
+        <div class="stat-title">Total factures</div>
+        <div class="stat-value">{{ stats.totalFactures }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Montant total</div>
+        <div class="stat-value">{{ formatMontant(stats.totalMontant) }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Factures payées</div>
+        <div class="stat-value">{{ stats.nombrePayees }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Factures en retard</div>
+        <div class="stat-value">{{ stats.nombreEnRetard }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Délai moyen de paiement</div>
+        <div class="stat-value">{{ stats.tempsMoyenPaiement.toFixed(1) }} jours</div>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters-container">
+      <form [formGroup]="filterForm">
+        <div class="filters-row">
+          <div class="filter-group">
+            <label for="statut">Statut</label>
+            <select id="statut" formControlName="statut">
+              <option value="">Tous les statuts</option>
+              <option value="brouillon">Brouillon</option>
+              <option value="validee">Validée</option>
+              <option value="emise">Émise</option>
+              <option value="payee">Payée</option>
+              <option value="partiellement_payee">Partiellement payée</option>
+              <option value="en_retard">En retard</option>
+              <option value="annulee">Annulée</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="dateDebut">Du</label>
+            <input type="date" id="dateDebut" formControlName="dateDebut">
+          </div>
+
+          <div class="filter-group">
+            <label for="dateFin">Au</label>
+            <input type="date" id="dateFin" formControlName="dateFin">
+          </div>
+
+          <div class="filter-group">
+            <label for="montantMin">Montant min</label>
+            <input type="number" id="montantMin" formControlName="montantMin" placeholder="€">
+          </div>
+
+          <div class="filter-group">
+            <label for="montantMax">Montant max</label>
+            <input type="number" id="montantMax" formControlName="montantMax" placeholder="€">
+          </div>
+
+          <div class="filter-group search-group">
+            <input type="text" id="recherche" formControlName="recherche" placeholder="Rechercher...">
+            <button type="button" class="search-button">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+
+          <button type="button" class="reset-filters" (click)="resetFilters()">
+            <i class="fas fa-times"></i> Réinitialiser
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Tableau des factures -->
+    <div class="factures-table-container">
+      <table class="factures-table">
+        <thead>
+          <tr>
+            <th (click)="changeSort('numeroFacture')">
+              N° Facture
+              <i class="fas" [ngClass]="{'fa-sort-up': sortField === 'numeroFacture' && sortDirection === 'asc', 'fa-sort-down': sortField === 'numeroFacture' && sortDirection === 'desc', 'fa-sort': sortField !== 'numeroFacture'}"></i>
+            </th>
+            <th (click)="changeSort('dateEmission')">
+              Date émission
+              <i class="fas" [ngClass]="{'fa-sort-up': sortField === 'dateEmission' && sortDirection === 'asc', 'fa-sort-down': sortField === 'dateEmission' && sortDirection === 'desc', 'fa-sort': sortField !== 'dateEmission'}"></i>
+            </th>
+            <th (click)="changeSort('client.nom')">
+              Client
+              <i class="fas" [ngClass]="{'fa-sort-up': sortField === 'client.nom' && sortDirection === 'asc', 'fa-sort-down': sortField === 'client.nom' && sortDirection === 'desc', 'fa-sort': sortField !== 'client.nom'}"></i>
+            </th>
+            <th (click)="changeSort('vehicule.immatriculation')">
+              Véhicule
+              <i class="fas" [ngClass]="{'fa-sort-up': sortField === 'vehicule.immatriculation' && sortDirection === 'asc', 'fa-sort-down': sortField === 'vehicule.immatriculation' && sortDirection === 'desc', 'fa-sort': sortField !== 'vehicule.immatriculation'}"></i>
+            </th>
+            <th (click)="changeSort('montantTTC')">
+              Montant TTC
+              <i class="fas" [ngClass]="{'fa-sort-up': sortField === 'montantTTC' && sortDirection === 'asc', 'fa-sort-down': sortField === 'montantTTC' && sortDirection === 'desc', 'fa-sort': sortField !== 'montantTTC'}"></i>
+            </th>
+            <th (click)="changeSort('statut')">
+              Statut
+              <i class="fas" [ngClass]="{'fa-sort-up': sortField === 'statut' && sortDirection === 'asc', 'fa-sort-down': sortField === 'statut' && sortDirection === 'desc', 'fa-sort': sortField !== 'statut'}"></i>
+            </th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let facture of paginatedFactures" (click)="viewFactureDetails(facture.id)">
+            <td>{{ facture.numeroFacture }}</td>
+            <td>{{ formatDate(facture.dateEmission) }}</td>
+            <td>{{ facture.client.nom }} {{ facture.client.prenom }}</td>
+            <td>{{ facture.vehicule.marque }} {{ facture.vehicule.modele }} ({{ facture.vehicule.immatriculation }})</td>
+            <td class="montant">{{ formatMontant(facture.montantTTC) }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(facture.statut)">
+                {{ getStatusLabel(facture.statut) }}
+              </span>
+            </td>
+            <td class="actions">
+              <button *ngIf="facture.statut === 'brouillon'" (click)="validateFacture(facture.id, $event)" class="action-btn validate-btn">
+                <i class="fas fa-check"></i>
+                <span class="tooltip">Valider</span>
+              </button>
+              <button *ngIf="facture.statut === 'validee'" (click)="emitFacture(facture.id, $event)" class="action-btn emit-btn">
+                <i class="fas fa-paper-plane"></i>
+                <span class="tooltip">Émettre</span>
+              </button>
+              <button class="action-btn view-btn" (click)="viewFactureDetails(facture.id); $event.stopPropagation()">
+                <i class="fas fa-eye"></i>
+                <span class="tooltip">Détails</span>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="paginatedFactures.length === 0">
+            <td colspan="7" class="no-results">Aucune facture trouvée</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalItems > itemsPerPage">
+      <button 
+        [disabled]="currentPage === 1" 
+        (click)="changePage(currentPage - 1)"
+        class="pagination-btn prev"
+      >
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      
+      <div class="page-info">
+        Page {{ currentPage }} sur {{ totalPages }}
+      </div>
+      
+      <button 
+        [disabled]="currentPage === totalPages" 
+        (click)="changePage(currentPage + 1)"
+        class="pagination-btn next"
+      >
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
