@@ -258,13 +258,28 @@ export class ReparationService {
   }
 
   /**
-   * Ajoute une photo à une réparation (Exemple - à implémenter avec API).
-   * TODO: Remplacer par un appel API réel (POST) et gérer l'upload (potentiellement FormData).
+   * Ajoute les métadonnées d'une photo (URL) à une réparation.
    */
-  addPhotoToReparation(reparationId: string, photoData: FormData): Observable<PhotoReparation> {
-    console.warn(`ReparationService: addPhotoToReparation(${reparationId}) called - NO API CALL IMPLEMENTED YET.`);
-    const url = `${this.apiUrl}/${reparationId}/photos`;
-    return throwError(() => new Error('Fonctionnalité addPhotoToReparation non implémentée'));
+  addPhotoToReparation(reparationId: string, photoData: { url: string, description: string, etapeAssociee?: string }): Observable<PhotoReparation> {
+    const url = `${this.apiUrl}/reparations/${reparationId}/photos`;
+    console.log(`ReparationService: adding photo metadata for reparation ${reparationId} via API: ${url}`);
+
+    // Envoyer directement l'objet photoData en JSON
+    return this.http.post<{ success: boolean, message: string, data: PhotoReparation }>(url, photoData).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          // Parser les dates de la photo retournée
+          return this.parseDatesInPhoto(response.data);
+        } else {
+          console.error('ReparationService: API returned success=false or no data for addPhotoToReparation', response);
+          throw new HttpErrorResponse({ 
+            error: { message: response.message || 'Échec de l\'ajout des informations de la photo.' }, 
+            status: 400 // Ou autre code d'erreur approprié
+          });
+        }
+      }),
+      catchError(this.handleError)
+    );
   }
 
   // --- Fonctions utilitaires pour parser les dates --- //

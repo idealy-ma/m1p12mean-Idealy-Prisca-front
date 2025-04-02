@@ -7,6 +7,7 @@ import { Facture } from '../../../../models/facture.model';
 import { switchMap, catchError, tap, finalize } from 'rxjs/operators';
 import { of, throwError } from 'rxjs';
 import { TokenService } from '../../../../services/token/token.service';
+import { SupabaseService } from '../../../../services/supabase/supabase.service';
 
 interface CurrentUserInfo {
   _id: string;
@@ -44,7 +45,8 @@ export class ReparationDetailsComponent implements OnInit {
     private router: Router,
     private reparationService: ReparationService,
     private factureService: FactureService,
-    private tokenService: TokenService
+    private tokenService: TokenService,
+    private supabaseService: SupabaseService
   ) {}
 
   ngOnInit(): void {
@@ -188,43 +190,61 @@ export class ReparationDetailsComponent implements OnInit {
     }
   }
 
-  uploadPhoto(): void {
+  async uploadPhoto(): Promise<void> {
     const description = this.photoDescription?.trim();
     if (this.reparation && this.newPhotoFile && description) {
       this.photoUploading = true;
       this.photoError = null;
+      let publicUrl = '';
 
-      const formData = new FormData();
-      formData.append('photo', this.newPhotoFile, this.newPhotoFile.name);
-      formData.append('description', description);
-      if (this.photoEtapeId) {
-        formData.append('etapeAssociee', this.photoEtapeId);
+      try {
+        console.log('Uploading photo to Supabase...');
+        const urls = await this.supabaseService.uploadMultipleImages([this.newPhotoFile]);
+        if (urls && urls.length > 0) {
+          publicUrl = urls[0];
+          console.log('Supabase upload successful, URL:', publicUrl);
+        } else {
+          throw new Error('L\'upload Supabase n\'a retourné aucune URL.');
+        }
+
+        const photoData = {
+          url: publicUrl,
+          description: description,
+          etapeAssociee: this.photoEtapeId || undefined
+        };
+
+        console.log('Sending photo metadata to backend...', photoData);
+        this.reparationService.addPhotoToReparation(this.reparation._id, photoData)
+          .pipe(
+            finalize(() => this.photoUploading = false)
+          )
+          .subscribe({
+            next: (nouvellePhoto: PhotoReparation) => {
+              console.log('Backend update successful', nouvellePhoto);
+              if (this.reparation) {
+                  if (!this.reparation.photos) {
+                      this.reparation.photos = [];
+                  }
+                  this.reparation.photos.push(this.reparationService['parseDatesInPhoto'](nouvellePhoto));
+                  this.filteredPhotos = [...this.reparation.photos];
+              }
+              this.newPhotoFile = null;
+              this.photoPreview = null;
+              this.photoDescription = '';
+              this.photoEtapeId = '';
+            },
+            error: err => {
+              console.error('Error adding photo metadata to backend:', err);
+              this.photoError = err.message || `Erreur lors de l'enregistrement de la photo`;
+            }
+          });
+
+      } catch (uploadError: any) {
+        console.error('Error during photo upload process:', uploadError);
+        this.photoError = uploadError.message || "Erreur lors de l'upload de l'image.";
+        this.photoUploading = false;
       }
 
-      this.reparationService.addPhotoToReparation(this.reparation._id, formData)
-        .pipe(
-          finalize(() => this.photoUploading = false)
-        )
-        .subscribe({
-          next: (nouvellePhoto: PhotoReparation) => {
-            if (this.reparation) {
-                if (!this.reparation.photos) {
-                    this.reparation.photos = [];
-                }
-                this.reparation.photos.push(this.reparationService['parseDatesInPhoto'](nouvellePhoto));
-                this.filteredPhotos = [...this.reparation.photos];
-            }
-            this.newPhotoFile = null;
-            this.photoPreview = null;
-            this.photoDescription = '';
-            this.photoEtapeId = '';
-            console.log('Photo added successfully');
-          },
-          error: err => {
-            console.error('Error adding photo:', err);
-            this.photoError = err.userMessage || `Erreur lors de l'ajout de la photo`;
-          }
-        });
     } else if (!this.newPhotoFile) {
         this.photoError = "Veuillez sélectionner un fichier image.";
     } else if (!description) {
