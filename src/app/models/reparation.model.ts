@@ -2,7 +2,7 @@ import { Devis } from "./devis.model";
 
 export interface CommentaireEtape {
   // _id?: string; // Optionnel si l'API ne le retourne pas ou si Mongoose ne le met pas par défaut dans le sous-document
-  auteur: string; // 'client' or 'mecanicien' ou ID/Objet populé
+  auteur: User; // Auteur sera toujours un objet User populé
   message: string;
   date: Date;
   expanded?: boolean; // Ajouter cette propriété optionnelle pour l'UI
@@ -28,10 +28,12 @@ export interface PhotoReparation {
 }
 
 export interface User {
+  _id?: string; // Ajouter _id (optionnel)
   nom: string;
   prenom: string;
   email?: string;
   telephone?: string;
+  role?: string; // Ajouter role (optionnel)
 }
 
 export interface Vehicule {

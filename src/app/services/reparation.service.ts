@@ -232,13 +232,29 @@ export class ReparationService {
   }
 
   /**
-   * Ajoute un commentaire à une étape spécifique (Exemple - à implémenter avec API).
-   * TODO: Remplacer par un appel API réel (POST).
+   * Ajoute un commentaire à une étape spécifique.
    */
   addCommentToStep(reparationId: string, etapeId: string, message: string): Observable<EtapeReparation> {
-    console.warn(`ReparationService: addCommentToStep(${reparationId}, ${etapeId}) called - NO API CALL IMPLEMENTED YET.`);
-    const url = `${this.apiUrl}/${reparationId}/etapes/${etapeId}/commentaires`;
-    return throwError(() => new Error('Fonctionnalité addCommentToStep non implémentée'));
+    const url = `${this.apiUrl}/reparations/${reparationId}/etapes/${etapeId}/commentaires`;
+    console.log(`ReparationService: adding comment to step ${etapeId} for reparation ${reparationId} via API: ${url}`);
+
+    const body = { message: message }; // Le backend attend un objet avec une clé "message"
+
+    return this.http.post<{ success: boolean, message: string, data: EtapeReparation }>(url, body).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          // Parser les dates de l'étape retournée (y compris pour le nouveau commentaire)
+          return this.parseDatesInEtape(response.data);
+        } else {
+          console.error('ReparationService: API returned success=false or no data for addCommentToStep', response);
+          throw new HttpErrorResponse({ 
+            error: { message: response.message || 'Échec de l\'ajout du commentaire.' }, 
+            status: 400 // Ou autre code d'erreur approprié
+          });
+        }
+      }),
+      catchError(this.handleError) // Utiliser le gestionnaire d'erreurs global
+    );
   }
 
   /**

@@ -1,11 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Reparation, EtapeReparation, CommentaireEtape, ReparationStatus, EtapeStatus, PhotoReparation } from '../../../../models/reparation.model';
+import { Reparation, EtapeReparation, CommentaireEtape, ReparationStatus, EtapeStatus, PhotoReparation, User } from '../../../../models/reparation.model';
 import { ReparationService } from '../../../../services/reparation.service';
 import { FactureService } from '../../../../services/facture.service';
 import { Facture } from '../../../../models/facture.model';
 import { switchMap, catchError, tap, finalize } from 'rxjs/operators';
 import { of, throwError } from 'rxjs';
+import { TokenService } from '../../../../services/token/token.service';
+
+interface CurrentUserInfo {
+  _id: string;
+  role: string;
+}
 
 @Component({
   selector: 'app-reparation-details',
@@ -31,20 +37,35 @@ export class ReparationDetailsComponent implements OnInit {
   photoFilterEtapeId: string = '';
   commentairesVisibles: { [etapeId: string]: boolean } = {};
   commentExpandedState: { [commentId: string]: boolean } = {};
+  currentUser: CurrentUserInfo | null = null;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private reparationService: ReparationService,
-    private factureService: FactureService
+    private factureService: FactureService,
+    private tokenService: TokenService
   ) {}
 
   ngOnInit(): void {
+    const userId = this.tokenService.getUserId();
+    const userRole = this.tokenService.getUserRole();
+
+    if (!userId || !userRole) {
+      console.error("Impossible de récupérer l'ID ou le rôle de l'utilisateur depuis le token.");
+      this.error = "Erreur d'authentification ou token invalide.";
+      this.loading = false;
+      return;
+    }
+    
+    this.currentUser = { _id: userId, role: userRole };
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadReparation(id);
     } else {
       this.error = 'ID de réparation non fourni';
+      this.loading = false;
     }
   }
 
@@ -71,9 +92,11 @@ export class ReparationDetailsComponent implements OnInit {
       this.filteredPhotos = this.reparation.photos ? [...this.reparation.photos] : [];
       this.commentairesVisibles = {};
       this.commentExpandedState = {};
+      this.newComment = {};
       if (this.reparation.etapesSuivi) {
         this.reparation.etapesSuivi.forEach(etape => {
           this.commentairesVisibles[etape._id] = false;
+          this.newComment[etape._id] = '';
           if (etape.commentaires) {
             etape.commentaires.forEach(comment => {
               this.commentExpandedState[this.getCommentId(etape._id, comment)] = (comment.message?.length || 0) <= 100;
@@ -146,13 +169,15 @@ export class ReparationDetailsComponent implements OnInit {
             const index = this.reparation!.etapesSuivi.findIndex(e => e._id === etapeId);
             if (index !== -1) {
               this.reparation!.etapesSuivi[index] = this.reparationService['parseDatesInEtape'](updatedEtape);
-              const newCommentFromServer = updatedEtape.commentaires?.[updatedEtape.commentaires.length - 1];
-              if (newCommentFromServer) {
-                const commentFullId = this.getCommentId(etapeId, newCommentFromServer);
-                this.commentExpandedState[commentFullId] = true;
-              }
+              this.reparation!.etapesSuivi[index].commentaires.forEach(c => {
+                 const commentFullId = this.getCommentId(etapeId, c);
+                 if (this.commentExpandedState[commentFullId] === undefined) {
+                     this.commentExpandedState[commentFullId] = (c.message?.length || 0) <= 100;
+                 }
+              });
             }
             this.newComment[etapeId] = '';
+            this.commentairesVisibles[etapeId] = true;
             console.log(`Comment added to step ${etapeId} successfully`);
           },
           error: err => {
@@ -207,7 +232,6 @@ export class ReparationDetailsComponent implements OnInit {
     }
   }
 
-  // Méthode appelée par l'événement (change) de la checkbox
   finishStep(etape: EtapeReparation): void {
     const nouveauStatut = (etape.status === EtapeStatus.Terminee) 
                           ? EtapeStatus.EnCours 
@@ -272,8 +296,8 @@ export class ReparationDetailsComponent implements OnInit {
   }
 
   getCommentId(etapeId: string, commentaire: CommentaireEtape): string {
-    const commentIdentifier = commentaire.date.getTime().toString();
-    return `${etapeId}-${commentIdentifier}`;
+    const index = this.reparation?.etapesSuivi?.find(e => e._id === etapeId)?.commentaires?.indexOf(commentaire);
+    return `${etapeId}-${index ?? commentaire.date.toISOString()}`;
   }
 
   getEtapeProgressThreshold(index: number): number {
@@ -344,5 +368,34 @@ export class ReparationDetailsComponent implements OnInit {
 
   private get reparationServiceWithParsers(): ReparationService & { parseDatesInEtape(etape: any): EtapeReparation, parseDatesInPhoto(photo: any): PhotoReparation } {
       return this.reparationService as any;
+  }
+
+  getAuteurLabel(auteur: User | undefined): string {
+    if (!auteur) return 'Inconnu';
+    if (this.currentUser && auteur._id === this.currentUser._id) {
+      return 'Vous';
+    }
+    if (auteur.prenom && auteur.nom) {
+      return `${auteur.prenom} ${auteur.nom}`;
+    }
+    return 'Auteur inconnu';
+  }
+
+  canComment(reparation: Reparation | null): boolean {
+    if (!reparation || !this.currentUser) {
+      return false;
+    }
+    const userRole = this.currentUser.role;
+    const userId = this.currentUser._id;
+    
+    if (!userRole || !userId) return false;
+
+    if (userRole === 'client' && reparation.client?._id === userId) {
+      return true;
+    }
+    if (userRole === 'mecanicien' && reparation.mecaniciensAssignes?.some(a => a.mecanicien?._id === userId)) {
+      return true;
+    }
+    return false;
   }
 } 

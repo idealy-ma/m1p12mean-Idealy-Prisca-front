@@ -225,7 +225,14 @@
               <div class="commentaires-list">
                 <div *ngFor="let commentaire of etape.commentaires" class="commentaire" [ngClass]="{'expanded': commentExpandedState[getCommentId(etape._id, commentaire)]}">
                   <div class="commentaire-header">
-                    <span class="auteur" [ngClass]="{'auteur-client': commentaire.auteur === 'client', 'auteur-mecanicien': commentaire.auteur === 'mecanicien'}">{{ commentaire.auteur === 'client' ? 'Client' : 'Mécanicien' }}</span>
+                    <span class="auteur" 
+                          [ngClass]="{
+                            'auteur-mecanicien': commentaire.auteur.role === 'mecanicien', 
+                            'auteur-client': commentaire.auteur.role === 'client',
+                            'auteur-vous': commentaire.auteur._id === currentUser?._id
+                          }">
+                      {{ getAuteurLabel(commentaire.auteur) }}
+                    </span>
                     <span class="date">{{ commentaire.date | date:'dd/MM/yy HH:mm' }}</span>
                   </div>
                   <div class="text-container">
@@ -241,12 +248,12 @@
                    Aucun commentaire pour cette étape.
                 </div>
               </div>
-              <div class="nouveau-commentaire">
+              <div class="nouveau-commentaire" *ngIf="canComment(reparation)">
                 <textarea [(ngModel)]="newComment[etape._id]"
                           placeholder="Ajouter un commentaire..."
                           rows="2"
                           (keyup.enter)="addComment(etape._id)"></textarea>
-                <button class="btn-send" (click)="addComment(etape._id)" [disabled]="!newComment[etape._id].trim()">
+                <button class="btn-send" (click)="addComment(etape._id)" [disabled]="!newComment[etape._id]?.trim()">
                   <i class="fas fa-paper-plane"></i>
                 </button>
               </div>
