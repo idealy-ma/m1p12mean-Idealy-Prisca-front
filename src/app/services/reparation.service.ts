@@ -202,13 +202,33 @@ export class ReparationService {
   }
 
   /**
-   * Met à jour le statut d'une étape spécifique d'une réparation (Exemple - à implémenter avec API).
-   * TODO: Remplacer par un appel API réel (PATCH ou PUT).
+   * Met à jour le statut d'une étape spécifique d'une réparation.
    */
   updateStepStatus(reparationId: string, etapeId: string, status: EtapeStatus, dateFin?: Date): Observable<EtapeReparation> {
-    console.warn(`ReparationService: updateStepStatus(${reparationId}, ${etapeId}, ${status}) called - NO API CALL IMPLEMENTED YET.`);
-    const url = `${this.apiUrl}/${reparationId}/etapes/${etapeId}/status`;
-    return throwError(() => new Error('Fonctionnalité updateStepStatus non implémentée'));
+    const url = `${this.apiUrl}/reparations/${reparationId}/etapes/${etapeId}/status`;
+    console.log(`ReparationService: updating step status ${etapeId} for reparation ${reparationId} to ${status} via API: ${url}`);
+    
+    const body: any = { status };
+    if (dateFin) {
+      body.dateFin = dateFin.toISOString(); // Envoyer la date au format ISO
+    }
+    
+    // Utiliser PATCH
+    return this.http.patch<{ success: boolean, message: string, data: EtapeReparation }>(url, body).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          // Parser les dates éventuelles dans la réponse de l'étape
+          return this.parseDatesInEtape(response.data);
+        } else {
+          console.error('ReparationService: API returned success=false or no data for updateStepStatus', response);
+          throw new HttpErrorResponse({ 
+            error: { message: response.message || 'Échec de la mise à jour du statut de l\'étape.' }, 
+            status: 400 // Ou autre code d'erreur approprié
+          });
+        }
+      }),
+      catchError(this.handleError) // Utiliser le gestionnaire d'erreurs global
+    );
   }
 
   /**

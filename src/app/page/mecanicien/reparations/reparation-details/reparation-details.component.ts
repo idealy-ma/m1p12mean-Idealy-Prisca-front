@@ -207,6 +207,14 @@ export class ReparationDetailsComponent implements OnInit {
     }
   }
 
+  // Méthode appelée par l'événement (change) de la checkbox
+  finishStep(etape: EtapeReparation): void {
+    const nouveauStatut = (etape.status === EtapeStatus.Terminee) 
+                          ? EtapeStatus.EnCours 
+                          : EtapeStatus.Terminee; 
+    this.updateEtapeStatus(etape._id, nouveauStatut);
+  }
+
   calculateProgress(): number {
     if (!this.reparation || !this.reparation.etapesSuivi || this.reparation.etapesSuivi.length === 0) {
       return 0;
@@ -221,8 +229,8 @@ export class ReparationDetailsComponent implements OnInit {
         return 'status-waiting';
       case EtapeStatus.EnCours:
         return 'status-in-progress';
-      case EtapeStatus.Annulee:
-        return 'status-cancelled';
+      case EtapeStatus.Bloquee:
+        return 'status-blocked';
       case EtapeStatus.Terminee:
         return 'status-completed';
       default:
@@ -297,12 +305,6 @@ export class ReparationDetailsComponent implements OnInit {
     if (!this.reparation || !this.reparation.etapesSuivi) return 'Étape inconnue';
     const etape = this.reparation.etapesSuivi.find(e => e._id === etapeId);
     return etape ? etape.titre : 'Étape inconnue';
-  }
-
-  finishStep(etape: EtapeReparation): void {
-    if (this.reparation && etape.status !== EtapeStatus.Terminee) {
-      this.updateEtapeStatus(etape._id, EtapeStatus.Terminee);
-    }
   }
 
   finishReparation(): void {

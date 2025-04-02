@@ -12,10 +12,12 @@ export interface EtapeReparation {
   _id: string;
   titre: string;
   description?: string;
-  status: 'en_attente' | 'en_cours' | 'terminee' | 'annulee';
+  status: EtapeStatus;
   dateDebut?: Date;
   dateFin?: Date;
   commentaires: CommentaireEtape[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface PhotoReparation {
@@ -81,8 +83,8 @@ export enum ReparationStatus {
 }
 
 export enum EtapeStatus {
-  EnAttente = 'en_attente',
-  EnCours = 'en_cours',
-  Terminee = 'terminee',
-  Annulee = 'annulee'
+  EnAttente = 'En attente',
+  EnCours = 'En cours',
+  Terminee = 'Terminée',
+  Bloquee = 'Bloquée'
 } 

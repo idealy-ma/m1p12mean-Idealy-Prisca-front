@@ -151,14 +151,14 @@
                  'todo-completed': etape.status === EtapeStatus.Terminee,
                  'todo-in-progress': etape.status === EtapeStatus.EnCours,
                  'todo-pending': etape.status === EtapeStatus.EnAttente,
-                 'todo-cancelled': etape.status === EtapeStatus.Annulee
+                 'todo-blocked': etape.status === EtapeStatus.Bloquee
                }">
 
             <div class="todo-item-header">
               <div class="todo-checkbox">
                 <input type="checkbox" 
                        [checked]="etape.status === EtapeStatus.Terminee" 
-                       [disabled]="etape.status === EtapeStatus.Annulee" 
+                       [disabled]="etape.status === EtapeStatus.Bloquee" 
                        (change)="finishStep(etape)">
               </div>
 
@@ -176,7 +176,7 @@
                         'fa-clock': etape.status === EtapeStatus.EnAttente,
                         'fa-spinner fa-spin': etape.status === EtapeStatus.EnCours,
                         'fa-check-circle': etape.status === EtapeStatus.Terminee,
-                        'fa-times-circle': etape.status === EtapeStatus.Annulee
+                        'fa-lock': etape.status === EtapeStatus.Bloquee
                       }"></i>
                     {{ getStatusLabel(etape.status) }}
                   </span>

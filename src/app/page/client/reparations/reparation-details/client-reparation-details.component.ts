@@ -105,7 +105,7 @@ export class ClientReparationDetailsComponent implements OnInit, OnDestroy {
       case EtapeStatus.EnCours.toLowerCase(): return 'status-in-progress';
       case EtapeStatus.Terminee.toLowerCase(): return 'status-completed';
       case EtapeStatus.EnAttente.toLowerCase(): return 'status-pending';
-      case EtapeStatus.Annulee.toLowerCase(): return 'status-cancelled';
+      case EtapeStatus.Bloquee.toLowerCase(): return 'status-blocked';
 
       default: return 'status-unknown';
     }
@@ -123,7 +123,7 @@ export class ClientReparationDetailsComponent implements OnInit, OnDestroy {
       [EtapeStatus.EnCours.toLowerCase()]: 'En cours',
       [EtapeStatus.Terminee.toLowerCase()]: 'Terminée',
       [EtapeStatus.EnAttente.toLowerCase()]: 'En attente',
-      [EtapeStatus.Annulee.toLowerCase()]: 'Annulée',
+      [EtapeStatus.Bloquee.toLowerCase()]: 'Bloquée',
     };
     return statusMapping[lowerStatus] || status;
   }
