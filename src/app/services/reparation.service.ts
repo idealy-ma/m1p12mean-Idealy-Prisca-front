@@ -110,8 +110,8 @@ export class ReparationService {
   /**
    * Récupère une réparation par son ID depuis l'API backend.
    */
-  getReparationById(id: string): Observable<Reparation | undefined> {
-    const url = `${this.apiUrl}/${id}`;
+  getReparationById(id: string): Observable<Reparation> {
+    const url = `${this.apiUrl}/reparations/${id}`;
     console.log(`ReparationService: fetching reparation by id ${id} from API: ${url}`);
 
     return this.http.get<{ success: boolean, data: Reparation }>(url).pipe(
@@ -120,11 +120,26 @@ export class ReparationService {
           return this.parseDatesInReparation(response.data);
         } else {
           console.error(`ReparationService: API returned success=false or no data for id ${id}`, response);
-          throw new HttpErrorResponse({ error: { message: `Réparation non trouvée ou réponse invalide de l'API (id: ${id})`}, status: 404 });
+          throw new HttpErrorResponse({ 
+            error: { message: `Réparation non trouvée ou réponse invalide de l'API (id: ${id})`}, 
+            status: 404 
+          });
         }
       }),
-      tap(data => console.log(`ReparationService: fetched reparation ${data?._id} from API`)),
-      catchError(this.handleError)
+      catchError(error => {
+        console.error('Erreur lors de la récupération de la réparation:', error);
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 400) {
+            return throwError(() => new Error('ID de réparation invalide'));
+          } else if (error.status === 403) {
+            return throwError(() => new Error('Accès non autorisé à cette réparation'));
+          } else if (error.status === 404) {
+            return throwError(() => new Error('Réparation non trouvée'));
+          }
+        }
+        return throwError(() => new Error('Une erreur est survenue lors de la récupération de la réparation'));
+      }),
+      tap(data => console.log(`ReparationService: fetched reparation ${data?._id} from API`))
     );
   }
 
@@ -249,20 +264,11 @@ export class ReparationService {
           userFriendlyMessage = error.error.message || 'Ressource non trouvée.';
         } else if (error.status === 400) {
           userFriendlyMessage = error.error.message || 'Données invalides.';
-        } else {
-          userFriendlyMessage = error.error.message || 'Erreur serveur inattendue.';
         }
-      } else if (typeof error.error === 'string'){
-        errorMessage += ` - API Body: ${error.error}`;
       }
     }
-    console.error('Erreur API complète:', errorMessage, error);
 
-    return throwError(() => ({ 
-      userMessage: userFriendlyMessage,
-      developerMessage: errorMessage,
-      status: error.status,
-      errorBody: error.error
-    }));
+    console.error('ReparationService Error:', errorMessage);
+    return throwError(() => new Error(userFriendlyMessage));
   }
 } 
