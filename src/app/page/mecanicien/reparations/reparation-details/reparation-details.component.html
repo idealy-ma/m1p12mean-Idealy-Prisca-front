@@ -17,17 +17,17 @@
       </div>
       <div class="title-section">
         <h1>Réparation #{{ reparation._id }}</h1>
-        <div class="status-badge" [ngClass]="getStatusClass(reparation.status)">
-          {{ getStatusLabel(reparation.status) }}
+        <div class="status-badge" [ngClass]="getStatusClass(reparation.statusReparation)">
+          {{ getStatusLabel(reparation.statusReparation) }}
         </div>
       </div>
       <div class="actions">
-        <button *ngIf="reparation.status !== ReparationStatus.Terminee && reparation.status !== ReparationStatus.Annulee"
+        <button *ngIf="reparation.statusReparation !== ReparationStatus.Terminee && reparation.statusReparation !== ReparationStatus.Annulee"
                 class="btn btn-primary"
                 (click)="finishReparation()">
           <i class="fas fa-check"></i> Terminer la Réparation
         </button>
-         <button *ngIf="reparation.status !== ReparationStatus.Annulee"
+         <button *ngIf="reparation.statusReparation !== ReparationStatus.Annulee"
                 class="btn btn-danger"
                 (click)="updateStatus(ReparationStatus.Annulee)">
           <i class="fas fa-times"></i> Annuler
@@ -84,19 +84,23 @@
         <div class="info-grid">
           <div class="info-item">
             <label>Nom</label>
-            <span>{{ reparation.garage.nom }}</span>
+            <span>{{ 'AutoService' }}</span>
           </div>
            <div class="info-item">
             <label>Adresse</label>
-            <span>{{ reparation.garage.adresse }}</span>
+            <span>{{ '123 Rue de la Paix, Paris, France' }}</span>
           </div>
           <div class="info-item">
             <label>Téléphone</label>
-            <span>{{ reparation.garage.telephone || 'N/A' }}</span>
+            <span>{{ '06 06 06 06 06' }}</span>
           </div>
-           <div class="info-item" *ngIf="reparation['mecanicienAssigné']">
-            <label>Mécanicien</label>
-            <span>{{ reparation['mecanicienAssigné'].prenom }} {{ reparation['mecanicienAssigné'].nom }}</span>
+           <div class="info-item" *ngIf="reparation.mecaniciensAssignes && reparation.mecaniciensAssignes.length > 0">
+            <label>Mécanicien(s)</label>
+            <span>
+              {{ reparation.mecaniciensAssignes[0]?.mecanicien?.prenom }}
+              {{ reparation.mecaniciensAssignes[0]?.mecanicien?.nom }}
+              <span *ngIf="reparation.mecaniciensAssignes.length > 1"> (et autres)</span>
+            </span>
           </div>
         </div>
       </div>
@@ -106,9 +110,9 @@
     <div class="description-section">
       <h2>Description initiale du problème</h2>
       <p>{{ reparation.problemeDeclare }}</p>
-      <div *ngIf="reparation.descriptionTravaux">
+      <div *ngIf="reparation.problemeDeclare">
         <h2>Description des travaux (par le mécanicien)</h2>
-        <p>{{ reparation.descriptionTravaux }}</p>
+        <p>{{ reparation.problemeDeclare }}</p>
       </div>
 
       <div class="progress-section">
@@ -145,7 +149,7 @@
       <div *ngIf="activeTab === 'etapes'" class="etapes-tab">
         <!-- Liste des étapes -->
         <div class="todo-list">
-          <div *ngFor="let etape of reparation.etapes; let i = index" 
+          <div *ngFor="let etape of reparation.etapesSuivi; let i = index" 
                class="todo-item" 
                [ngClass]="{
                  'todo-completed': etape.status === EtapeStatus.Terminee,
@@ -253,7 +257,7 @@
             </div>
           </div>
 
-          <div *ngIf="!reparation.etapes || reparation.etapes.length === 0" class="no-todos">
+          <div *ngIf="!reparation.etapesSuivi || reparation.etapesSuivi.length === 0" class="no-todos">
             Aucune étape n'a été définie pour cette réparation.
           </div>
         </div>
@@ -268,7 +272,7 @@
             <label>Filtrer par étape:</label>
             <select [(ngModel)]="photoFilterEtapeId" (change)="filterPhotosByEtape(photoFilterEtapeId)">
               <option value="">Toutes les photos</option>
-              <option *ngFor="let etape of reparation.etapes" [value]="etape._id">
+              <option *ngFor="let etape of reparation.etapesSuivi" [value]="etape._id">
                 {{ etape.titre }} ({{ countPhotosForEtape(etape._id) }})
               </option>
             </select>
@@ -302,7 +306,7 @@
                  <label for="photo-etape">Associer à une étape (Optionnel)</label>
                  <select id="photo-etape" [(ngModel)]="photoEtapeId">
                    <option value="">Aucune étape spécifique</option>
-                   <option *ngFor="let etape of reparation.etapes" [value]="etape._id">
+                   <option *ngFor="let etape of reparation.etapesSuivi" [value]="etape._id">
                      {{ etape.titre }}
                    </option>
                  </select>

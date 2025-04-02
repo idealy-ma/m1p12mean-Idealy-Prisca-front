@@ -4,38 +4,29 @@
     <div class="filters">
        <div class="filter-group">
         <label for="status-filter">Statut:</label>
-        <select id="status-filter" [(ngModel)]="filterStatus" (ngModelChange)="onFilterChange()">
-          <option value="tous">Tous</option>
-          <!-- Use ReparationStatus enum values -->
-          <option [value]="ReparationStatus.EnAttenteValidation">En attente validation</option>
-          <option [value]="ReparationStatus.Validee">Validée</option>
-          <option [value]="ReparationStatus.EnCours">En cours</option>
-          <option [value]="ReparationStatus.EnPause">En pause</option>
-          <option [value]="ReparationStatus.Terminee">Terminée</option>
-          <option [value]="ReparationStatus.Annulee">Annulée</option>
-          <option [value]="ReparationStatus.Refusee">Refusée</option>
-        </select>
-      </div>
-       <div class="filter-group">
-        <label for="date-filter">Date création:</label>
-        <select id="date-filter" [(ngModel)]="filterDate" (ngModelChange)="onFilterChange()">
-          <option value="tous">Toutes</option>
-          <option value="aujourdhui">Aujourd'hui</option>
-          <option value="semaine">Cette semaine</option>
-          <option value="mois">Ce mois-ci</option>
+        <select id="status-filter" [(ngModel)]="currentStatusFilter" (ngModelChange)="onFilterChange()">
+          <option *ngFor="let status of availableStatuses" [value]="status.value">
+            {{ status.label }}
+          </option>
         </select>
       </div>
       <div class="search-box">
         <input 
           type="text" 
           [(ngModel)]="searchTerm" 
-          (ngModelChange)="onSearchChange()"
-          placeholder="Rechercher (client, véhicule, ID...)."
+          (ngModelChange)="onSearchTermChange($event)"
+          placeholder="Rechercher (client, véhicule, ID...)"
           class="search-input"
         >
-        <button (click)="applyFilters()" class="search-button">
-          <i class="fas fa-search"></i>
-        </button>
+      </div>
+      <div class="filter-group">
+        <label for="limit-filter">Par page:</label>
+        <select id="limit-filter" [(ngModel)]="itemsPerPage" (ngModelChange)="onItemsPerPageChange(+$event.target.value)">
+            <option [value]="5">5</option>
+            <option [value]="10">10</option>
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+        </select>
       </div>
     </div>
   </div>
@@ -51,14 +42,14 @@
 
   <div *ngIf="!loading && !error" class="content-area">
     <div class="reparations-grid">
-      <div *ngFor="let reparation of paginatedReparations" class="reparation-card">
+      <div *ngFor="let reparation of reparations" class="reparation-card">
         <div class="reparation-header">
           <div class="vehicle-info">
             <h3>{{ reparation.vehicule.marque }} {{ reparation.vehicule.modele }}</h3>
             <p class="registration">{{ reparation.vehicule.immatriculation }}</p>
           </div>
-          <div class="status-badge" [ngClass]="getStatusClass(reparation.status)">
-            {{ getStatusLabel(reparation.status) }}
+          <div class="status-badge" [ngClass]="getStatusClass(reparation.statusReparation)">
+            {{ getStatusLabel(reparation.statusReparation) }}
           </div>
         </div>
 
@@ -82,7 +73,7 @@
           <div class="dates">
             <p>
               <i class="fas fa-calendar-plus"></i>
-              Créée le: {{ reparation.dateCreation | date:'dd/MM/yyyy' }}
+              Créée le: {{ reparation.dateCreationReparation | date:'dd/MM/yyyy' }}
             </p>
              <p *ngIf="reparation.dateFinPrevue">
               <i class="fas fa-calendar-alt"></i>
@@ -102,8 +93,8 @@
       </div>
     </div>
 
-    <div *ngIf="!filteredReparations || filteredReparations.length === 0" class="no-results">
-      <p>Aucune réparation ne correspond à vos critères de recherche.</p>
+    <div *ngIf="!reparations || reparations.length === 0" class="no-results">
+      <p>Aucune réparation à afficher.</p>
     </div>
 
     <div *ngIf="totalPages > 1" class="pagination">
@@ -119,7 +110,7 @@
       <ng-container *ngFor="let pageNum of getPageNumbers()">
         <button 
             *ngIf="pageNum !== -1"
-            (click)="goToPage(pageNum)"
+            (click)="goToPage(+pageNum)"
             [class.active]="currentPage === pageNum"
             class="pagination-button number"
             [attr.aria-label]="'Aller à la page ' + pageNum"
