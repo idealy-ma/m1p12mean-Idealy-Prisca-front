@@ -171,25 +171,26 @@
   font-weight: 600;
   color: white;
   text-transform: uppercase;
+  background-color: #6c757d;
 }
 
-.status-waiting {
+.status-badge[data-status="Planifiée"] {
   background-color: #f59e0b;
 }
 
-.status-in-progress {
+.status-badge[data-status="En cours"] {
   background-color: #3b82f6;
 }
 
-.status-paused {
+.status-badge[data-status="En attente pièces"] {
   background-color: #8b5cf6;
 }
 
-.status-completed {
+.status-badge[data-status="Terminée"] {
   background-color: #10b981;
 }
 
-.status-cancelled {
+.status-badge[data-status="Annulée"] {
   background-color: #ef4444;
 }
 

@@ -84,6 +84,54 @@ export class ReparationService {
   }
 
   /**
+   * Récupère les réparations pour le client connecté (avec pagination/filtrage).
+   */
+  getClientReparations(params: {
+    page?: number,
+    limit?: number,
+    sortField?: string,
+    sortOrder?: 'asc' | 'desc',
+    statusReparation?: string // Specific status filter
+  }): Observable<ApiPaginatedResponse<Reparation>> {
+    const url = `${this.apiUrl}/client/reparations`; // Endpoint spécifique au client
+    let httpParams = new HttpParams();
+
+    if (params.page) httpParams = httpParams.set('page', params.page.toString());
+    if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
+    if (params.statusReparation) httpParams = httpParams.set('statusReparation', params.statusReparation);
+
+    if (params.sortField && params.sortOrder) {
+      // Le backend attend un objet JSON pour le tri, mais ici on envoie field et order séparés
+      // Le ClientController s'attend à sortField et sortOrder directement
+      httpParams = httpParams.set('sortField', params.sortField);
+      httpParams = httpParams.set('sortOrder', params.sortOrder);
+    }
+
+    console.log(`ReparationService: fetching client reparations from API: ${url} with params`, httpParams);
+
+    return this.http.get<ApiPaginatedResponse<Reparation>>(url, { params: httpParams }).pipe(
+      map(response => {
+        if (response && response.success && Array.isArray(response.data)) {
+          response.data = response.data.map(rep => this.parseDatesInReparation(rep));
+          return response;
+        } else {
+          console.error('ReparationService: Réponse inattendue de l\'API pour getClientReparations:', response);
+          return { 
+            success: false, 
+            count: 0, 
+            total: 0, 
+            pagination: { page: params.page || 1, limit: params.limit || 10, totalPages: 0 }, 
+            data: [],
+            message: response?.message || 'Réponse invalide de l\'API' 
+          };
+        }
+      }),
+      tap(response => console.log(`ReparationService: fetched ${response.data.length}/${response.total} client reparations from API`)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Récupère toutes les réparations (Appel API réel mais potentiellement limité).
    * @deprecated Use specific methods with pagination/filtering like getMecanicienReparations instead.
    * TODO: Ajouter filtres, pagination côté API et l'utiliser ici.
