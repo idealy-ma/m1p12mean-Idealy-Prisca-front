@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
-import { delay, tap } from 'rxjs/operators';
+import { delay, tap, map, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { Facture, FactureFilters, FactureStats, Transaction, PaymentInfo } from '../models/facture.model';
 
@@ -15,10 +15,38 @@ export class FactureService {
   private mockFactures: Facture[] = [];
 
   constructor(private http: HttpClient) {
-    this.initMockData();
+    // Commenter l'initialisation des mocks pour utiliser l'API
+    // this.initMockData(); 
+  }
+
+  // --- Méthodes utilisant l'API --- 
+
+  /**
+   * Génère une facture pour une réparation terminée via l'API.
+   * @param reparationId L'ID de la réparation.
+   * @returns Observable<Facture> La facture créée.
+   */
+  generateFromReparation(reparationId: string): Observable<Facture> {
+    const url = `${this.apiUrl}/from-reparation/${reparationId}`;
+    console.log(`FactureService: calling API to generate invoice from repair ${reparationId} at ${url}`);
+    // Le corps est vide car les données sont déduites côté backend
+    return this.http.post<{ success: boolean; message: string; data: Facture }>(url, {}).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          console.log('FactureService: Invoice generated successfully', response.data);
+          // TODO: Parser les dates si nécessaire (si le backend ne garantit pas les objets Date)
+          return response.data;
+        } else {
+          console.error('FactureService: API error generating invoice', response);
+          throw new Error(response.message || 'Erreur lors de la génération de la facture.');
+        }
+      }),
+      catchError(this.handleError) // Utiliser le gestionnaire d'erreurs
+    );
   }
 
   getFactures(filters?: FactureFilters): Observable<Facture[]> {
+    console.warn("FactureService.getFactures utilise encore des données mockées !");
     let result = [...this.mockFactures];
 
     if (filters) {
@@ -63,100 +91,53 @@ export class FactureService {
   }
 
   getFacture(id: string): Observable<Facture> {
+    console.warn(`FactureService.getFacture(${id}) utilise encore des données mockées !`);
     const facture = this.mockFactures.find(f => f.id === id);
     if (facture) {
       return of(facture).pipe(delay(300));
     }
-    return throwError(() => new Error('Facture non trouvée'));
-  }
-
-  generateFromReparation(reparationId: string): Observable<Facture> {
-    const mockFacture: Facture = {
-      id: 'F' + Date.now(),
-      numeroFacture: 'FACT-' + Math.floor(Math.random() * 10000),
-      dateEmission: new Date(),
-      dateEcheance: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // +30 jours
-      client: { id: 'C123', nom: 'Dupont', prenom: 'Jean', email: 'jean.dupont@example.com', telephone: '0612345678', adresse: '123 Rue de Paris, 75001 Paris' },
-      vehicule: { id: 'V456', marque: 'Peugeot', modele: '308', immatriculation: 'AB-123-CD', annee: 2018, kilometrage: 78000 },
-      reparationId: reparationId,
-      devisId: 'D789',
-      lignesFacture: [
-        { id: 'L1', designation: 'Remplacement filtre à huile', quantite: 1, prixUnitaireHT: 15.0, tauxTVA: 20, montantHT: 15.0, montantTVA: 3.0, montantTTC: 18.0, type: 'piece', reference: 'FH-308-2018' },
-        { id: 'L2', designation: 'Huile moteur 5W30', quantite: 5, prixUnitaireHT: 8.0, tauxTVA: 20, montantHT: 40.0, montantTVA: 8.0, montantTTC: 48.0, type: 'piece', reference: 'HM-5W30' },
-        { id: 'L3', designation: 'Main d\'œuvre vidange', quantite: 1, prixUnitaireHT: 45.0, tauxTVA: 20, montantHT: 45.0, montantTVA: 9.0, montantTTC: 54.0, type: 'main_oeuvre' }
-      ],
-      montantHT: 100.0,
-      montantTVA: 20.0,
-      montantTTC: 120.0,
-      statut: 'brouillon',
-      transactions: [],
-      delaiPaiement: 30,
-      creePar: 'M1'
-    };
-    this.mockFactures.push(mockFacture);
-    return of(mockFacture).pipe(delay(800));
+    return throwError(() => new Error('Facture non trouvée (mock)'));
   }
 
   validateFacture(factureId: string): Observable<Facture> {
+    console.warn(`FactureService.validateFacture(${factureId}) utilise encore des données mockées !`);
     const factureIndex = this.mockFactures.findIndex(f => f.id === factureId);
-    if (factureIndex === -1) {
-      return throwError(() => new Error('Facture non trouvée'));
-    }
+    if (factureIndex === -1) return throwError(() => new Error('Facture mockée non trouvée'));
     this.mockFactures[factureIndex] = { ...this.mockFactures[factureIndex], statut: 'validee', validePar: 'MG1' };
     return of(this.mockFactures[factureIndex]).pipe(delay(500));
   }
 
   emitFacture(factureId: string): Observable<Facture> {
+    console.warn(`FactureService.emitFacture(${factureId}) utilise encore des données mockées !`);
     const factureIndex = this.mockFactures.findIndex(f => f.id === factureId);
-    if (factureIndex === -1) {
-      return throwError(() => new Error('Facture non trouvée'));
-    }
-    if (this.mockFactures[factureIndex].statut !== 'validee') {
-      return throwError(() => new Error('La facture doit être validée avant d\'être émise'));
-    }
+    if (factureIndex === -1) return throwError(() => new Error('Facture mockée non trouvée'));
+    if (this.mockFactures[factureIndex].statut !== 'validee') return throwError(() => new Error('Facture mockée non validée'));
     this.mockFactures[factureIndex] = { ...this.mockFactures[factureIndex], statut: 'emise' };
     return of(this.mockFactures[factureIndex]).pipe(delay(500));
   }
 
   payFacture(factureId: string, paymentInfo: PaymentInfo): Observable<Transaction> {
+    console.warn(`FactureService.payFacture(${factureId}) utilise encore des données mockées !`);
     const factureIndex = this.mockFactures.findIndex(f => f.id === factureId);
-    if (factureIndex === -1) {
-      return throwError(() => new Error('Facture non trouvée'));
-    }
-    const transaction: Transaction = {
-      id: 'T' + Date.now(),
-      date: new Date(),
-      montant: paymentInfo.montant,
-      modePaiement: paymentInfo.modePaiement,
-      reference: paymentInfo.reference,
-      statut: 'validee'
-    };
+    if (factureIndex === -1) return throwError(() => new Error('Facture mockée non trouvée'));
+    const transaction: Transaction = { id: 'T' + Date.now(), date: new Date(), montant: paymentInfo.montant, modePaiement: paymentInfo.modePaiement, reference: paymentInfo.reference, statut: 'validee' };
     this.mockFactures[factureIndex].transactions.push(transaction);
-    const totalPaye = this.mockFactures[factureIndex].transactions
-      .filter(t => t.statut === 'validee')
-      .reduce((sum, t) => sum + t.montant, 0);
-    if (totalPaye >= this.mockFactures[factureIndex].montantTTC) {
-      this.mockFactures[factureIndex].statut = 'payee';
-    } else if (totalPaye > 0) {
-      this.mockFactures[factureIndex].statut = 'partiellement_payee';
-    }
+    const totalPaye = this.mockFactures[factureIndex].transactions.filter(t => t.statut === 'validee').reduce((sum, t) => sum + t.montant, 0);
+    if (totalPaye >= this.mockFactures[factureIndex].montantTTC) this.mockFactures[factureIndex].statut = 'payee';
+    else if (totalPaye > 0) this.mockFactures[factureIndex].statut = 'partiellement_payee';
     return of(transaction).pipe(delay(800));
   }
 
   cancelFacture(factureId: string, reason: string): Observable<Facture> {
+    console.warn(`FactureService.cancelFacture(${factureId}) utilise encore des données mockées !`);
     const factureIndex = this.mockFactures.findIndex(f => f.id === factureId);
-    if (factureIndex === -1) {
-      return throwError(() => new Error('Facture non trouvée'));
-    }
-    this.mockFactures[factureIndex] = {
-      ...this.mockFactures[factureIndex],
-      statut: 'annulee',
-      commentaires: (this.mockFactures[factureIndex].commentaires || '') + '\nAnnulation: ' + reason
-    };
+    if (factureIndex === -1) return throwError(() => new Error('Facture mockée non trouvée'));
+    this.mockFactures[factureIndex] = { ...this.mockFactures[factureIndex], statut: 'annulee', commentaires: (this.mockFactures[factureIndex].commentaires || '') + '\nAnnulation: ' + reason };
     return of(this.mockFactures[factureIndex]).pipe(delay(500));
   }
 
   getStats(): Observable<FactureStats> {
+    console.warn("FactureService.getStats utilise encore des données mockées !");
     const totalFactures = this.mockFactures.length;
     const totalMontant = this.mockFactures.reduce((sum, f) => sum + f.montantTTC, 0);
     const nombrePayees = this.mockFactures.filter(f => f.statut === 'payee').length;
@@ -166,6 +147,7 @@ export class FactureService {
     if (facturesPayees.length > 0) {
       const totalJours = facturesPayees.reduce((sum, f) => {
         const dernierPaiement = f.transactions.filter(t => t.statut === 'validee').sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+        if (!dernierPaiement) return sum; // Skip if no valid payment found
         return sum + Math.floor((new Date(dernierPaiement.date).getTime() - new Date(f.dateEmission).getTime()) / (1000 * 60 * 60 * 24));
       }, 0);
       tempsMoyenPaiement = totalJours / facturesPayees.length;
@@ -173,18 +155,37 @@ export class FactureService {
     return of({ totalFactures, totalMontant, nombrePayees, nombreEnRetard, tempsMoyenPaiement }).pipe(delay(700));
   }
 
-  // Mettre à jour une facture existante (principalement pour l'édition en mode brouillon)
   updateFacture(updatedFacture: Facture): Observable<Facture> {
+    console.warn(`FactureService.updateFacture(${updatedFacture.id}) utilise encore des données mockées !`);
     const factureIndex = this.mockFactures.findIndex(f => f.id === updatedFacture.id);
-    if (factureIndex === -1) {
-      return throwError(() => new Error('Facture non trouvée pour mise à jour'));
-    }
-    // Remplacer l'ancienne facture par la nouvelle dans notre tableau mocké
+    if (factureIndex === -1) return throwError(() => new Error('Facture mockée non trouvée'));
     this.mockFactures[factureIndex] = updatedFacture;
-    console.log("Facture mise à jour dans le service:", updatedFacture);
-    return of(updatedFacture).pipe(delay(400)); // Simuler délai réseau
+    return of(updatedFacture).pipe(delay(400));
   }
 
+  // Méthode de gestion d'erreurs
+  private handleError(error: HttpErrorResponse) {
+    console.error('FactureService API Error:', error);
+    let userMessage = 'Une erreur technique est survenue lors de l\'opération sur la facture.';
+    if (error.error instanceof ErrorEvent) {
+      userMessage = `Erreur réseau ou client: ${error.error.message}`;
+    } else if (error.status === 404) {
+      userMessage = 'La ressource demandée (facture ou réparation) n\'a pas été trouvée.';
+    } else if (error.status === 400) {
+      userMessage = error.error?.message || 'Données invalides pour la facturation.';
+    } else if (error.status === 401 || error.status === 403) {
+      userMessage = error.error?.message || 'Action non autorisée.';
+    } else if (error.status === 409) {
+      userMessage = error.error?.message || 'Conflit: la ressource existe déjà ou l\'état ne permet pas l\'action.';
+    } else if (error.error && error.error.message) {
+      // Essayer d'utiliser le message d'erreur du backend s'il existe
+      userMessage = error.error.message;
+    }
+    // Renvoyer une nouvelle Erreur pour l'Observable
+    return throwError(() => new Error(userMessage));
+  }
+  
+  // Méthode pour initialiser les mocks (à supprimer plus tard)
   private initMockData() {
     this.mockFactures = [
       // Facture payée

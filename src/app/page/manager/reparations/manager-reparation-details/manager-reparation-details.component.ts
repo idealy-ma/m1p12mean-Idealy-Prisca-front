@@ -45,12 +45,13 @@ export class ManagerReparationDetailsComponent implements OnInit {
   photoToDelete: PhotoReparation | null = null;
 
   currentUser: CurrentUserInfo | null = null;
+  isGeneratingInvoice: boolean = false; // Flag for invoice generation
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private reparationService: ReparationService,
-    private factureService: FactureService, // Keep even if unused for now
+    private factureService: FactureService,
     private tokenService: TokenService,
     private supabaseService: SupabaseService,
     private location: Location // Inject Location
@@ -126,23 +127,27 @@ export class ManagerReparationDetailsComponent implements OnInit {
       console.log(`Manager attempting to update status for ${currentId} to ${newStatus}`);
       this.loading = true;
       this.reparationService.updateReparationStatus(currentId, newStatus, dateFinReelle)
-        .pipe(
-          finalize(() => this.loading = false)
-        )
+        .pipe()
         .subscribe({
           next: updatedReparation => {
             console.log('Global status update successful:', updatedReparation);
-            // Check if the current reparation ID still matches before updating
             if (this.reparation && this.reparation._id === currentId) {
                  this.reparation = updatedReparation;
-                 this.initializeComponentState(); // Re-initialize state if needed
+                 this.initializeComponentState();
+                 // Si le statut est "Terminée", déclencher la facturation
+                 if (newStatus === ReparationStatus.Terminee) {
+                     this.generateInvoiceForReparation(currentId);
+                 } else {
+                     this.loading = false; // Arrêter le chargement si on ne facture pas
+                 }
             } else {
-                console.warn("Reparation changed during status update, not updating local state.");
+                this.loading = false;
             }
           },
           error: err => {
             console.error('Error updating reparation global status:', err);
-            this.error = err.userMessage || `Erreur lors de la mise à jour du statut global`;
+            this.error = err.message || `Erreur lors de la mise à jour du statut global`;
+            this.loading = false; // Arrêter le chargement en cas d'erreur
           }
         });
     } else {
@@ -151,11 +156,55 @@ export class ManagerReparationDetailsComponent implements OnInit {
   }
 
   finishReparation(): void {
-    if (this.reparation) {
-        console.log(`Manager finishing reparation ${this.reparation._id}`);
-        this.updateStatus(ReparationStatus.Terminee, new Date());
-        // Note: Invoice generation is handled separately or triggered by backend/another process
+    if (this.reparation && !this.loading && !this.isGeneratingInvoice) {
+        if (this.reparation.statusReparation === ReparationStatus.Terminee) {
+            // Si déjà terminé (implique échec facturation précédente), retenter directement la facturation
+            console.log("Retrying invoice generation for already finished repair...");
+            this.generateInvoiceForReparation(this.reparation._id);
+        } else if (this.reparation.statusReparation !== ReparationStatus.Facturee && this.reparation.statusReparation !== ReparationStatus.Annulee) {
+            // Sinon (pas encore terminé), lancer le flux normal : maj statut puis facturation auto
+            console.log("Starting finish process: updating status first...");
+            this.updateStatus(ReparationStatus.Terminee, new Date());
+        }
     }
+  }
+
+  // --- Invoice Generation --- 
+
+  generateInvoiceForReparation(reparationId: string): void {
+      console.log(`Attempting to generate invoice for repair ${reparationId}`);
+      this.isGeneratingInvoice = true;
+      this.error = null; // Clear previous errors
+      
+      this.factureService.generateFromReparation(reparationId)
+          .pipe(
+              finalize(() => {
+                  this.loading = false; // Arrêter le chargement global
+                  this.isGeneratingInvoice = false;
+              })
+          )
+          .subscribe({
+              next: (nouvelleFacture) => {
+                  console.log('Invoice generated successfully:', nouvelleFacture);
+                  // Afficher une notification de succès
+                  // this.toastr.success(`Facture ${nouvelleFacture.numeroFacture} créée avec succès.`, 'Facturation');
+                  alert(`Facture ${nouvelleFacture.numeroFacture} créée avec succès.`); // Simple alert for now
+                  
+                  // Optionnel: Naviguer vers la nouvelle facture
+                  // this.router.navigate(['/manager/factures', nouvelleFacture.id]); 
+                  
+                  // Recharger la réparation pour refléter le nouveau statut "Facturée"
+                  this.loadReparation(reparationId);
+              },
+              error: (err) => {
+                  console.error('Error generating invoice:', err);
+                  this.error = err.message || 'Une erreur est survenue lors de la création de la facture.';
+                  // Afficher une notification d'erreur
+                  // this.toastr.error(this.error, 'Erreur Facturation');
+                  alert(`Erreur Facturation: ${this.error}`); // Simple alert
+                  // Ne pas recharger la réparation ici car le statut n'a peut-être pas changé
+              }
+          });
   }
 
   // --- Etape Status and Comment Methods ---
