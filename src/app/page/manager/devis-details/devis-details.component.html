@@ -159,19 +159,19 @@
             <div *ngIf="devis?.preferredDate" class="date-badge">
               <i class="fas fa-calendar-alt"></i>
               {{ devis.preferredDate | date:'dd/MM/yyyy' }}
-              <button class="btn-edit-date" (click)="startEditDate()">
+              <button class="btn-edit-date" (click)="startEditDate()" [disabled]="devis.status !== 'en_attente'">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="btn-delete-date" (click)="removePreferredDate()">
+              <button class="btn-delete-date" (click)="removePreferredDate()" [disabled]="devis.status !== 'en_attente'">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
-            <button *ngIf="!devis?.preferredDate" class="btn-add-date" (click)="startEditDate()">
+            <button *ngIf="!devis?.preferredDate" class="btn-add-date" (click)="startEditDate()" [disabled]="devis.status !== 'en_attente'">
               <i class="fas fa-plus"></i> Ajouter une date
             </button>
           </div>
           <div *ngIf="isEditingDate" class="date-edit">
-            <input type="date" [ngModel]="dateInputValue" (ngModelChange)="onDateChange($event)" class="date-input">
+            <input type="date" [ngModel]="dateInputValue" (ngModelChange)="onDateChange($event)" class="date-input" >
             <div class="date-actions">
               <button class="btn-save-date" (click)="savePreferredDate()">
                 <i class="fas fa-check"></i> Enregistrer
@@ -459,9 +459,15 @@
                   Aucun élément ne correspond aux filtres sélectionnés.
                 </div>
                 
-                <button type="button" class="btn-add" (click)="ajouterTodoItem()">
-                  <i class="fas fa-plus"></i> Ajouter un élément
-                </button>
+                <button 
+                type="button" 
+                class="btn-add" 
+                (click)="ajouterTodoItem()" 
+                [disabled]="devis.status !== 'en_attente'"
+              >
+                <i class="fas fa-plus"></i> Ajouter un élément
+              </button>
+              
               </div>
             </form>
 
@@ -508,7 +514,7 @@
           <button 
             class="btn-send" 
             (click)="sendToClient()"
-            [disabled]="isSending"
+            [disabled]="isSending || devis.status !== 'en_attente'"
           >
             <span *ngIf="!isSending">
               <i class="fas fa-paper-plane me-2"></i> Envoyer au client

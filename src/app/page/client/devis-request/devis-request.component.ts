@@ -165,53 +165,51 @@ export class DevisRequestComponent implements OnInit {
     });
   }
   
-  // Méthode pour charger les packs de services depuis l'API
-  loadServicePacks(): void {
-    this.isLoadingPacks = true;
-    this.devisService.getServicePacks().subscribe({
-      next: (response: any) => {
-        console.log('Packs de services reçus :', response);
-        
-        if (response.success && response.data) {
-          // Transformer les données de l'API pour correspondre à la structure attendue par le composant
-          this.servicePacks = response.data.map((pack: any) => {
-            // Calculer le prix total des services inclus dans le pack
-            let totalPrice = 0;
-            const packServices = pack.services || [];
-            
-            // Appliquer la remise si elle existe
-            const discountPercentage = pack.remise || 0;
-            const discountedPrice = discountPercentage > 0 
-              ? totalPrice * (1 - discountPercentage / 100)
-              : totalPrice;
-            
-            return {
-              id: pack._id,
-              label: pack.name,
-              services: packServices,
-              price: Math.round(discountedPrice),
-              originalPrice: totalPrice,
-              discount: discountPercentage,
-              selected: false
-            };
-          });
+ // Méthode pour charger les packs de services depuis l'API
+loadServicePacks(): void {
+  this.isLoadingPacks = true;
+  this.devisService.getServicePacks().subscribe({
+    next: (response: any) => {
+      console.log('Packs de services reçus :', response);
+      
+      if (response.success && response.data) {
+        // Transformer les données de l'API pour correspondre à la structure attendue par le composant
+        this.servicePacks = response.data.map((pack: any) => {
+          // Vérifier si le pack contient des services et calculer le prix total des services inclus
+          const packServices = pack.services || [];
           
-          console.log(`${this.servicePacks.length} packs de services chargés avec succès`);
-        } else {
-          console.error('Format de réponse incorrect pour les packs de services');
-        }
+          let totalPrice = packServices.reduce((sum: number, service: any) => sum + (service.prix || 0), 0);
+          // Appliquer la remise si elle existe
+          const discountPercentage = pack.remise || 0;
+          const discountedPrice = totalPrice - (totalPrice * (discountPercentage / 100));
+
+          return {
+            id: pack._id,
+            label: pack.name,
+            services: packServices,
+            price: Math.round(discountedPrice), // Prix après remise
+            originalPrice: totalPrice, // Prix initial sans remise
+            discount: discountPercentage, // Pourcentage de remise
+            selected: false
+          };
+        });
         
-        this.isLoadingServices = false;
-        this.isLoadingPacks = false;
-      },
-      error: (error) => {
-        this.isLoadingServices = false;
-        this.isLoadingPacks = false;
-        console.error('Erreur détaillée lors du chargement des packs de services:', error);
+        console.log(`${this.servicePacks.length} packs de services chargés avec succès`);
+      } else {
+        console.error('Format de réponse incorrect pour les packs de services');
       }
-    });
-  }
-  
+      
+      this.isLoadingServices = false;
+      this.isLoadingPacks = false;
+    },
+    error: (error) => {
+      this.isLoadingServices = false;
+      this.isLoadingPacks = false;
+      console.error('Erreur détaillée lors du chargement des packs de services:', error);
+    }
+  });
+}
+
 
 
   // Méthode pour récupérer le véhicule sélectionné
@@ -450,7 +448,6 @@ export class DevisRequestComponent implements OnInit {
       console.error('Error submitting devis', error);
     }
   }
-  
   private validateForms(): boolean {
     // Validate vehicle form
     if (this.vehiculeForm.invalid) {
@@ -469,17 +466,22 @@ export class DevisRequestComponent implements OnInit {
     }
     
     if (this.includeServices) {
-      // Validate services
+      // Vérifier s'il y a au moins un service sélectionné
       const hasSelectedService = this.availableServices.some(service => service.selected);
-      if (!hasSelectedService) {
+
+      // Vérifier s'il y a au moins un pack sélectionné
+      const hasSelectedPack = this.servicePacks.some(pack => pack.selected);
+
+      if (!hasSelectedService && !hasSelectedPack) {
         this.hasError = true;
-        this.errorMessage = 'Veuillez sélectionner au moins un service.';
+        this.errorMessage = 'Veuillez sélectionner au moins un service ou un pack de services.';
         return false;
       }
     }
     
     return true;
   }
+
 
   resetError(): void {
     this.hasError = false;

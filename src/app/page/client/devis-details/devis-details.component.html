@@ -238,7 +238,7 @@
         <h2>Actions</h2>
         <div class="actions-container">
           <p class="actions-info">Vous pouvez accepter ou refuser ce devis. Une fois votre décision prise, elle sera définitive.</p>
-          <div class="action-buttons" *ngIf="devis.status === 'en_attente' || devis.status === 'termine'">
+          <div class="action-buttons" *ngIf=" devis.status === 'termine'">
             <button class="btn-accept" (click)="accepterDevis()" [disabled]="isAccepting">
               <i class="fas" [ngClass]="{'fa-check': !isAccepting, 'fa-spinner fa-spin': isAccepting}"></i>
               {{ isAccepting ? 'Acceptation en cours...' : 'Accepter le devis' }}

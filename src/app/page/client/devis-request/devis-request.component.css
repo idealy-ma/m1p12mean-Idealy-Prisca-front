@@ -1099,15 +1099,17 @@ input[type="date"]:focus {
   height: 100%;
   background-color: var(--primary-color);
 }
-
 .type-choice .circle-indicator {
   width: 20px;
   height: 20px;
   min-width: 20px;
   border: 2px solid rgba(0, 0, 0, 0.2);
-  border-radius: 50%;
+  border-radius: 4px; /* Passe de cercle à carré */
   margin-top: 2px;
   transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .type-choice.selected .circle-indicator {
@@ -1117,16 +1119,12 @@ input[type="date"]:focus {
 }
 
 .type-choice.selected .circle-indicator::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 8px;
-  height: 8px;
-  background-color: white;
-  border-radius: 50%;
+  content: '✔'; /* Ajout de la coche */
+  font-size: 14px;
+  color: white;
+  font-weight: bold;
 }
+
 
 .type-choice .type-content {
   display: flex;
