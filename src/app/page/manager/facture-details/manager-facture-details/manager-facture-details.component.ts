@@ -173,7 +173,6 @@ export class ManagerFactureDetailsComponent implements OnInit {
     if (this.factureForm.invalid) {
       console.error("Formulaire invalide:", this.factureForm.errors);
       this.factureForm.markAllAsTouched(); 
-      alert("Le formulaire contient des erreurs. Veuillez corriger les champs en rouge.");
       return;
     }
     
@@ -182,15 +181,15 @@ export class ManagerFactureDetailsComponent implements OnInit {
     const formData = this.factureForm.getRawValue(); 
 
     // 1. Créer l'objet de base à partir des données du formulaire
-    const updatedFactureData: any = { 
+    const updatedFactureData: any = { // Utiliser any temporairement pour flexibilité
       ...formData
     };
 
     // 2. Remplacer les objets par les IDs ou null
     updatedFactureData.client = formData.client?.id || null;
     updatedFactureData.vehicule = formData.vehicule?.id || null;
-    updatedFactureData.devis = formData.devisId || null; 
-    updatedFactureData.validePar = formData.validePar || null; 
+    updatedFactureData.devis = formData.devisId || null; // Utiliser la valeur de devisId du form
+    updatedFactureData.validePar = formData.validePar || null; // Mettre null si vide
 
     // 3. Nettoyer l'objet remise
     if (updatedFactureData.remise && typeof updatedFactureData.remise === 'object') {
@@ -201,22 +200,33 @@ export class ManagerFactureDetailsComponent implements OnInit {
     }
 
     // 4. Supprimer les champs non pertinents ou non modifiables pour l'update
-    delete updatedFactureData.numeroFacture; 
-    delete updatedFactureData.creePar; 
-    delete updatedFactureData.reparationId; 
-    delete updatedFactureData.devisId; 
-    delete updatedFactureData.transactions; 
-    delete updatedFactureData.montantHT; 
-    delete updatedFactureData.montantTVA; 
-    delete updatedFactureData.montantTTC; 
+    delete updatedFactureData.numeroFacture; // Non modifiable
+    delete updatedFactureData.creePar; // Non modifiable
+    delete updatedFactureData.reparationId; // La référence à la réparation ne change pas
+    delete updatedFactureData.devisId; // On a déjà mis sa valeur dans .devis
+    delete updatedFactureData.transactions; // Non modifiable via ce formulaire
+    delete updatedFactureData.montantHT; // Calculé par le backend
+    delete updatedFactureData.montantTVA; // Calculé par le backend
+    delete updatedFactureData.montantTTC; // Calculé par le backend
+    // Les champs client et vehicule contiennent maintenant l'ID ou null.
     
+    // IMPORTANT: Le backend (FactureService.update via .save()) 
+    // doit ignorer les champs client, vehicule, reparation dans les données reçues,
+    // car on ne modifie pas ces références lors de la sauvegarde d'un brouillon.
+    // La logique actuelle dans FactureService.update le fait déjà.
+
     console.log("Envoi de la facture mise à jour (nettoyée) pour sauvegarde:", updatedFactureData);
     this.isUpdatingStatus = true; 
     this.error = null;
 
     // Envoyer l'objet nettoyé. Caster en Facture si nécessaire.
+    console.log(updatedFactureData);
+    
     this.factureService.updateFacture(updatedFactureData as Facture).subscribe({ 
       next: (savedFacture) => {
+        // Log pour vérifier la réponse du backend
+        console.log("Facture reçue après sauvegarde (savedFacture):", savedFacture);
+
         // Mettre à jour avec les données retournées (qui incluent les totaux recalculés)
         this.facture = savedFacture;
         this.initializeForm(savedFacture);
