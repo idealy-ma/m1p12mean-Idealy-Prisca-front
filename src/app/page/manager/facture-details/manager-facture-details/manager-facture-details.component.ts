@@ -4,6 +4,7 @@ import { Facture, LigneFacture, Transaction } from '../../../../models/facture.m
 import { FactureService } from '../../../../services/facture.service';
 import { Location } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { PdfGenerationService } from '../../../../services/pdf-generation.service';
 
 @Component({
   selector: 'app-manager-facture-details',
@@ -23,7 +24,8 @@ export class ManagerFactureDetailsComponent implements OnInit {
     private router: Router,
     private factureService: FactureService,
     private location: Location,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private pdfGenerationService: PdfGenerationService
   ) {
     this.factureForm = this.fb.group({
       id: [''],
@@ -219,8 +221,12 @@ export class ManagerFactureDetailsComponent implements OnInit {
     });
   }
 
-  printFacture(): void {
-    window.print();
+  downloadPDF(): void {
+    if (!this.facture) {
+      console.error("Facture data not loaded, cannot generate PDF.");
+      return;
+    }
+    this.pdfGenerationService.generateFacturePdf(this.facture);
   }
 
   goBack(): void {
@@ -248,7 +254,7 @@ export class ManagerFactureDetailsComponent implements OnInit {
       'validee': 'Validée',
       'emise': 'Émise',
       'payee': 'Payée',
-      'partiellement_payee': 'Partielle',
+      'partiellement_payee': 'Partiellement payée',
       'annulee': 'Annulée',
       'en_retard': 'En retard'
     };

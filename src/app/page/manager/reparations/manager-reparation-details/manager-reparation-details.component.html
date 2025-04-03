@@ -97,8 +97,8 @@
            <div class="info-item" *ngIf="reparation.mecaniciensAssignes && reparation.mecaniciensAssignes.length > 0">
             <label>Mécanicien(s)</label>
             <span>
-              {{ reparation.mecaniciensAssignes[0]?.mecanicien?.prenom }}
-              {{ reparation.mecaniciensAssignes[0]?.mecanicien?.nom }}
+              {{ reparation.mecaniciensAssignes[0].mecanicien.prenom }}
+              {{ reparation.mecaniciensAssignes[0].mecanicien.nom }}
               <span *ngIf="reparation.mecaniciensAssignes.length > 1"> (et autres)</span>
             </span>
           </div>

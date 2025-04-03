@@ -61,7 +61,7 @@
               <button *ngIf="facture.statut === 'validee'" (click)="emitFacture()" type="button" class="action-btn emit-btn">
                 <i class="fas fa-paper-plane"></i> Émettre
               </button>
-              <button (click)="printFacture()" type="button" class="action-btn print-btn">
+              <button (click)="downloadPDF()" type="button" class="action-btn print-btn">
                 <i class="fas fa-print"></i> Imprimer
               </button>
             </ng-container>
