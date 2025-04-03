@@ -55,7 +55,7 @@ export class ManagerFacturesListComponent implements OnInit {
     this.loading = true;
     this.factureService.getFactures().subscribe({
       next: (data) => {
-        this.factures = data;
+        this.factures = data.data;
         this.applyFiltersAndSort(); // Appliquer les filtres et le tri initiaux
         this.loading = false;
       },

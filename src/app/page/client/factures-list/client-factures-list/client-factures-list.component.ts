@@ -59,7 +59,7 @@ export class ClientFacturesListComponent implements OnInit {
     this.factureService.getFactures().subscribe({
       next: (data) => {
         // Filtrer pour ne garder que les factures visibles par le client
-        this.factures = data.filter(f => f.statut !== 'brouillon' && f.statut !== 'validee');
+        this.factures = data.data.filter(f => f.statut !== 'brouillon' && f.statut !== 'validee');
         this.applyFiltersAndSort(); // Appliquer filtres/tri initiaux
         this.loading = false;
       },
