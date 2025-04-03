@@ -61,7 +61,19 @@
               <button *ngIf="facture.statut === 'validee'" (click)="emitFacture()" type="button" class="action-btn emit-btn">
                 <i class="fas fa-paper-plane"></i> Émettre
               </button>
-              <button (click)="printFacture()" type="button" class="action-btn print-btn">
+              <button *ngIf="facture.statut !== 'annulee' && facture.statut !== 'payee'" 
+                      (click)="cancelFacture()" 
+                      type="button" 
+                      class="action-btn danger-btn">
+                <i class="fas fa-ban"></i> Annuler
+              </button>
+              <button *ngIf="facture.statut === 'emise' || facture.statut === 'partiellement_payee' || facture.statut === 'en_retard'" 
+                      (click)="openPaymentModal()" 
+                      type="button" 
+                      class="action-btn payment-btn"> 
+                <i class="fas fa-dollar-sign"></i> Enregistrer Paiement
+              </button>
+              <button (click)="downloadPDF()" type="button" class="action-btn print-btn">
                 <i class="fas fa-print"></i> Imprimer
               </button>
             </ng-container>
@@ -239,4 +251,63 @@
       </div>
     </div>
   </form>
-</div>
+
+  <!-- MODALE D'AJOUT DE PAIEMENT -->
+  <div class="modal-overlay" *ngIf="showPaymentModal">
+    <div class="modal-content payment-modal">
+      <h3>Enregistrer un paiement pour Facture N° {{ facture?.numeroFacture }}</h3>
+      <p>Montant restant dû : {{ formatMontant(calculerMontantRestant()) }}</p>
+      
+      <form [formGroup]="paymentForm" (ngSubmit)="onSubmitPayment()">
+        <div class="form-group">
+          <label for="paymentAmount">Montant payé *</label>
+          <input type="number" id="paymentAmount" formControlName="montant" class="form-control" placeholder="0.00" 
+                 [class.is-invalid]="paymentForm.get('montant')?.invalid && paymentForm.get('montant')?.touched">
+          <div *ngIf="paymentForm.get('montant')?.errors?.['required'] && paymentForm.get('montant')?.touched" class="invalid-feedback">
+            Le montant est requis.
+          </div>
+           <div *ngIf="paymentForm.get('montant')?.errors?.['min'] && paymentForm.get('montant')?.touched" class="invalid-feedback">
+            Le montant doit être positif.
+          </div>
+           <div *ngIf="paymentForm.get('montant')?.errors?.['max'] && paymentForm.get('montant')?.touched" class="invalid-feedback">
+            Le montant ne peut excéder le montant restant dû.
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="paymentMethod">Mode de paiement *</label>
+          <select id="paymentMethod" formControlName="modePaiement" class="form-control"
+                  [class.is-invalid]="paymentForm.get('modePaiement')?.invalid && paymentForm.get('modePaiement')?.touched">
+            <option *ngFor="let mode of modesPaiement" [value]="mode">{{ formatModePaiement(mode) }}</option>
+          </select>
+           <div *ngIf="paymentForm.get('modePaiement')?.errors?.['required'] && paymentForm.get('modePaiement')?.touched" class="invalid-feedback">
+            Le mode de paiement est requis.
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="paymentReference">Référence (optionnel)</label>
+          <input type="text" id="paymentReference" formControlName="reference" class="form-control" placeholder="N° chèque, ID transaction...">
+        </div>
+        
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="paymentForm.invalid || paymentLoading"> 
+            <span *ngIf="!paymentLoading">Ajouter Paiement</span>
+            <span *ngIf="paymentLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span *ngIf="paymentLoading"> Ajout...</span>
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="closePaymentModal()" [disabled]="paymentLoading">
+            Annuler
+          </button>
+        </div>
+        
+        <div *ngIf="paymentError" class="error-message mt-3">
+           {{ paymentError }}
+        </div>
+        
+      </form>
+    </div>
+  </div>
+  <!-- FIN MODALE -->
+
+</div> <!-- Fin .facture-details-container -->

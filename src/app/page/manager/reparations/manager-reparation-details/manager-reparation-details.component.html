@@ -22,14 +22,18 @@
         </div>
       </div>
       <div class="actions">
-        <button *ngIf="reparation.statusReparation !== ReparationStatus.Terminee && reparation.statusReparation !== ReparationStatus.Annulee"
+        <button *ngIf="reparation.statusReparation !== ReparationStatus.Facturee && reparation.statusReparation !== ReparationStatus.Annulee"
                 class="btn btn-primary"
-                (click)="finishReparation()">
-          <i class="fas fa-check"></i> Terminer la Réparation
+                (click)="finishReparation()"
+                [disabled]="loading || isGeneratingInvoice">
+          <i class="fas" [ngClass]="{'fa-check': reparation.statusReparation !== ReparationStatus.Terminee, 'fa-file-invoice': reparation.statusReparation === ReparationStatus.Terminee}"></i>
+          {{ reparation.statusReparation === ReparationStatus.Terminee ? 'Générer Facture (Réessayer)' : 'Terminer la Réparation' }}
+          <span *ngIf="loading || isGeneratingInvoice" class="spinner-border spinner-border-sm ms-1" role="status" aria-hidden="true"></span>
         </button>
-         <button *ngIf="reparation.statusReparation !== ReparationStatus.Annulee"
+         <button *ngIf="reparation.statusReparation !== ReparationStatus.Annulee && reparation.statusReparation !== ReparationStatus.Facturee && reparation.statusReparation !== ReparationStatus.Terminee"
                 class="btn btn-danger"
-                (click)="updateStatus(ReparationStatus.Annulee)">
+                (click)="updateStatus(ReparationStatus.Annulee)"
+                [disabled]="loading || isGeneratingInvoice">
           <i class="fas fa-times"></i> Annuler
         </button>
       </div>
@@ -97,8 +101,8 @@
            <div class="info-item" *ngIf="reparation.mecaniciensAssignes && reparation.mecaniciensAssignes.length > 0">
             <label>Mécanicien(s)</label>
             <span>
-              {{ reparation.mecaniciensAssignes[0]?.mecanicien?.prenom }}
-              {{ reparation.mecaniciensAssignes[0]?.mecanicien?.nom }}
+              {{ reparation.mecaniciensAssignes[0].mecanicien.prenom }}
+              {{ reparation.mecaniciensAssignes[0].mecanicien.nom }}
               <span *ngIf="reparation.mecaniciensAssignes.length > 1"> (et autres)</span>
             </span>
           </div>

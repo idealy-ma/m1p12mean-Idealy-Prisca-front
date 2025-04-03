@@ -506,3 +506,144 @@
     margin-bottom: 10px;
   }
 }
+
+/* -- Styles pour la Modale de Paiement -- */
+
+.modal-overlay {
+  position: fixed; /* Couvre toute la fenêtre */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7); /* Fond semi-transparent */
+  display: flex;
+  align-items: center; /* Centre verticalement */
+  justify-content: center; /* Centre horizontalement */
+  z-index: 1050; /* Assure qu'elle est au-dessus des autres éléments */
+  padding: 20px; /* Espace pour éviter que le contenu touche les bords */
+}
+
+.modal-content.payment-modal {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  width: 100%; /* Prend toute la largeur disponible */
+  max-width: 500px; /* Mais pas plus de 500px */
+  max-height: 90vh; /* Limite la hauteur */
+  overflow-y: auto; /* Permet le défilement si le contenu est trop long */
+  position: relative;
+  color: #333; /* Assurer un texte lisible sur fond blanc */
+}
+
+.payment-modal h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #004a99; /* Ou votre couleur principale */
+  text-align: center;
+}
+
+.payment-modal p {
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Styles pour le formulaire dans la modale */
+.payment-modal .form-group {
+  margin-bottom: 15px;
+}
+
+.payment-modal .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.payment-modal .form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; /* Important pour que padding ne change pas la largeur */
+}
+
+.payment-modal .form-control.is-invalid {
+  border-color: #dc3545; /* Rouge pour erreur */
+}
+
+.payment-modal .invalid-feedback {
+  color: #dc3545;
+  font-size: 0.875em;
+  margin-top: 4px;
+}
+
+.payment-modal .modal-actions {
+  margin-top: 25px;
+  display: flex;
+  justify-content: flex-end; /* Aligner les boutons à droite */
+  gap: 10px; /* Espace entre les boutons */
+}
+
+/* Styles de base pour les boutons (adapter à votre thème) */
+.payment-modal .btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.payment-modal .btn-primary {
+  background-color: #007bff; /* Bleu */
+  color: white;
+}
+
+.payment-modal .btn-primary:disabled {
+  background-color: #6c757d; /* Gris si désactivé */
+  cursor: not-allowed;
+}
+
+.payment-modal .btn-secondary {
+  background-color: #6c757d; /* Gris */
+  color: white;
+}
+
+.payment-modal .error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* Styles pour le spinner sur le bouton */
+.payment-modal .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: .2em;
+    vertical-align: -0.125em;
+}
+
+.payment-modal .spinner-border {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    vertical-align: text-bottom;
+    border: .25em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    -webkit-animation: spinner-border .75s linear infinite;
+    animation: spinner-border .75s linear infinite;
+}
+
+@-webkit-keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+
+/* --- Fin Styles Modale --- */

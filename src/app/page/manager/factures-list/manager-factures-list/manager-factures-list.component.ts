@@ -14,7 +14,12 @@ export class ManagerFacturesListComponent implements OnInit {
   filteredFactures: Facture[] = [];
   loading: boolean = true;
   error: string | null = null;
+  
+  // --- Propriétés pour les stats --- 
   stats: FactureStats | null = null;
+  statsLoading: boolean = true; // État de chargement pour les stats
+  statsError: string | null = null; // Erreur spécifique aux stats
+  // ---------------------------------
   
   filterForm: FormGroup;
   
@@ -44,35 +49,54 @@ export class ManagerFacturesListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadFactures();
-    this.loadStats();
+    this.loadStats(); // Charger les statistiques
     
     this.filterForm.valueChanges.subscribe(() => {
-      this.applyFiltersAndSort(); // Appliquer filtres ET tri
+      this.applyFiltersAndSort(); 
     });
   }
   
   loadFactures(): void {
     this.loading = true;
+    // Note: L'appel getFactures ici ne semble pas prendre en compte la pagination/tri côté API
+    // Il charge tout puis filtre/trie côté client. Pour de gros volumes, il faudrait adapter l'appel API.
     this.factureService.getFactures().subscribe({
       next: (data) => {
-        this.factures = data;
-        this.applyFiltersAndSort(); // Appliquer les filtres et le tri initiaux
-        this.loading = false;
+        // Supposant que data est ApiPaginatedResponse<Facture> ou similaire
+        // Ajuster selon la structure réelle retournée par getFactures
+        if (data && data.success && Array.isArray(data.data)) {
+             this.factures = data.data;
+             this.applyFiltersAndSort(); 
+             this.loading = false;
+        } else {
+            this.error = 'Réponse invalide lors du chargement des factures.';
+            this.loading = false;
+            this.factures = [];
+            this.applyFiltersAndSort(); 
+        }
       },
-      error: (err) => {
+      error: (err: Error) => {
         this.error = 'Erreur lors du chargement des factures: ' + err.message;
         this.loading = false;
+        this.factures = [];
+        this.applyFiltersAndSort(); 
       }
     });
   }
   
+  // --- Nouvelle méthode pour charger les stats --- 
   loadStats(): void {
+    this.statsLoading = true;
+    this.statsError = null;
     this.factureService.getStats().subscribe({
-      next: (data) => {
+      next: (data: FactureStats) => {
         this.stats = data;
+        this.statsLoading = false;
       },
-      error: (err) => {
-        console.error('Erreur lors du chargement des statistiques:', err);
+      error: (err: Error) => {
+        this.statsError = 'Erreur lors du chargement des statistiques: ' + err.message;
+        this.statsLoading = false;
+        console.error(this.statsError);
       }
     });
   }
