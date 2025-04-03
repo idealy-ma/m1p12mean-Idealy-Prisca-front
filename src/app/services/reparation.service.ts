@@ -53,7 +53,8 @@ export class ReparationService {
     if (params.status) httpParams = httpParams.set('status', params.status);
 
     if (params.sortField && params.sortOrder) {
-      const sort = { [params.sortField]: params.sortOrder === 'desc' ? -1 : 1 };
+      const sort: { [key: string]: number } = {};
+      sort[params.sortField] = params.sortOrder === 'desc' ? -1 : 1;
       httpParams = httpParams.set('sort', JSON.stringify(sort));
     }
 
@@ -192,13 +193,34 @@ export class ReparationService {
   }
 
   /**
-   * Met à jour le statut global d'une réparation (Exemple - à implémenter avec API).
-   * TODO: Remplacer par un appel API réel (PATCH ou PUT).
+   * Met à jour le statut global d'une réparation.
    */
   updateReparationStatus(id: string, status: ReparationStatus, dateFinReelle?: Date): Observable<Reparation> {
-    console.warn(`ReparationService: updateReparationStatus(${id}, ${status}) called - NO API CALL IMPLEMENTED YET.`);
-    const url = `${this.apiUrl}/${id}/status`;
-    return throwError(() => new Error('Fonctionnalité updateReparationStatus non implémentée'));
+    const url = `${this.apiUrl}/reparations/${id}/status`;
+    console.log(`ReparationService: updating global status for reparation ${id} to ${status} via API: ${url}`);
+    
+    const body: any = { status };
+    if (dateFinReelle) {
+      // S'assurer que la date est bien envoyée si elle existe
+      body.dateFinReelle = dateFinReelle.toISOString(); 
+    }
+    
+    // Utiliser PATCH
+    return this.http.patch<{ success: boolean, message: string, data: Reparation }>(url, body).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          // Parser les dates de la réparation retournée
+          return this.parseDatesInReparation(response.data);
+        } else {
+          console.error('ReparationService: API returned success=false or no data for updateReparationStatus', response);
+          throw new HttpErrorResponse({ 
+            error: { message: response.message || 'Échec de la mise à jour du statut.' }, 
+            status: 400 // Ou autre code d'erreur approprié
+          });
+        }
+      }),
+      catchError(this.handleError) // Utiliser le gestionnaire d'erreurs global
+    );
   }
 
   /**
@@ -369,5 +391,63 @@ export class ReparationService {
 
     console.error('ReparationService Error:', errorMessage);
     return throwError(() => new Error(userFriendlyMessage));
+  }
+
+  /**
+   * Récupère TOUTES les réparations pour le manager (utilise l'endpoint général GET /reparations).
+   * @param params - Paramètres de pagination, tri et filtres.
+   */
+  getAllReparationsForManager(params: {
+    page?: number,
+    limit?: number,
+    sortField?: string,
+    sortOrder?: 'asc' | 'desc',
+    [key: string]: any; // Pour les filtres dynamiques (ex: statusReparation, client)
+  }): Observable<ApiPaginatedResponse<Reparation>> {
+    const url = `${this.apiUrl}/reparations`; // Endpoint général, protégé côté backend pour les managers
+    let httpParams = new HttpParams();
+
+    // Pagination
+    if (params.page) httpParams = httpParams.set('page', params.page.toString());
+    if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
+
+    // Tri
+    if (params.sortField && params.sortOrder) {
+      // Spécifier le type de l'objet pour résoudre l'erreur linter
+      const sort: { [key: string]: number } = {};
+      sort[params.sortField] = params.sortOrder === 'desc' ? -1 : 1;
+      // Envoyer comme chaîne JSON, comme attendu par le backend
+      httpParams = httpParams.set('sort', JSON.stringify(sort));
+    }
+
+    // Filtres dynamiques (exclure les paramètres de pagination/tri déjà gérés)
+    for (const key in params) {
+      if (key !== 'page' && key !== 'limit' && key !== 'sortField' && key !== 'sortOrder' && params[key]) {
+        httpParams = httpParams.set(key, params[key].toString());
+      }
+    }
+
+    console.log(`ReparationService: fetching ALL reparations for manager from API: ${url} with params`, httpParams);
+
+    return this.http.get<ApiPaginatedResponse<Reparation>>(url, { params: httpParams }).pipe(
+      map(response => {
+        if (response && response.success && Array.isArray(response.data)) {
+          response.data = response.data.map(rep => this.parseDatesInReparation(rep));
+          return response;
+        } else {
+          console.error('ReparationService: Réponse inattendue de l\'API pour getAllReparationsForManager:', response);
+          return { 
+            success: false, 
+            count: 0, 
+            total: 0, 
+            pagination: { page: params.page || 1, limit: params.limit || 10, totalPages: 0 }, 
+            data: [],
+            message: response?.message || 'Réponse invalide de l\'API' 
+          };
+        }
+      }),
+      tap(response => console.log(`ReparationService: fetched ${response.data.length}/${response.total} total reparations for manager`)),
+      catchError(this.handleError) // Utiliser le gestionnaire d'erreurs existant
+    );
   }
 } 

@@ -1,0 +1,333 @@
+<div class="reparation-details-container">
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement des détails de la réparation...</p>
+  </div>
+
+  <div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <div *ngIf="!loading && !error && reparation" class="content">
+    <!-- En-tête -->
+    <div class="header">
+      <div class="back-button" (click)="goBack()">
+        <i class="fas fa-arrow-left"></i>
+        Retour
+      </div>
+      <div class="title-section">
+        <h1>Réparation #{{ reparation._id }}</h1>
+        <div class="status-badge" [ngClass]="getStatusClass(reparation.statusReparation)">
+          {{ getStatusLabel(reparation.statusReparation) }}
+        </div>
+      </div>
+      <div class="actions">
+        <button *ngIf="reparation.statusReparation !== ReparationStatus.Terminee && reparation.statusReparation !== ReparationStatus.Annulee"
+                class="btn btn-primary"
+                (click)="finishReparation()">
+          <i class="fas fa-check"></i> Terminer la Réparation
+        </button>
+         <button *ngIf="reparation.statusReparation !== ReparationStatus.Annulee"
+                class="btn btn-danger"
+                (click)="updateStatus(ReparationStatus.Annulee)">
+          <i class="fas fa-times"></i> Annuler
+        </button>
+      </div>
+    </div>
+
+    <!-- Informations principales -->
+    <div class="main-info">
+      <div class="vehicle-info">
+        <h2>Véhicule</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Marque/Modèle</label>
+            <span>{{ reparation.vehicule.marque }} {{ reparation.vehicule.modele }}</span>
+          </div>
+          <div class="info-item">
+            <label>Immatriculation</label>
+            <span>{{ reparation.vehicule.immatriculation }}</span>
+          </div>
+          <div class="info-item">
+            <label>Année</label>
+            <span>{{ reparation.vehicule.annee || 'N/A' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Kilométrage</label>
+            <span>{{ (reparation.vehicule.kilometrage | number) || 'N/A' }} km</span>
+          </div>
+        </div>
+        <div *ngIf="reparation.vehicule.photoUrl" class="vehicle-photo">
+           <img [src]="reparation.vehicule.photoUrl" alt="Photo du véhicule">
+        </div>
+      </div>
+
+      <div class="client-info">
+        <h2>Client</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Nom</label>
+            <span>{{ reparation.client.prenom }} {{ reparation.client.nom }}</span>
+          </div>
+          <div class="info-item">
+            <label>Email</label>
+            <span>{{ reparation.client.email || 'N/A' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Téléphone</label>
+            <span>{{ reparation.client.telephone || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+       <div class="garage-info">
+        <h2>Garage</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Nom</label>
+            <span>{{ 'AutoService' }}</span>
+          </div>
+           <div class="info-item">
+            <label>Adresse</label>
+            <span>{{ '123 Rue de la Paix, Paris, France' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Téléphone</label>
+            <span>{{ '06 06 06 06 06' }}</span>
+          </div>
+           <div class="info-item" *ngIf="reparation.mecaniciensAssignes && reparation.mecaniciensAssignes.length > 0">
+            <label>Mécanicien(s)</label>
+            <span>
+              {{ reparation.mecaniciensAssignes[0]?.mecanicien?.prenom }}
+              {{ reparation.mecaniciensAssignes[0]?.mecanicien?.nom }}
+              <span *ngIf="reparation.mecaniciensAssignes.length > 1"> (et autres)</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description et progression -->
+    <div class="description-section">
+      <h2>Description initiale du problème</h2>
+      <p>{{ reparation.problemeDeclare }}</p>
+
+      <div class="progress-section">
+        <div class="progress-header">
+          <div class="progress-label">Progression globale des étapes</div>
+          <div class="progress-percentage" [ngClass]="{'completed': calculateProgress() === 100}">
+            <span class="percentage-value">{{ calculateProgress() }}%</span>
+            <span class="percentage-icon" *ngIf="calculateProgress() === 100"><i class="fas fa-check-circle"></i></span>
+          </div>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar">
+            <div class="progress" [style.width.%]="calculateProgress()"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation des onglets -->
+    <div class="tabs">
+      <button [class.active]="activeTab === 'etapes'"
+              (click)="activeTab = 'etapes'">
+        <i class="fas fa-tasks"></i> Étapes
+      </button>
+      <button [class.active]="activeTab === 'photos'"
+              (click)="activeTab = 'photos'">
+        <i class="fas fa-camera"></i> Documentation Visuelle
+      </button>
+    </div>
+
+    <!-- Contenu des onglets -->
+    <div class="tab-content">
+      <!-- Onglet Étapes -->
+      <div *ngIf="activeTab === 'etapes'" class="etapes-tab">
+        <!-- Liste des étapes -->
+        <div class="todo-list">
+          <div *ngFor="let etape of reparation.etapesSuivi; let i = index" 
+               class="todo-item" 
+               [ngClass]="{
+                 'todo-completed': etape.status === EtapeStatus.Terminee,
+                 'todo-in-progress': etape.status === EtapeStatus.EnCours,
+                 'todo-pending': etape.status === EtapeStatus.EnAttente,
+                 'todo-blocked': etape.status === EtapeStatus.Bloquee
+               }">
+
+            <div class="todo-item-header">
+              <div class="todo-checkbox">
+                <input type="checkbox" 
+                       [checked]="etape.status === EtapeStatus.Terminee" 
+                       [disabled]="etape.status === EtapeStatus.Bloquee" 
+                       (change)="finishStep(etape)">
+              </div>
+
+              <div class="todo-content">
+                <div class="todo-name">
+                  {{ i + 1 }}. {{ etape.titre }}
+                  <span class="photo-indicator" *ngIf="countPhotosForEtape(etape._id) > 0" (click)="activeTab = 'photos'; filterPhotosByEtape(etape._id)">
+                    <i class="fas fa-camera"></i> {{ countPhotosForEtape(etape._id) }}
+                  </span>
+                </div>
+                <div class="todo-details">
+                  <span class="todo-status" [ngClass]="getStatusClass(etape.status)">
+                    <i class="fas" 
+                      [ngClass]="{
+                        'fa-clock': etape.status === EtapeStatus.EnAttente,
+                        'fa-spinner fa-spin': etape.status === EtapeStatus.EnCours,
+                        'fa-check-circle': etape.status === EtapeStatus.Terminee,
+                        'fa-lock': etape.status === EtapeStatus.Bloquee
+                      }"></i>
+                    {{ getStatusLabel(etape.status) }}
+                  </span>
+                  <span class="todo-timing" *ngIf="etape.dateDebut">
+                    <i class="far fa-calendar-alt"></i>
+                    Début: {{ etape.dateDebut | date:'dd/MM/yy HH:mm' }}
+                  </span>
+                  <span class="todo-timing" *ngIf="etape.dateFin">
+                    <i class="far fa-calendar-check"></i>
+                    Fin: {{ etape.dateFin | date:'dd/MM/yy HH:mm' }}
+                  </span>
+                </div>
+                <div class="todo-description" *ngIf="etape.description">
+                  <i class="fas fa-info-circle"></i> {{ etape.description }}
+                </div>
+              </div>
+
+              <div class="todo-actions">
+                <!-- Actions spécifiques manager pourraient être ajoutées ici -->
+                 <button class="btn-action btn-add-photo" (click)="openPhotoUploadModal(etape)">
+                  <i class="fas fa-camera"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="toggle-comments">
+              <button class="btn-toggle" (click)="toggleCommentairesVisibilite(etape._id)">
+                <i class="fas" [ngClass]="{'fa-chevron-down': commentairesVisibles[etape._id], 'fa-chevron-right': !commentairesVisibles[etape._id]}"></i>
+                Commentaires
+                <span class="comment-count" *ngIf="(etape.commentaires?.length ?? 0) > 0">({{ etape.commentaires.length }})</span>
+              </button>
+            </div>
+            <div class="todo-comments" *ngIf="commentairesVisibles[etape._id]">
+              <div class="commentaires-list">
+                <div *ngFor="let commentaire of etape.commentaires" class="commentaire" [ngClass]="{'expanded': commentaire.expanded}">
+                  <div class="commentaire-header">
+                    <span class="auteur" 
+                          [ngClass]="{
+                            'auteur-mecanicien': commentaire.auteur.role === 'mecanicien', 
+                            'auteur-client': commentaire.auteur.role === 'client',
+                            'auteur-vous': commentaire.auteur._id === currentUser?._id
+                          }">
+                      {{ getAuteurLabel(commentaire.auteur) }}
+                    </span>
+                    <span class="date">{{ commentaire.date | date:'dd/MM/yy HH:mm' }}</span>
+                  </div>
+                  <div class="text-container">
+                    <p>{{ commentaire.message }}</p>
+                    <button *ngIf="(commentaire.message?.length ?? 0) > 100" 
+                            class="expand-btn" 
+                            (click)="toggleCommentExpand(commentaire)">
+                      {{ commentaire.expanded ? 'Voir moins' : 'Voir plus' }}
+                    </button>
+                  </div>
+                </div>
+                <div *ngIf="!etape.commentaires || etape.commentaires.length === 0" class="no-comments">
+                   Aucun commentaire pour cette étape.
+                </div>
+              </div>
+              <!-- Formulaire d'ajout de commentaire -->
+              <div class="add-comment-form">
+                 <textarea [(ngModel)]="nouveauCommentaireText[etape._id]" 
+                           placeholder="Ajouter un commentaire..." 
+                           rows="2">
+                </textarea>
+                <button class="btn btn-secondary btn-sm" 
+                        (click)="addCommentaire(etape._id)" 
+                        [disabled]="!nouveauCommentaireText[etape._id] || isAddingCommentaire[etape._id]">
+                  <span *ngIf="isAddingCommentaire[etape._id]"><i class="fas fa-spinner fa-spin"></i></span>
+                  <span *ngIf="!isAddingCommentaire[etape._id]">Ajouter</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglet Photos -->
+      <div *ngIf="activeTab === 'photos'" class="photos-tab">
+        <div class="photo-filter">
+          <label for="etapeFilter">Filtrer par étape :</label>
+          <select id="etapeFilter" [(ngModel)]="selectedEtapeFilter" (change)="filterPhotosByEtape(selectedEtapeFilter)">
+            <option value="">Toutes les étapes</option>
+            <option *ngFor="let etape of reparation.etapesSuivi" [value]="etape._id">{{ etape.titre }}</option>
+          </select>
+          <button class="clear-filter" *ngIf="selectedEtapeFilter" (click)="clearPhotoFilter()">Voir toutes</button>
+        </div>
+        <div class="photo-grid">
+          <div *ngFor="let photo of filteredPhotos" class="photo-item">
+            <div class="photo-thumbnail" (click)="openPhotoModal(photo.url)">
+              <img [src]="photo.url" [alt]="photo.description || 'Photo de réparation'">
+              <div class="photo-overlay">
+                <i class="fas fa-search-plus"></i>
+              </div>
+            </div>
+            <div class="photo-info">
+              <span class="photo-date">{{ photo.dateAjout | date:'dd/MM/yy HH:mm' }}</span>
+              <span class="photo-uploader">par {{ getAuteurLabel(photo.auteur) }}</span>
+              <p class="photo-description">{{ photo.description || 'Pas de description' }}</p>
+              <span class="photo-etape-link" *ngIf="photo.etapeAssociee" (click)="activeTab = 'etapes'">
+                Lié à : {{ getEtapeTitle(photo.etapeAssociee) }}
+              </span>
+            </div>
+            <button class="btn-delete-photo" 
+                    *ngIf="currentUser && (currentUser.role === 'manager' || currentUser._id === photo.auteur._id)"
+                    (click)="confirmDeletePhoto(photo)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+          <div *ngIf="filteredPhotos.length === 0" class="no-photos">
+            Aucune photo trouvée pour cette sélection.
+          </div>
+        </div>
+         <!-- Bouton d'ajout de photo global (si nécessaire) -->
+        <div class="add-photo-global">
+           <button class="btn btn-secondary" (click)="openPhotoUploadModal(null)">
+            <i class="fas fa-plus"></i> Ajouter une Photo
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modale d'upload de photo -->
+<!-- 
+<app-photo-upload-modal 
+  *ngIf="showPhotoUploadModal" 
+  [reparationId]="reparation?._id" 
+  [etapeConcernee]="etapePourPhoto" 
+  (closeModal)="closePhotoUploadModal()" 
+  (photoUploaded)="onPhotoUploaded($event)">
+</app-photo-upload-modal>
+-->
+
+<!-- Modale d'affichage de photo -->
+<!-- 
+<app-photo-viewer-modal
+  *ngIf="showPhotoViewerModal"
+  [imageUrl]="selectedPhotoUrl"
+  (closeModal)="closePhotoModal()">
+</app-photo-viewer-modal>
+-->
+
+<!-- Confirmation Modal for Deleting Photo -->
+<app-confirmation-dialog
+  *ngIf="showDeleteConfirmation"
+  title="Confirmer la suppression"
+  message="Êtes-vous sûr de vouloir supprimer cette photo ? Cette action est irréversible."
+  (confirmed)="deletePhoto()"
+  (cancelled)="cancelDeletePhoto()">
+</app-confirmation-dialog>

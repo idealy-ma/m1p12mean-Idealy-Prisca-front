@@ -24,6 +24,7 @@ export interface PhotoReparation {
   url: string;
   description?: string;
   dateAjout: Date;
+  auteur: User;
   etapeAssociee?: string; // Optional link to an EtapeReparation _id
 }
 
