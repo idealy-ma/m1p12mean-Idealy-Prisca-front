@@ -16,7 +16,7 @@
         <i class="fas fa-file-invoice"></i>
         <span>Devis</span>
       </li>
-      <li class="disabled">
+      <li [class.active]="activeRoute === 'reparations'" (click)="navigateTo('/manager/reparations')">
         <i class="fas fa-tools"></i>
         <span>Réparations</span>
       </li>

@@ -46,6 +46,19 @@ export class TokenService {
     return decodedToken?.role || null;
   }
 
+  // Récupérer l'ID de l'utilisateur à partir du token
+  getUserId(): string | null {
+    if (!this.isTokenValid()) {
+      return null;
+    }
+    
+    const jwtHelper = new JwtHelperService();
+    const decodedToken = jwtHelper.decodeToken(this.token);
+    
+    // Le payload contient souvent l'ID dans un champ 'id' ou 'sub'
+    return decodedToken?.id || decodedToken?.sub || null;
+  }
+
   // Vérifier si l'utilisateur a un rôle spécifique
   hasRole(requiredRole: string): boolean {
     const userRole = this.getUserRole();

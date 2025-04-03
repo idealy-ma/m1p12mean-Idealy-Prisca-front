@@ -13,7 +13,7 @@
     <div class="header">
       <div class="back-button" (click)="goBack()">
         <i class="fas fa-arrow-left"></i>
-        Retour à la liste
+        Retour
       </div>
       <div class="title-section">
         <h1>Réparation #{{ reparation._id }}</h1>
@@ -195,20 +195,9 @@
               </div>
 
               <div class="todo-actions">
-                <button *ngIf="etape.status === EtapeStatus.EnAttente"
-                        class="btn-action btn-start"
-                        (click)="updateEtapeStatus(etape._id, EtapeStatus.EnCours)">
-                  <i class="fas fa-play"></i>
-                </button>
-                <button *ngIf="etape.status === EtapeStatus.EnCours"
-                        class="btn-action btn-complete"
-                        (click)="finishStep(etape)">
-                  <i class="fas fa-check"></i>
-                </button>
-                 <button *ngIf="etape.status === EtapeStatus.Terminee"
-                        class="btn-action btn-restart"
-                        (click)="updateEtapeStatus(etape._id, EtapeStatus.EnCours)">
-                  <i class="fas fa-redo"></i>
+                <!-- Actions spécifiques manager pourraient être ajoutées ici -->
+                 <button class="btn-action btn-add-photo" (click)="openPhotoUploadModal(etape)">
+                  <i class="fas fa-camera"></i>
                 </button>
               </div>
             </div>
@@ -223,7 +212,7 @@
             </div>
             <div class="todo-comments" *ngIf="commentairesVisibles[etape._id]">
               <div class="commentaires-list">
-                <div *ngFor="let commentaire of etape.commentaires" class="commentaire" [ngClass]="{'expanded': commentExpandedState[getCommentId(etape._id, commentaire)]}">
+                <div *ngFor="let commentaire of etape.commentaires" class="commentaire" [ngClass]="{'expanded': commentaire.expanded}">
                   <div class="commentaire-header">
                     <span class="auteur" 
                           [ngClass]="{
@@ -239,8 +228,8 @@
                     <p>{{ commentaire.message }}</p>
                     <button *ngIf="(commentaire.message?.length ?? 0) > 100" 
                             class="expand-btn" 
-                            (click)="toggleCommentExpand(etape._id, commentaire)">
-                      {{ commentExpandedState[getCommentId(etape._id, commentaire)] ? 'Voir moins' : 'Voir plus' }}
+                            (click)="toggleCommentExpand(commentaire)">
+                      {{ commentaire.expanded ? 'Voir moins' : 'Voir plus' }}
                     </button>
                   </div>
                 </div>
@@ -248,112 +237,97 @@
                    Aucun commentaire pour cette étape.
                 </div>
               </div>
-              <div class="nouveau-commentaire" *ngIf="canComment(reparation)">
-                <textarea [(ngModel)]="newComment[etape._id]"
-                          placeholder="Ajouter un commentaire..."
-                          rows="2"
-                          (keyup.enter)="addComment(etape._id)"></textarea>
-                <button class="btn-send" (click)="addComment(etape._id)" [disabled]="!newComment[etape._id]?.trim()">
-                  <i class="fas fa-paper-plane"></i>
+              <!-- Formulaire d'ajout de commentaire -->
+              <div class="add-comment-form">
+                 <textarea [(ngModel)]="nouveauCommentaireText[etape._id]" 
+                           placeholder="Ajouter un commentaire..." 
+                           rows="2">
+                </textarea>
+                <button class="btn btn-secondary btn-sm" 
+                        (click)="addCommentaire(etape._id)" 
+                        [disabled]="!nouveauCommentaireText[etape._id] || isAddingCommentaire[etape._id]">
+                  <span *ngIf="isAddingCommentaire[etape._id]"><i class="fas fa-spinner fa-spin"></i></span>
+                  <span *ngIf="!isAddingCommentaire[etape._id]">Ajouter</span>
                 </button>
               </div>
             </div>
-          </div>
-
-          <div *ngIf="!reparation.etapesSuivi || reparation.etapesSuivi.length === 0" class="no-todos">
-            Aucune étape n'a été définie pour cette réparation.
           </div>
         </div>
       </div>
 
       <!-- Onglet Photos -->
       <div *ngIf="activeTab === 'photos'" class="photos-tab">
-        <h2>Documentation visuelle</h2>
-
-        <div class="photos-filters">
-          <div class="filter-group">
-            <label>Filtrer par étape:</label>
-            <select [(ngModel)]="photoFilterEtapeId" (change)="filterPhotosByEtape(photoFilterEtapeId)">
-              <option value="">Toutes les photos</option>
-              <option *ngFor="let etape of reparation.etapesSuivi" [value]="etape._id">
-                {{ etape.titre }} ({{ countPhotosForEtape(etape._id) }})
-              </option>
-            </select>
-          </div>
+        <div class="photo-filter">
+          <label for="etapeFilter">Filtrer par étape :</label>
+          <select id="etapeFilter" [(ngModel)]="selectedEtapeFilter" (change)="filterPhotosByEtape(selectedEtapeFilter)">
+            <option value="">Toutes les étapes</option>
+            <option *ngFor="let etape of reparation.etapesSuivi" [value]="etape._id">{{ etape.titre }}</option>
+          </select>
+          <button class="clear-filter" *ngIf="selectedEtapeFilter" (click)="clearPhotoFilter()">Voir toutes</button>
         </div>
-
-        <div class="upload-section">
-          <h3>Ajouter une nouvelle photo</h3>
-          <div class="upload-form">
-            <div class="file-input-group">
-              <label for="photo-file" class="btn btn-secondary">Choisir une image</label>
-              <input type="file" 
-                     id="photo-file"
-                     accept="image/*" 
-                     (change)="handleFileChange($event)"
-                     #fileInput
-                     style="display: none;">
-               <span *ngIf="newPhotoFile" class="file-selected">
-                 Fichier sélectionné: {{ newPhotoFile.name }}
-               </span>
-               <span *ngIf="!newPhotoFile" class="file-selected">
-                 Aucun fichier choisi
-               </span>
+        <div class="photo-grid">
+          <div *ngFor="let photo of filteredPhotos" class="photo-item">
+            <div class="photo-thumbnail" (click)="openPhotoModal(photo.url)">
+              <img [src]="photo.url" [alt]="photo.description || 'Photo de réparation'">
+              <div class="photo-overlay">
+                <i class="fas fa-search-plus"></i>
+              </div>
             </div>
-             <div *ngIf="photoPreview" class="photo-preview">
-                <img [src]="photoPreview" alt="Aperçu de la photo">
-            </div>
-
-            <div class="photo-details">
-               <div class="input-group">
-                 <label for="photo-etape">Associer à une étape (Optionnel)</label>
-                 <select id="photo-etape" [(ngModel)]="photoEtapeId">
-                   <option value="">Aucune étape spécifique</option>
-                   <option *ngFor="let etape of reparation.etapesSuivi" [value]="etape._id">
-                     {{ etape.titre }}
-                   </option>
-                 </select>
-               </div>
- 
-               <div class="input-group">
-                 <label for="photo-description">Description</label>
-                 <textarea id="photo-description" 
-                           [(ngModel)]="photoDescription"
-                           rows="3"
-                           placeholder="Décrivez ce que montre cette photo..."></textarea>
-               </div>
-             </div>
- 
-             <button class="btn btn-primary upload-btn" 
-                     (click)="uploadPhoto(); fileInput.value = ''" 
-                     [disabled]="!newPhotoFile || !photoDescription.trim() || photoUploading">
-                 <i class="fas fa-upload"></i> {{ photoUploading ? 'Envoi en cours...' : 'Ajouter la photo' }}
-             </button>
-             <div *ngIf="photoUploading" class="upload-spinner">
-               <div class="spinner small"></div>
-             </div>
-             <div *ngIf="photoError" class="text-danger small mt-1">{{ photoError }}</div>
-           </div>
-         </div>
-
-        <div class="photos-grid">
-          <div *ngFor="let photo of filteredPhotos" class="photo-card">
-            <img [src]="photo.url" [alt]="photo.description || 'Photo de réparation'" (error)="photo.url='assets/placeholder-image.png'">
             <div class="photo-info">
-              <p>{{ photo.description || 'Pas de description' }}</p>
-              <span class="date">Ajoutée le: {{ photo.dateAjout | date:'dd/MM/yy HH:mm' }}</span>
-              <span *ngIf="photo.etapeAssociee" class="etape-associee">
-                <i class="fas fa-link"></i> Étape: {{ getEtapeNomById(photo.etapeAssociee) }}
+              <span class="photo-date">{{ photo.dateAjout | date:'dd/MM/yy HH:mm' }}</span>
+              <span class="photo-uploader">par {{ getAuteurLabel(photo.auteur) }}</span>
+              <p class="photo-description">{{ photo.description || 'Pas de description' }}</p>
+              <span class="photo-etape-link" *ngIf="photo.etapeAssociee" (click)="activeTab = 'etapes'">
+                Lié à : {{ getEtapeTitle(photo.etapeAssociee) }}
               </span>
             </div>
+            <button class="btn-delete-photo" 
+                    *ngIf="currentUser && (currentUser.role === 'manager' || currentUser._id === photo.auteur._id)"
+                    (click)="confirmDeletePhoto(photo)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
           </div>
           <div *ngIf="filteredPhotos.length === 0" class="no-photos">
-            <p *ngIf="!photoFilterEtapeId">Aucune photo pour cette réparation.</p>
-            <p *ngIf="photoFilterEtapeId">Aucune photo associée à l'étape "{{ getEtapeNomById(photoFilterEtapeId) }}".</p>
+            Aucune photo trouvée pour cette sélection.
           </div>
         </div>
+         <!-- Bouton d'ajout de photo global (si nécessaire) -->
+        <div class="add-photo-global">
+           <button class="btn btn-secondary" (click)="openPhotoUploadModal(null)">
+            <i class="fas fa-plus"></i> Ajouter une Photo
+          </button>
+        </div>
       </div>
-
     </div>
+
   </div>
-</div> 
+</div>
+
+<!-- Modale d'upload de photo -->
+<!-- 
+<app-photo-upload-modal 
+  *ngIf="showPhotoUploadModal" 
+  [reparationId]="reparation?._id" 
+  [etapeConcernee]="etapePourPhoto" 
+  (closeModal)="closePhotoUploadModal()" 
+  (photoUploaded)="onPhotoUploaded($event)">
+</app-photo-upload-modal>
+-->
+
+<!-- Modale d'affichage de photo -->
+<!-- 
+<app-photo-viewer-modal
+  *ngIf="showPhotoViewerModal"
+  [imageUrl]="selectedPhotoUrl"
+  (closeModal)="closePhotoModal()">
+</app-photo-viewer-modal>
+-->
+
+<!-- Confirmation Modal for Deleting Photo -->
+<app-confirmation-dialog
+  *ngIf="showDeleteConfirmation"
+  title="Confirmer la suppression"
+  message="Êtes-vous sûr de vouloir supprimer cette photo ? Cette action est irréversible."
+  (confirmed)="deletePhoto()"
+  (cancelled)="cancelDeletePhoto()">
+</app-confirmation-dialog>

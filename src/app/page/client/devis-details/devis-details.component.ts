@@ -54,6 +54,7 @@ export class ClientDevisDetailsComponent implements OnInit {
     this.devisService.getClientDevisById(id).subscribe({
       next: (response) => {
         if (response && response.success) {
+          console.log('Devis récupéré:', response.data);
           this.devis = response.data;
         } else {
           this.error = 'Format de données invalide';
@@ -125,12 +126,14 @@ export class ClientDevisDetailsComponent implements OnInit {
     });
   }
   
-  // Calculer le total des ser²vices choisis
+  // Calculer le total des services choisis
   calculerTotalServicesChoisis(): number {
     if (!this.devis?.servicesChoisis?.length) return 0;
     
-    return this.devis.servicesChoisis.reduce((total, service) => {
-      return total + (service.service.prix || 0);
+    // Utiliser ?. et ?? pour un accès sécurisé au prix
+    return this.devis.servicesChoisis.reduce((total, serviceChoisi) => {
+      const prix = serviceChoisi?.service?.prix ?? 0;
+      return total + prix;
     }, 0);
   }
   
@@ -191,7 +194,7 @@ export class ClientDevisDetailsComponent implements OnInit {
     if (!this.devis?.lignesSupplementaires?.length) return 0;
     
     return this.devis.lignesSupplementaires.reduce((total, ligne) => {
-      return total + ((ligne.prixUnitaire || 0) * (ligne.quantite || 1));
+      return total + ((ligne.prix || 0) * (ligne.quantite || 1));
     }, 0);
   }
 

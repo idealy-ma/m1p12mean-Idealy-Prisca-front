@@ -151,19 +151,19 @@
             <div *ngFor="let ligne of devis.lignesSupplementaires" class="ligne-item">
               <div class="ligne-icon">
                 <i class="fas" [ngClass]="{
-                  'fa-cog': ligne.typeElement === 'piece',
-                  'fa-tools': ligne.typeElement === 'service',
-                  'fa-user-tie': ligne.typeElement === 'main_oeuvre',
-                  'fa-box': ligne.typeElement === 'autre'
+                  'fa-cog': ligne.type === 'piece',
+                  'fa-tools': ligne.type === 'service',
+                  'fa-user-tie': ligne.type === 'main_oeuvre',
+                  'fa-box': ligne.type === 'autre'
                 }"></i>
               </div>
               <div class="ligne-details">
-                <div class="ligne-name">{{ ligne.designation || 'Ligne supplémentaire' }}</div>
+                <div class="ligne-name">{{ ligne.nom }}</div>
                 <div class="ligne-description" *ngIf="ligne.description">{{ ligne.description }}</div>
-                <div class="ligne-type">{{ ligne.typeElement }}</div>
+                <div class="ligne-type">{{ ligne.type }}</div>
                 <div class="ligne-quantity">Quantité: {{ ligne.quantite }}</div>
               </div>
-              <div class="ligne-price">{{ (ligne.prixUnitaire || 0) * (ligne.quantite || 1) | currency:'EUR':'symbol':'1.2-2' }}</div>
+              <div class="ligne-price">{{ (ligne.prix || 0) * (ligne.quantite || 1) | currency:'EUR':'symbol':'1.2-2' }}</div>
             </div>
           </div>
           <div class="total-section">

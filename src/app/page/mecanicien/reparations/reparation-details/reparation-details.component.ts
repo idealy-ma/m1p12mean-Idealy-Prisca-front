@@ -1,11 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Reparation, EtapeReparation, CommentaireEtape, ReparationStatus, EtapeStatus, PhotoReparation } from '../../../../models/reparation.model';
+import { Reparation, EtapeReparation, CommentaireEtape, ReparationStatus, EtapeStatus, PhotoReparation, User } from '../../../../models/reparation.model';
 import { ReparationService } from '../../../../services/reparation.service';
 import { FactureService } from '../../../../services/facture.service';
 import { Facture } from '../../../../models/facture.model';
 import { switchMap, catchError, tap, finalize } from 'rxjs/operators';
 import { of, throwError } from 'rxjs';
+import { TokenService } from '../../../../services/token/token.service';
+import { SupabaseService } from '../../../../services/supabase/supabase.service';
+
+interface CurrentUserInfo {
+  _id: string;
+  role: string;
+}
 
 @Component({
   selector: 'app-reparation-details',
@@ -31,43 +38,53 @@ export class ReparationDetailsComponent implements OnInit {
   photoFilterEtapeId: string = '';
   commentairesVisibles: { [etapeId: string]: boolean } = {};
   commentExpandedState: { [commentId: string]: boolean } = {};
+  currentUser: CurrentUserInfo | null = null;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private reparationService: ReparationService,
-    private factureService: FactureService
+    private factureService: FactureService,
+    private tokenService: TokenService,
+    private supabaseService: SupabaseService
   ) {}
 
   ngOnInit(): void {
-    this.route.paramMap.pipe(
-      tap(() => {
-        this.loading = true;
-        this.error = null;
-        this.reparation = null;
-      }),
-      switchMap(params => {
-        const id = params.get('id');
-        if (id) {
-          return this.reparationService.getReparationById(id).pipe(
-            catchError(err => {
-              console.error('Error loading reparation:', err);
-              this.error = `Erreur lors du chargement de la réparation: ${err.message || err}`;
-              return of(undefined);
-            })
-          );
-        } else {
-          this.error = "ID de réparation manquant dans l'URL.";
-          return of(undefined);
-        }
-      }),
-      finalize(() => this.loading = false)
-    ).subscribe(reparation => {
-      if (reparation) {
-        this.reparation = reparation;
+    const userId = this.tokenService.getUserId();
+    const userRole = this.tokenService.getUserRole();
+
+    if (!userId || !userRole) {
+      console.error("Impossible de récupérer l'ID ou le rôle de l'utilisateur depuis le token.");
+      this.error = "Erreur d'authentification ou token invalide.";
+      this.loading = false;
+      return;
+    }
+    
+    this.currentUser = { _id: userId, role: userRole };
+
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.loadReparation(id);
+    } else {
+      this.error = 'ID de réparation non fourni';
+      this.loading = false;
+    }
+  }
+
+  loadReparation(id: string): void {
+    this.loading = true;
+    this.error = null;
+
+    this.reparationService.getReparationById(id).subscribe({
+      next: (reparation) => {
+        this.reparation = reparation || null;
+        this.loading = false;
         this.initializeComponentState();
-      } else if (!this.error) {
-        this.error = "Réparation non trouvée.";
+      },
+      error: (err) => {
+        this.error = 'Erreur lors du chargement de la réparation';
+        this.loading = false;
+        console.error('Erreur:', err);
       }
     });
   }
@@ -77,9 +94,11 @@ export class ReparationDetailsComponent implements OnInit {
       this.filteredPhotos = this.reparation.photos ? [...this.reparation.photos] : [];
       this.commentairesVisibles = {};
       this.commentExpandedState = {};
-      if (this.reparation.etapes) {
-        this.reparation.etapes.forEach(etape => {
+      this.newComment = {};
+      if (this.reparation.etapesSuivi) {
+        this.reparation.etapesSuivi.forEach(etape => {
           this.commentairesVisibles[etape._id] = false;
+          this.newComment[etape._id] = '';
           if (etape.commentaires) {
             etape.commentaires.forEach(comment => {
               this.commentExpandedState[this.getCommentId(etape._id, comment)] = (comment.message?.length || 0) <= 100;
@@ -92,7 +111,7 @@ export class ReparationDetailsComponent implements OnInit {
 
   updateStatus(newStatusValue: string): void {
     const newStatus = newStatusValue as ReparationStatus;
-    if (this.reparation && this.reparation.status !== newStatus) {
+    if (this.reparation && this.reparation.statusReparation !== newStatus) {
       this.loading = true;
       this.reparationService.updateReparationStatus(this.reparation._id, newStatus)
         .pipe(
@@ -115,7 +134,7 @@ export class ReparationDetailsComponent implements OnInit {
   updateEtapeStatus(etapeId: string, newStatusValue: string): void {
     const newStatus = newStatusValue as EtapeStatus;
     if (this.reparation) {
-      const etape = this.reparation.etapes.find(e => e._id === etapeId);
+      const etape = this.reparation.etapesSuivi.find(e => e._id === etapeId);
       if (etape && etape.status !== newStatus) {
         this.loading = true;
         this.reparationService.updateStepStatus(this.reparation._id, etapeId, newStatus)
@@ -124,9 +143,9 @@ export class ReparationDetailsComponent implements OnInit {
           )
           .subscribe({
             next: updatedEtape => {
-              const index = this.reparation!.etapes.findIndex(e => e._id === etapeId);
+              const index = this.reparation!.etapesSuivi.findIndex(e => e._id === etapeId);
               if (index !== -1) {
-                this.reparation!.etapes[index] = updatedEtape;
+                this.reparation!.etapesSuivi[index] = updatedEtape;
               }
               console.log(`Step ${etapeId} status updated successfully`);
             },
@@ -143,100 +162,128 @@ export class ReparationDetailsComponent implements OnInit {
     const message = this.newComment[etapeId]?.trim();
     if (this.reparation && etapeId && message) {
       this.loading = true;
-      this.reparationService.addCommentToStep(this.reparation._id, etapeId, 'Mécanicien', message)
+      this.reparationService.addCommentToStep(this.reparation._id, etapeId, message)
         .pipe(
           finalize(() => this.loading = false)
         )
         .subscribe({
           next: updatedEtape => {
-            const index = this.reparation!.etapes.findIndex(e => e._id === etapeId);
+            const index = this.reparation!.etapesSuivi.findIndex(e => e._id === etapeId);
             if (index !== -1) {
-              this.reparation!.etapes[index] = updatedEtape;
-              const newComment = updatedEtape.commentaires[updatedEtape.commentaires.length - 1];
-              this.commentExpandedState[this.getCommentId(etapeId, newComment)] = true;
+              this.reparation!.etapesSuivi[index] = this.reparationService['parseDatesInEtape'](updatedEtape);
+              this.reparation!.etapesSuivi[index].commentaires.forEach(c => {
+                 const commentFullId = this.getCommentId(etapeId, c);
+                 if (this.commentExpandedState[commentFullId] === undefined) {
+                     this.commentExpandedState[commentFullId] = (c.message?.length || 0) <= 100;
+                 }
+              });
             }
             this.newComment[etapeId] = '';
+            this.commentairesVisibles[etapeId] = true;
             console.log(`Comment added to step ${etapeId} successfully`);
           },
           error: err => {
             console.error(`Error adding comment to step ${etapeId}:`, err);
-            this.error = `Erreur lors de l'ajout du commentaire: ${err.message || err}`;
+            this.error = err.userMessage || `Erreur lors de l'ajout du commentaire`;
           }
         });
     }
   }
 
-  uploadPhoto(): void {
+  async uploadPhoto(): Promise<void> {
     const description = this.photoDescription?.trim();
-    const mockPhotoUrl = 'assets/mock/photos/newly-uploaded.jpg';
-
-    if (this.reparation && description) {
+    if (this.reparation && this.newPhotoFile && description) {
       this.photoUploading = true;
       this.photoError = null;
-      this.reparationService.addPhotoToReparation(this.reparation._id, mockPhotoUrl, description, this.photoEtapeId || undefined)
-        .pipe(
-          finalize(() => this.photoUploading = false)
-        )
-        .subscribe({
-          next: updatedReparation => {
-            this.reparation = updatedReparation;
-            this.filteredPhotos = this.reparation.photos ? [...this.reparation.photos] : [];
-            this.newPhotoFile = null;
-            this.photoPreview = null;
-            this.photoDescription = '';
-            this.photoEtapeId = '';
-            console.log('Photo added successfully (mock URL)');
-          },
-          error: err => {
-            console.error('Error adding photo:', err);
-            this.photoError = `Erreur lors de l'ajout de la photo: ${err.message || err}`;
-          }
-        });
+      let publicUrl = '';
+
+      try {
+        console.log('Uploading photo to Supabase...');
+        const urls = await this.supabaseService.uploadMultipleImages([this.newPhotoFile]);
+        if (urls && urls.length > 0) {
+          publicUrl = urls[0];
+          console.log('Supabase upload successful, URL:', publicUrl);
+        } else {
+          throw new Error('L\'upload Supabase n\'a retourné aucune URL.');
+        }
+
+        const photoData = {
+          url: publicUrl,
+          description: description,
+          etapeAssociee: this.photoEtapeId || undefined
+        };
+
+        console.log('Sending photo metadata to backend...', photoData);
+        this.reparationService.addPhotoToReparation(this.reparation._id, photoData)
+          .pipe(
+            finalize(() => this.photoUploading = false)
+          )
+          .subscribe({
+            next: (nouvellePhoto: PhotoReparation) => {
+              console.log('Backend update successful', nouvellePhoto);
+              if (this.reparation) {
+                  if (!this.reparation.photos) {
+                      this.reparation.photos = [];
+                  }
+                  this.reparation.photos.push(this.reparationService['parseDatesInPhoto'](nouvellePhoto));
+                  this.filteredPhotos = [...this.reparation.photos];
+              }
+              this.newPhotoFile = null;
+              this.photoPreview = null;
+              this.photoDescription = '';
+              this.photoEtapeId = '';
+            },
+            error: err => {
+              console.error('Error adding photo metadata to backend:', err);
+              this.photoError = err.message || `Erreur lors de l'enregistrement de la photo`;
+            }
+          });
+
+      } catch (uploadError: any) {
+        console.error('Error during photo upload process:', uploadError);
+        this.photoError = uploadError.message || "Erreur lors de l'upload de l'image.";
+        this.photoUploading = false;
+      }
+
+    } else if (!this.newPhotoFile) {
+        this.photoError = "Veuillez sélectionner un fichier image.";
     } else if (!description) {
       this.photoError = "La description de la photo est requise.";
     }
   }
 
+  finishStep(etape: EtapeReparation): void {
+    const nouveauStatut = (etape.status === EtapeStatus.Terminee) 
+                          ? EtapeStatus.EnCours 
+                          : EtapeStatus.Terminee; 
+    this.updateEtapeStatus(etape._id, nouveauStatut);
+  }
+
   calculateProgress(): number {
-    if (!this.reparation || !this.reparation.etapes || this.reparation.etapes.length === 0) {
+    if (!this.reparation || !this.reparation.etapesSuivi || this.reparation.etapesSuivi.length === 0) {
       return 0;
     }
-    const completedSteps = this.reparation.etapes.filter(e => e.status === EtapeStatus.Terminee).length;
-    return Math.round((completedSteps / this.reparation.etapes.length) * 100);
+    const completedSteps = this.reparation.etapesSuivi.filter(e => e.status === EtapeStatus.Terminee).length;
+    return Math.round((completedSteps / this.reparation.etapesSuivi.length) * 100);
   }
 
-  getStatusClass(status: ReparationStatus | EtapeStatus | string): string {
+  getStatusClass(status: string): string {
     switch (status) {
-      case ReparationStatus.EnAttenteValidation: return 'status-pending';
-      case ReparationStatus.Validee: return 'status-validated';
-      case ReparationStatus.EnCours: return 'status-progress';
-      case ReparationStatus.EnPause: return 'status-paused';
-      case ReparationStatus.Terminee: return 'status-completed';
-      case ReparationStatus.Annulee: return 'status-cancelled';
-      case ReparationStatus.Refusee: return 'status-refused';
-      case EtapeStatus.EnAttente: return 'status-pending';
-      case EtapeStatus.EnCours: return 'status-progress';
-      case EtapeStatus.Terminee: return 'status-completed';
-      case EtapeStatus.Annulee: return 'status-cancelled';
-      default: return 'status-unknown';
+      case EtapeStatus.EnAttente:
+        return 'status-waiting';
+      case EtapeStatus.EnCours:
+        return 'status-in-progress';
+      case EtapeStatus.Bloquee:
+        return 'status-blocked';
+      case EtapeStatus.Terminee:
+        return 'status-completed';
+      default:
+        return 'status-unknown';
     }
   }
 
-  getStatusLabel(status: ReparationStatus | EtapeStatus | string): string {
-    switch (status) {
-      case ReparationStatus.EnAttenteValidation: return 'En attente validation';
-      case ReparationStatus.Validee: return 'Validée';
-      case ReparationStatus.EnCours: return 'En cours';
-      case ReparationStatus.EnPause: return 'En pause';
-      case ReparationStatus.Terminee: return 'Terminée';
-      case ReparationStatus.Annulee: return 'Annulée';
-      case ReparationStatus.Refusee: return 'Refusée';
-      case EtapeStatus.EnAttente: return 'À faire';
-      case EtapeStatus.EnCours: return 'En cours';
-      case EtapeStatus.Terminee: return 'Terminée';
-      case EtapeStatus.Annulee: return 'Annulée';
-      default: return 'Inconnu';
-    }
+  getStatusLabel(status: string): string {
+    return status;
   }
 
   goBack(): void {
@@ -269,15 +316,15 @@ export class ReparationDetailsComponent implements OnInit {
   }
 
   getCommentId(etapeId: string, commentaire: CommentaireEtape): string {
-    const commentIdentifier = commentaire.date.getTime().toString();
-    return `${etapeId}-${commentIdentifier}`;
+    const index = this.reparation?.etapesSuivi?.find(e => e._id === etapeId)?.commentaires?.indexOf(commentaire);
+    return `${etapeId}-${index ?? commentaire.date.toISOString()}`;
   }
 
   getEtapeProgressThreshold(index: number): number {
-    if (!this.reparation || !this.reparation.etapes || this.reparation.etapes.length === 0) {
+    if (!this.reparation || !this.reparation.etapesSuivi || this.reparation.etapesSuivi.length === 0) {
       return 0;
     }
-    return (index / this.reparation.etapes.length) * 100;
+    return (index / this.reparation.etapesSuivi.length) * 100;
   }
 
   filterPhotosByEtape(etapeId: string): void {
@@ -299,19 +346,13 @@ export class ReparationDetailsComponent implements OnInit {
   }
 
   getEtapeNomById(etapeId: string): string {
-    if (!this.reparation || !this.reparation.etapes) return 'Étape inconnue';
-    const etape = this.reparation.etapes.find(e => e._id === etapeId);
+    if (!this.reparation || !this.reparation.etapesSuivi) return 'Étape inconnue';
+    const etape = this.reparation.etapesSuivi.find(e => e._id === etapeId);
     return etape ? etape.titre : 'Étape inconnue';
   }
 
-  finishStep(etape: EtapeReparation): void {
-    if (this.reparation && etape.status !== EtapeStatus.Terminee) {
-      this.updateEtapeStatus(etape._id, EtapeStatus.Terminee);
-    }
-  }
-
   finishReparation(): void {
-    if (this.reparation && this.reparation.status !== ReparationStatus.Terminee) {
+    if (this.reparation && this.reparation.statusReparation !== ReparationStatus.Terminee) {
       this.loading = true;
       this.reparationService.updateReparationStatus(this.reparation._id, ReparationStatus.Terminee)
         .pipe(
@@ -343,5 +384,38 @@ export class ReparationDetailsComponent implements OnInit {
           }
         });
     }
+  }
+
+  private get reparationServiceWithParsers(): ReparationService & { parseDatesInEtape(etape: any): EtapeReparation, parseDatesInPhoto(photo: any): PhotoReparation } {
+      return this.reparationService as any;
+  }
+
+  getAuteurLabel(auteur: User | undefined): string {
+    if (!auteur) return 'Inconnu';
+    if (this.currentUser && auteur._id === this.currentUser._id) {
+      return 'Vous';
+    }
+    if (auteur.prenom && auteur.nom) {
+      return `${auteur.prenom} ${auteur.nom}`;
+    }
+    return 'Auteur inconnu';
+  }
+
+  canComment(reparation: Reparation | null): boolean {
+    if (!reparation || !this.currentUser) {
+      return false;
+    }
+    const userRole = this.currentUser.role;
+    const userId = this.currentUser._id;
+    
+    if (!userRole || !userId) return false;
+
+    if (userRole === 'client' && reparation.client?._id === userId) {
+      return true;
+    }
+    if (userRole === 'mecanicien' && reparation.mecaniciensAssignes?.some(a => a.mecanicien?._id === userId)) {
+      return true;
+    }
+    return false;
   }
 } 

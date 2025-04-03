@@ -14,7 +14,7 @@ export class SupabaseService {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const filePath = `${Date.now()}-${file.name}`;
+      const filePath = `${Date.now()}-${file.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9.-_]/g, '')}`;
 
       const { data, error } = await this.supabase.storage
         .from(this.bucket) // Nom de ton bucket Supabase
@@ -28,7 +28,9 @@ export class SupabaseService {
       // Récupérer l'URL publique du fichier
       const publicUrl = this.supabase.storage
         .from(this.bucket)
-        .getPublicUrl(filePath).data.publicUrl;
+        .getPublicUrl(data.path).data.publicUrl;
+
+      console.log('URL publique du fichier:', publicUrl);
 
       urls.push(publicUrl); // Ajouter l'URL publique à la liste
     }

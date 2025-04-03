@@ -87,4 +87,16 @@ export class UserService extends BaseService {
   updateUserProfile(userData: any): Observable<any> {
     return this.http.put<any>(`${this.rootUrl}/users/profile`, userData);
   }
+
+  /**
+   * Récupère les utilisateurs filtrés par rôle.
+   * @param role Le rôle à filtrer ('client', 'mecanicien', 'manager').
+   * @returns Un Observable contenant la liste des utilisateurs trouvés.
+   */
+  getUsersByRole(role: 'client' | 'mecanicien' | 'manager'): Observable<{ success: boolean, count: number, data: User[] }> {
+    // Utiliser l'endpoint spécifique du backend pour récupérer par rôle
+    const url = `${this.rootUrl}/manager/users/role/${role}`;
+    console.log(`UserService: fetching users by role ${role} from API: ${url}`);
+    return this.http.get<{ success: boolean, count: number, data: User[] }>(url);
+  }
 } 

@@ -38,6 +38,11 @@ import { ManagerFactureDetailsComponent } from './page/manager/facture-details/m
 import { ClientFacturesListComponent } from './page/client/factures-list/client-factures-list/client-factures-list.component';
 import { ClientFactureDetailsComponent } from './page/client/facture-details/client-facture-details/client-facture-details.component';
 
+import { ManagerReparationDetailsComponent } from './page/manager/reparations/manager-reparation-details/manager-reparation-details.component';
+
+// Importer le nouveau composant de liste
+import { ManagerReparationsListComponent } from './page/manager/reparations/manager-reparations-list/manager-reparations-list.component';
+
 const routes: Routes = [
   // Landing page (page principale)
   { path: '', component: LandingPageComponent, pathMatch: 'full' },
@@ -83,6 +88,11 @@ const routes: Routes = [
       { path: '', component: AccueilManagerComponent },
       { path: 'devis', component: DevisListComponent },
       { path: 'devis/:id', component: DevisDetailsComponent },
+      { path: 'reparations', component: ManagerReparationsListComponent },
+      {
+        path: 'reparations/:id',
+        component: ManagerReparationDetailsComponent,
+      },
       { path: 'service', component: AddServiceComponent },
       { path: 'employee', component: AddEmployeeComponent },
       { path: 'employees', component: EmployeeListComponent },

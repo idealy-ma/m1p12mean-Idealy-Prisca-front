@@ -224,7 +224,7 @@ export class DevisDetailsComponent implements OnInit {
       this.devis.servicesChoisis.forEach(serviceChoisi => {
         const service = serviceChoisi.service;
         const devisItem: DevisItem = {
-          _id: serviceChoisi._id,
+          _id: service._id,
           nom: service.name,
           type: 'service',
           quantite: 0, // Pour service, c'est un forfait
@@ -253,9 +253,9 @@ export class DevisDetailsComponent implements OnInit {
         prix = 10000; // 100 euros en centimes, à adapter selon votre système de prix
         
         const devisItem: DevisItem = {
-          _id: packChoisi._id,
+          _id: pack._id,
           nom: `Pack: ${pack.name}`,
-          type: 'service',
+          type: 'pack',
           quantite: 0, // Pour service, c'est un forfait
           prixUnitaire: prix,
           completed: false,
@@ -272,11 +272,11 @@ export class DevisDetailsComponent implements OnInit {
     if (this.devis.lignesSupplementaires && this.devis.lignesSupplementaires.length > 0) {
       this.devis.lignesSupplementaires.forEach(ligne => {
         const devisItem: DevisItem = {
-          _id: ligne._id,
-          nom: ligne.designation || 'Ligne supplémentaire',
-          type: ligne.typeElement || 'piece',
-          quantite: ligne.quantite || 1,
-          prixUnitaire: ligne.prixUnitaire || 0,
+          _id: ligne.id,
+          nom: ligne.nom ?? '',
+          type: ligne.type || 'piece',
+          quantite: ligne.quantite ?? 0,
+          prixUnitaire: ligne.prix ?? 0,
           completed: ligne.completed || false,
           priorite: this.convertirPriorite(ligne.priorite),
           note: ligne.description || ''
@@ -296,7 +296,7 @@ export class DevisDetailsComponent implements OnInit {
             nom: `Main d'œuvre - ${mecanicien.prenom} ${mecanicien.nom}`,
             type: 'main_oeuvre',
             quantite: mecTravail.heureDeTravail || 1,
-            prixUnitaire: mecTravail.tarifHoraire || 0,
+            prixUnitaire: mecTravail.mecanicien.tarifHoraire || 0,
             completed: false,
             priorite: 'moyenne',
             mecanicienId: mecanicien._id
@@ -353,41 +353,43 @@ export class DevisDetailsComponent implements OnInit {
     // Récupérer uniquement les nouvelles lignes (celles qui ne sont pas préselection)
     const todoItems = this.todoItemsArray.getRawValue();
     todoItems.forEach(item => {
-       if (item.type === 'service') {
-        devisData.services.push({
-          service: item.mecanicienId,
-          prix: item.prixUnitaire,
-          note: item.note
-        });
+      if (item.type === 'service') {
+        const serviceId = item._id || item.nom;
+        if (serviceId) {
+          devisData.services.push({
+            service: serviceId,
+            prix: item.prixUnitaire,
+            note: item.note
+          });
+        }
       } else if (item.type === 'pack') {
-        devisData.packs.push({
-          servicePack: item.mecanicienId,
-          prix: item.prixUnitaire
-        });
+        // CORRECTION: Utiliser l'ID du pack (probablement stocké dans item.nom via le select)
+        const packId = item._id; // Assumons que le select met l'ID dans 'nom'
+        if (packId) { // N'ajouter que si on a un ID (et non pas 'undefined' ou chaine vide)
+          devisData.packs.push({
+            servicePack: packId,
+            prix: item.prixUnitaire // Le prix est défini par le manager
+            // note: pas de note pour les packs dans le modèle backend
+          });
+        }
       } else if (item.type === 'main_oeuvre') {
-        devisData.mecaniciens.push({
-          mecanicien: item.mecanicienId,
-          heureDeTravail: item.quantite
-        });
-      } else {
+        // Ajouter le mécanicien UNE SEULE FOIS ici
+        if (item.mecanicienId) { // S'assurer qu'un mécanicien est sélectionné
+          devisData.mecaniciens.push({
+            mecanicien: item.mecanicienId,
+            heureDeTravail: item.quantite // Utiliser quantite comme heureDeTravail
+          });
+        }
+      } else { // Autres types (piece, autre...)
         devisData.lignesSupplementaires.push({
           nom: item.nom,
-          prix: item.prixUnitaire,
+          prix: item.prixUnitaire, // Utiliser prixUnitaire
           quantite: item.quantite,
-          type: item.type
+          type: item.type // Assurer que le type est bien envoyé
         });
       }
-      
     });
 
-    // Récupérer les mécaniciens depuis les items de type 'main_oeuvre'
-    const mecanicienItems = todoItems.filter(item => item.type === 'main_oeuvre' && item.mecanicienId);
-    mecanicienItems.forEach(item => {
-      devisData.mecaniciens.push({
-        mecanicien: item.mecanicienId,
-        heureDeTravail: item.quantite // Utiliser quantite comme heureDeTravail
-      });
-    });
     // Appeler le service pour envoyer le devis au client
     this.devisService.sendDevisToClient(this.devis._id, devisData).subscribe({
       next: (response: any) => {
