@@ -61,6 +61,12 @@
               <button *ngIf="facture.statut === 'validee'" (click)="emitFacture()" type="button" class="action-btn emit-btn">
                 <i class="fas fa-paper-plane"></i> Émettre
               </button>
+              <button *ngIf="facture.statut !== 'annulee' && facture.statut !== 'payee'" 
+                      (click)="cancelFacture()" 
+                      type="button" 
+                      class="action-btn danger-btn">
+                <i class="fas fa-ban"></i> Annuler
+              </button>
               <button (click)="downloadPDF()" type="button" class="action-btn print-btn">
                 <i class="fas fa-print"></i> Imprimer
               </button>

@@ -17,6 +17,7 @@ export class ManagerFactureDetailsComponent implements OnInit {
   error: string | null = null;
   
   isEditing: boolean = false;
+  isUpdatingStatus: boolean = false;
   factureForm: FormGroup;
 
   constructor(
@@ -182,41 +183,97 @@ export class ManagerFactureDetailsComponent implements OnInit {
     updatedFactureData.transactions = this.facture.transactions;
 
     console.log("Envoi de la facture mise à jour:", updatedFactureData);
-
+    this.isUpdatingStatus = true;
     this.factureService.updateFacture(updatedFactureData).subscribe({
       next: (savedFacture) => {
         this.facture = savedFacture;
         this.initializeForm(savedFacture);
         this.isEditing = false;
+        this.isUpdatingStatus = false;
+        alert('Facture mise à jour avec succès.');
       },
       error: (err) => {
         console.error('Erreur lors de la sauvegarde:', err);
+        this.isUpdatingStatus = false;
+        alert(`Erreur lors de la sauvegarde: ${err.message}`);
       }
     });
   }
 
   validateFacture(): void {
-    if (this.isEditing) return;
+    if (this.isEditing || this.isUpdatingStatus) return;
     if (!this.facture) return;
+    
+    this.isUpdatingStatus = true;
+    this.error = null;
+
     this.factureService.validateFacture(this.facture.id).subscribe({
       next: (updatedFacture) => {
         this.facture = updatedFacture;
+        this.factureForm.patchValue({statut: updatedFacture.statut});
+        this.isUpdatingStatus = false;
+        alert('Facture validée avec succès.');
       },
       error: (err) => {
         console.error('Erreur lors de la validation:', err);
+        this.error = `Erreur validation: ${err.message}`;
+        this.isUpdatingStatus = false;
+        alert(`Erreur lors de la validation: ${err.message}`);
       }
     });
   }
 
   emitFacture(): void {
-    if (this.isEditing) return;
+    if (this.isEditing || this.isUpdatingStatus) return;
     if (!this.facture) return;
+    
+    this.isUpdatingStatus = true;
+    this.error = null;
+
     this.factureService.emitFacture(this.facture.id).subscribe({
       next: (updatedFacture) => {
         this.facture = updatedFacture;
+        this.factureForm.patchValue({statut: updatedFacture.statut});
+        this.isUpdatingStatus = false;
+        alert('Facture émise avec succès.');
       },
       error: (err) => {
         console.error('Erreur lors de l\'émission:', err);
+        this.error = `Erreur émission: ${err.message}`;
+        this.isUpdatingStatus = false;
+        alert(`Erreur lors de l\'émission: ${err.message}`);
+      }
+    });
+  }
+
+  cancelFacture(): void {
+    if (this.isEditing || this.isUpdatingStatus) return;
+    if (!this.facture || this.facture.statut === 'annulee' || this.facture.statut === 'payee') return;
+    
+    const reason = prompt("Veuillez indiquer la raison de l\'annulation :");
+    if (reason === null) {
+      return;
+    }
+    if (reason.trim() === '') {
+      alert("La raison de l\'annulation ne peut pas être vide.");
+      return;
+    }
+
+    this.isUpdatingStatus = true;
+    this.error = null;
+
+    this.factureService.cancelFacture(this.facture.id, reason).subscribe({
+      next: (updatedFacture) => {
+        this.facture = updatedFacture;
+        this.factureForm.patchValue({statut: updatedFacture.statut, commentaires: updatedFacture.commentaires});
+        this.isUpdatingStatus = false;
+        alert('Facture annulée avec succès.');
+      },
+      error: (err) => {
+        console.error('Erreur lors de l\'annulation:', err);
+        this.error = `Erreur annulation: ${err.message}`;
+        this.isUpdatingStatus = false;
+        alert(`Erreur lors de l\'annulation: ${err.message}`);
       }
     });
   }
@@ -249,36 +306,40 @@ export class ManagerFactureDetailsComponent implements OnInit {
   
   getStatusLabel(status: string | undefined): string {
     if (!status) return 'Inconnu';
-    const statusMap: {[key: string]: string} = {
+    const labelMap: {[key: string]: string} = {
       'brouillon': 'Brouillon',
       'validee': 'Validée',
       'emise': 'Émise',
       'payee': 'Payée',
-      'partiellement_payee': 'Partiellement payée',
+      'partiellement_payee': 'Partiellement Payée',
       'annulee': 'Annulée',
-      'en_retard': 'En retard'
+      'en_retard': 'En Retard'
     };
-    return statusMap[status] || status;
+    return labelMap[status] || status;
   }
   
   formatDate(date: Date | string | undefined): string {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+    if (!date) return 'N/A';
+    try {
+      return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch (e) {
+      return 'Date invalide';
+    }
   }
   
-  formatMontant(montant: number | undefined): string {
-    if (montant == null) return '-';
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(montant);
+  formatMontant(montant: number | undefined | null): string {
+    if (montant === null || montant === undefined) return '-';
+    return montant.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
   }
 
   formatTransactionStatus(status: string | undefined): string {
-    if (!status) return 'Inconnu';
-    const statusMap: {[key: string]: string} = {
+    if (!status) return '-';
+    const txStatusMap: {[key: string]: string} = {
       'en_attente': 'En attente',
       'validee': 'Validée',
       'rejetee': 'Rejetée',
       'remboursee': 'Remboursée'
     };
-    return statusMap[status] || status;
+    return txStatusMap[status] || status;
   }
 }
