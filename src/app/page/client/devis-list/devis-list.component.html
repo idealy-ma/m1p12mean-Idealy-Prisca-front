@@ -84,8 +84,8 @@
           <td>{{ item.montantEstime | currency:'EUR':'symbol':'1.2-2' }}</td>
           <td class="actions">
             <button class="btn-primary" [routerLink]="['/client/devis', item._id]">Détails</button>
-            <button class="btn-success" *ngIf="item.status === 'en_attente'" (click)="item._id && accepterDevis(item._id)">Accepter</button>
-            <button class="btn-danger" *ngIf="item.status === 'en_attente'" (click)="item._id && refuserDevis(item._id)">Refuser</button>
+            <button class="btn-success" *ngIf="item.status === 'termine'" (click)="item._id && accepterDevis(item._id)">Accepter</button>
+            <button class="btn-danger" *ngIf="item.status === 'termine'" (click)="item._id && refuserDevis(item._id)">Refuser</button>
           </td>
         </tr>
       </tbody>
