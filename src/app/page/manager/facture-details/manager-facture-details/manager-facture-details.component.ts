@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Facture, LigneFacture, Transaction } from '../../../../models/facture.model';
+import { Facture, LigneFacture, PaymentInfo, Transaction } from '../../../../models/facture.model';
 import { FactureService } from '../../../../services/facture.service';
 import { Location } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { PdfGenerationService } from '../../../../services/pdf-generation.service';
 
 @Component({
@@ -18,6 +18,15 @@ export class ManagerFactureDetailsComponent implements OnInit {
   
   isEditing: boolean = false;
   isUpdatingStatus: boolean = false;
+  
+  // --- Propriétés pour la modale de paiement ---
+  showPaymentModal: boolean = false;
+  paymentForm: FormGroup; 
+  paymentLoading: boolean = false;
+  paymentError: string | null = null;
+  modesPaiement: string[] = ['especes', 'carte', 'virement', 'cheque', 'en_ligne']; // Doit correspondre au backend/modèle
+  // -------------------------------------------
+
   factureForm: FormGroup;
 
   constructor(
@@ -56,6 +65,17 @@ export class ManagerFactureDetailsComponent implements OnInit {
       delaiPaiement: [30, Validators.required],
       creePar: [''],
       validePar: ['']
+    });
+    
+    // Initialisation du formulaire de paiement
+    this.paymentForm = this.fb.group({
+      montant: [null, [
+        Validators.required, 
+        Validators.min(0.01) 
+        // Le validateur max est ajouté dynamiquement dans openPaymentModal
+      ]], 
+      modePaiement: ['carte', Validators.required], 
+      reference: [''] 
     });
   }
 
@@ -180,18 +200,15 @@ export class ManagerFactureDetailsComponent implements OnInit {
 
     const formData = this.factureForm.getRawValue(); 
 
-    // 1. Créer l'objet de base à partir des données du formulaire
-    const updatedFactureData: any = { // Utiliser any temporairement pour flexibilité
+    const updatedFactureData: any = { 
       ...formData
     };
 
-    // 2. Remplacer les objets par les IDs ou null
     updatedFactureData.client = formData.client?.id || null;
     updatedFactureData.vehicule = formData.vehicule?.id || null;
-    updatedFactureData.devis = formData.devisId || null; // Utiliser la valeur de devisId du form
-    updatedFactureData.validePar = formData.validePar || null; // Mettre null si vide
+    updatedFactureData.devis = formData.devisId || null; 
+    updatedFactureData.validePar = formData.validePar || null; 
 
-    // 3. Nettoyer l'objet remise
     if (updatedFactureData.remise && typeof updatedFactureData.remise === 'object') {
         updatedFactureData.remise.montant = Number(updatedFactureData.remise.montant) || 0;
         updatedFactureData.remise.description = updatedFactureData.remise.description || '';
@@ -210,24 +227,12 @@ export class ManagerFactureDetailsComponent implements OnInit {
     delete updatedFactureData.montantTTC; // Calculé par le backend
     // Les champs client et vehicule contiennent maintenant l'ID ou null.
     
-    // IMPORTANT: Le backend (FactureService.update via .save()) 
-    // doit ignorer les champs client, vehicule, reparation dans les données reçues,
-    // car on ne modifie pas ces références lors de la sauvegarde d'un brouillon.
-    // La logique actuelle dans FactureService.update le fait déjà.
+    updatedFactureData.transactions = this.facture.transactions;
 
-    console.log("Envoi de la facture mise à jour (nettoyée) pour sauvegarde:", updatedFactureData);
-    this.isUpdatingStatus = true; 
-    this.error = null;
-
-    // Envoyer l'objet nettoyé. Caster en Facture si nécessaire.
-    console.log(updatedFactureData);
-    
-    this.factureService.updateFacture(updatedFactureData as Facture).subscribe({ 
+    console.log("Envoi de la facture mise à jour:", updatedFactureData);
+    this.isUpdatingStatus = true;
+    this.factureService.updateFacture(updatedFactureData).subscribe({
       next: (savedFacture) => {
-        // Log pour vérifier la réponse du backend
-        console.log("Facture reçue après sauvegarde (savedFacture):", savedFacture);
-
-        // Mettre à jour avec les données retournées (qui incluent les totaux recalculés)
         this.facture = savedFacture;
         this.initializeForm(savedFacture);
         this.isEditing = false;
@@ -321,6 +326,80 @@ export class ManagerFactureDetailsComponent implements OnInit {
     });
   }
 
+  calculerMontantRestant(): number {
+    if (!this.facture) return 0;
+    const totalPaye = this.facture.transactions
+        .filter(tx => tx.statut === 'validee')
+        .reduce((sum, tx) => sum + tx.montant, 0);
+    const restant = this.facture.montantTTC - totalPaye;
+    // Arrondir à 2 décimales pour éviter les problèmes de flottants
+    return Math.max(0, Math.round(restant * 100) / 100);
+  }
+  
+  // Validateur personnalisé pour le montant max
+  maxAmountValidator(max: number): (control: AbstractControl) => ValidationErrors | null {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const montant = control.value;
+      if (montant !== null && montant > max) {
+        return { maxAmountExceeded: { requiredValue: max, actualValue: montant } };
+      }
+      return null;
+    };
+  }
+
+  openPaymentModal(): void {
+    if (!this.facture) return;
+    this.paymentError = null;
+    const montantRestant = this.calculerMontantRestant();
+    
+    // Réinitialiser le formulaire et définir la valeur initiale/validateurs
+    this.paymentForm.reset({ modePaiement: 'carte', reference: '' }); // Garder mode par défaut
+    this.paymentForm.get('montant')?.clearValidators(); // Enlever anciens validateurs
+    this.paymentForm.get('montant')?.setValidators([
+      Validators.required,
+      Validators.min(0.01),
+      this.maxAmountValidator(montantRestant) // Ajouter validateur max dynamique
+    ]);
+    this.paymentForm.get('montant')?.updateValueAndValidity(); // Appliquer les nouveaux validateurs
+    
+    // Pré-remplir avec le montant restant (optionnel)
+    // this.paymentForm.get('montant')?.setValue(montantRestant);
+    
+    this.showPaymentModal = true;
+  }
+
+  closePaymentModal(): void {
+    this.showPaymentModal = false;
+    this.paymentLoading = false; // S'assurer que le chargement est arrêté
+  }
+
+  onSubmitPayment(): void {
+    if (this.paymentForm.invalid) {
+      this.paymentForm.markAllAsTouched();
+      return;
+    }
+    if (!this.facture) return; // Sécurité
+
+    this.paymentLoading = true;
+    this.paymentError = null;
+    const paymentInfo: PaymentInfo = this.paymentForm.value;
+
+    this.factureService.payFacture(this.facture.id, paymentInfo).subscribe({
+      next: (newTransaction) => {
+        alert('Paiement enregistré avec succès !');
+        // Recharger la facture complète pour voir la nouvelle transaction et le statut MAJ
+        this.loadFacture(this.facture!.id);
+        this.closePaymentModal(); 
+        // paymentLoading est remis à false dans closePaymentModal
+      },
+      error: (err) => {
+        console.error('Erreur lors de l\'enregistrement du paiement:', err);
+        this.paymentError = err.message;
+        this.paymentLoading = false;
+      }
+    });
+  }
+
   downloadPDF(): void {
     if (!this.facture) {
       console.error("Facture data not loaded, cannot generate PDF.");
@@ -384,5 +463,17 @@ export class ManagerFactureDetailsComponent implements OnInit {
       'remboursee': 'Remboursée'
     };
     return txStatusMap[status] || status;
+  }
+
+  // Helper pour le select des modes de paiement
+  formatModePaiement(mode: string): string {
+    const map: {[key: string]: string} = {
+        'especes': 'Espèces',
+        'carte': 'Carte bancaire',
+        'virement': 'Virement',
+        'cheque': 'Chèque',
+        'en_ligne': 'Paiement en ligne'
+    };
+    return map[mode] || mode;
   }
 }

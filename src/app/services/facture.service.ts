@@ -176,9 +176,32 @@ export class FactureService {
   }
 
   payFacture(factureId: string, paymentInfo: PaymentInfo): Observable<Transaction> {
-     console.warn(`FactureService.payFacture(${factureId}) APPEL API À IMPLÉMENTER !`);
-    // TODO: Appeler POST /api/factures/:id/transactions
-     return throwError(() => new Error('payFacture API call not implemented')); 
+     // console.warn(`FactureService.payFacture(${factureId}) APPEL API À IMPLÉMENTER !`);
+     // Appeler POST /api/factures/:id/transactions
+     const url = `${this.apiUrl}/${factureId}/transactions`;
+     console.log(`FactureService: adding transaction for invoice ${factureId} via API: ${url}`);
+     
+     // Envoyer les informations de paiement dans le corps de la requête
+     return this.http.post<{ success: boolean; message?: string; data: Transaction }>(url, paymentInfo).pipe(
+         map(response => {
+             if (response.success && response.data) {
+                 // Convertir la date de la transaction retournée
+                 if (response.data.date) {
+                     response.data.date = new Date(response.data.date);
+                 }
+                 // Mapper _id vers id si présent
+                 if ((response.data as any)._id && !response.data.id) {
+                     response.data.id = (response.data as any)._id.toString();
+                 }
+                 console.log("Transaction added successfully:", response.data);
+                 return response.data;
+             } else {
+                 throw new Error(response.message || `Échec de l\'ajout de la transaction pour la facture ${factureId}.`);
+             }
+         }),
+         catchError(this.handleError)
+     );
+     // return throwError(() => new Error('payFacture API call not implemented')); 
   }
 
   cancelFacture(factureId: string, reason: string): Observable<Facture> {
