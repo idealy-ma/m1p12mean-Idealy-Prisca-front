@@ -342,8 +342,8 @@
                           </span>
                         </h5>
                         <p class="pack-content">
-                          <ng-container *ngFor="let serviceId of pack.services; let last = last">
-                            {{ getServiceLabelById(serviceId) }}{{ !last ? ', ' : '' }}
+                          <ng-container *ngFor="let service of pack.services; let last = last">
+                            {{ service.name }}{{ !last ? ', ' : '' }}
                           </ng-container>
                         </p>
                         <span class="vehicle-card-select-indicator">
