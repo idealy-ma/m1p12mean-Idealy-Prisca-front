@@ -15,29 +15,48 @@
   <!-- Contenu principal -->
   <div class="factures-content" *ngIf="!loading && !error">
     
-    <!-- Statistiques -->
-    <div class="stats-row" *ngIf="stats">
-      <div class="stat-card">
-        <div class="stat-title">Total factures</div>
-        <div class="stat-value">{{ stats.totalFactures }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-title">Montant total</div>
-        <div class="stat-value">{{ formatMontant(stats.totalMontant) }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-title">Factures payées</div>
-        <div class="stat-value">{{ stats.nombrePayees }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-title">Factures en retard</div>
-        <div class="stat-value">{{ stats.nombreEnRetard }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-title">Délai moyen de paiement</div>
-        <div class="stat-value">{{ stats.tempsMoyenPaiement.toFixed(1) }} jours</div>
-      </div>
+    <!-- Section Statistiques (Style .stats-row / .stat-card) -->
+    <h2 class="section-title">Statistiques Générales</h2>
+    <div class="stats-row mb-4">
+        <div *ngIf="statsLoading" class="loading-spinner small text-center p-3 w-100">Chargement des stats...</div>
+        <div *ngIf="statsError" class="error-message text-center p-3 w-100">{{ statsError }}</div>
+      
+        <ng-container *ngIf="stats && !statsLoading && !statsError">
+             <div class="stat-card">
+                <div class="stat-title">Total Factures</div>
+                <div class="stat-value">{{ stats.totalFactures }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Total Facturé (TTC)</div>
+                <div class="stat-value text-primary">{{ formatMontant(stats.totalFactureTTC) }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Total Payé</div>
+                <div class="stat-value text-success">{{ formatMontant(stats.totalPayeGlobal) }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Restant Dû</div>
+                <div class="stat-value text-warning">{{ formatMontant(stats.montantRestantGlobal) }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Payées</div>
+                <div class="stat-value">{{ stats.nombrePayees }}</div>
+            </div>
+             <div class="stat-card">
+                <div class="stat-title">Partiellement Payées</div>
+                <div class="stat-value">{{ stats.nombrePartiellementPayees }}</div>
+            </div>
+             <div class="stat-card">
+                <div class="stat-title">En Attente</div>
+                <div class="stat-value">{{ stats.nombreEnAttentePaiement }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">En Retard</div>
+                <div class="stat-value text-danger">{{ stats.nombreEnRetard }}</div>
+            </div>
+        </ng-container>
     </div>
+    <!-- Fin Section Statistiques -->
 
     <!-- Filtres -->
     <div class="filters-container">

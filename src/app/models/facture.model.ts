@@ -84,8 +84,11 @@ export interface FactureFilters {
 
 export interface FactureStats {
   totalFactures: number;
-  totalMontant: number;
+  totalFactureTTC: number;
+  totalPayeGlobal: number;
+  montantRestantGlobal: number;
   nombrePayees: number;
+  nombrePartiellementPayees: number;
+  nombreEnAttentePaiement: number;
   nombreEnRetard: number;
-  tempsMoyenPaiement: number; // en jours
 } 

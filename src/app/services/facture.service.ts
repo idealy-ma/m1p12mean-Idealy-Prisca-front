@@ -213,9 +213,22 @@ export class FactureService {
   }
 
   getStats(): Observable<FactureStats> {
-    console.warn("FactureService.getStats APPEL API À IMPLÉMENTER !"); 
-    // TODO: Appeler GET /api/factures/stats
-    return throwError(() => new Error('getStats API call not implemented')); 
+    const url = `${this.apiUrl}/stats/general`;
+    console.log(`FactureService: fetching stats from API: ${url}`);
+    
+    return this.http.get<{ success: boolean; data: FactureStats }>(url).pipe(
+        map(response => {
+            if (response.success && response.data) {
+                console.log("Stats received successfully:", response.data);
+                return response.data;
+            } else {
+                // Si success est faux, l'erreur devrait être gérée par handleError via catchError
+                // Mais au cas où, on lance une erreur générique ici.
+                throw new Error('Échec de la récupération des statistiques (réponse invalide).');
+            }
+        }),
+        catchError(this.handleError) // handleError gère les erreurs HTTP et les messages d'erreur du backend
+    );
   }
 
   // Méthode de gestion d'erreurs
