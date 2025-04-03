@@ -173,19 +173,51 @@ export class ManagerFactureDetailsComponent implements OnInit {
     if (this.factureForm.invalid) {
       console.error("Formulaire invalide:", this.factureForm.errors);
       this.factureForm.markAllAsTouched(); 
+      alert("Le formulaire contient des erreurs. Veuillez corriger les champs en rouge.");
       return;
     }
     
     if (!this.facture) return;
 
-    const updatedFactureData = this.factureForm.getRawValue() as Facture;
-    
-    updatedFactureData.transactions = this.facture.transactions;
+    const formData = this.factureForm.getRawValue(); 
 
-    console.log("Envoi de la facture mise à jour:", updatedFactureData);
-    this.isUpdatingStatus = true;
-    this.factureService.updateFacture(updatedFactureData).subscribe({
+    // 1. Créer l'objet de base à partir des données du formulaire
+    const updatedFactureData: any = { 
+      ...formData
+    };
+
+    // 2. Remplacer les objets par les IDs ou null
+    updatedFactureData.client = formData.client?.id || null;
+    updatedFactureData.vehicule = formData.vehicule?.id || null;
+    updatedFactureData.devis = formData.devisId || null; 
+    updatedFactureData.validePar = formData.validePar || null; 
+
+    // 3. Nettoyer l'objet remise
+    if (updatedFactureData.remise && typeof updatedFactureData.remise === 'object') {
+        updatedFactureData.remise.montant = Number(updatedFactureData.remise.montant) || 0;
+        updatedFactureData.remise.description = updatedFactureData.remise.description || '';
+    } else {
+        updatedFactureData.remise = { montant: 0, description: '' }; 
+    }
+
+    // 4. Supprimer les champs non pertinents ou non modifiables pour l'update
+    delete updatedFactureData.numeroFacture; 
+    delete updatedFactureData.creePar; 
+    delete updatedFactureData.reparationId; 
+    delete updatedFactureData.devisId; 
+    delete updatedFactureData.transactions; 
+    delete updatedFactureData.montantHT; 
+    delete updatedFactureData.montantTVA; 
+    delete updatedFactureData.montantTTC; 
+    
+    console.log("Envoi de la facture mise à jour (nettoyée) pour sauvegarde:", updatedFactureData);
+    this.isUpdatingStatus = true; 
+    this.error = null;
+
+    // Envoyer l'objet nettoyé. Caster en Facture si nécessaire.
+    this.factureService.updateFacture(updatedFactureData as Facture).subscribe({ 
       next: (savedFacture) => {
+        // Mettre à jour avec les données retournées (qui incluent les totaux recalculés)
         this.facture = savedFacture;
         this.initializeForm(savedFacture);
         this.isEditing = false;
@@ -195,7 +227,8 @@ export class ManagerFactureDetailsComponent implements OnInit {
       error: (err) => {
         console.error('Erreur lors de la sauvegarde:', err);
         this.isUpdatingStatus = false;
-        alert(`Erreur lors de la sauvegarde: ${err.message}`);
+        this.error = `Erreur sauvegarde: ${err.message}`;
+        alert(`Erreur lors de la sauvegarde: ${err.message}`); 
       }
     });
   }
