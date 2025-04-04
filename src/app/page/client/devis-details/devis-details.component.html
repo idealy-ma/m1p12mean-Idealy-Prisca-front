@@ -234,57 +234,79 @@
       </div>
 
       <!-- Boutons d'action -->
-      <div class="section actions-section" *ngIf=" devis.status === 'termine'">
+      <div class="section actions-section" *ngIf="devis.status === 'termine' || devis.status === 'en_attente'">
         <h2>Actions</h2>
         <div class="actions-container">
-          <p class="actions-info">Vous pouvez accepter ou refuser ce devis. Une fois votre décision prise, elle sera définitive.</p>
-          <div class="action-buttons" *ngIf=" devis.status === 'termine'">
-            <button class="btn-accept" (click)="accepterDevis()" [disabled]="isAccepting">
-              <i class="fas" [ngClass]="{'fa-check': !isAccepting, 'fa-spinner fa-spin': isAccepting}"></i>
-              {{ isAccepting ? 'Acceptation en cours...' : 'Accepter le devis' }}
-            </button>
-            <button class="btn-reject" (click)="refuserDevis()" [disabled]="isRejecting">
-              <i class="fas" [ngClass]="{'fa-times': !isRejecting, 'fa-spinner fa-spin': isRejecting}"></i>
-              {{ isRejecting ? 'Refus en cours...' : 'Refuser le devis' }}
-            </button>
+          <p class="actions-info" *ngIf="devis.status === 'termine'">Vous pouvez accepter ou refuser ce devis. Une fois votre décision prise, elle sera définitive.</p>
+          <p class="actions-info" *ngIf="devis.status === 'en_attente'">Le devis est en cours d'analyse par nos équipes. Vous pouvez discuter avec le manager via le chat.</p>
+          
+          <div class="action-buttons" *ngIf="devis.status === 'termine'">
+             <!-- Boutons accepter/refuser -->
+             <button class="btn-accept" (click)="accepterDevis()" [disabled]="isAccepting">
+                <i class="fas" [ngClass]="{'fa-check': !isAccepting, 'fa-spinner fa-spin': isAccepting}"></i>
+                {{ isAccepting ? 'Acceptation en cours...' : 'Accepter le devis' }}
+             </button>
+             <button class="btn-reject" (click)="refuserDevis()" [disabled]="isRejecting">
+                <i class="fas" [ngClass]="{'fa-times': !isRejecting, 'fa-spinner fa-spin': isRejecting}"></i>
+                {{ isRejecting ? 'Refus en cours...' : 'Refuser le devis' }}
+             </button>
           </div>
+
+          <!-- Bouton pour ouvrir le chat -->
+          <button class="btn-chat" (click)="toggleChat()">
+            <i class="fas fa-comments"></i> Discuter avec le manager
+          </button>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Bouton flottant pour réafficher le chat -->
-  <button *ngIf="!isChatVisible" class="btn-show-chat" (click)="toggleChat()">
-    <i class="fas fa-comments"></i>
-  </button>
-
-  <!-- Chat sidebar -->
-  <div class="chat-sidebar" [class.visible]="isChatVisible">
-    <div class="chat-header">
-      <h2>Discussion avec le garage</h2>
-      <button class="btn-toggle-chat" (click)="toggleChat()">
-        <i class="fas" [ngClass]="{'fa-chevron-right': !isChatVisible, 'fa-chevron-left': isChatVisible}"></i>
-      </button>
     </div>
-    <div class="chat-container">
-      <div class="chat-messages">
-        <div *ngFor="let message of mockMessages" 
-             class="message" 
-             [ngClass]="message.type">
-          <div class="message-content">
-            {{ message.contenu }}
-          </div>
-          <div class="message-info">
-            <span class="message-time">{{ message.date | date:'HH:mm' }}</span>
-          </div>
-        </div>
-      </div>
-      <div class="chat-input">
-        <textarea [(ngModel)]="messageText" placeholder="Écrivez votre message..." (keyup.enter)="sendMessage()"></textarea>
-        <button class="btn-send" (click)="sendMessage()">
-          <i class="fas fa-paper-plane"></i>
+
+    <button *ngIf="!isChatVisible" class="btn-show-chat" (click)="toggleChat()">
+      <i class="fas fa-comments"></i>
+    </button>
+    <!-- Chat sidebar -->
+    <div class="chat-sidebar" [class.visible]="isChatVisible">
+      <div class="chat-header">
+        <h2>Discussion</h2>
+        <button class="btn-toggle-chat" (click)="toggleChat()">
+          <i class="fas fa-times"></i> <!-- Icône de fermeture -->
         </button>
       </div>
+      <div class="chat-container">
+        <!-- Affichage des erreurs -->
+        <div *ngIf="chatError" class="chat-error-message">
+          <i class="fas fa-exclamation-circle"></i> {{ chatError }}
+        </div>
+
+        <!-- Conteneur des messages -->
+        <div class="chat-messages" #chatMessagesContainer>
+          <div *ngIf="chatMessages.length === 0" class="no-messages">
+            Aucun message pour le moment.
+          </div>
+          <!-- Boucle sur les messages réels -->
+          <div *ngFor="let msg of chatMessages" class="chat-message" [ngClass]="{ 'my-message': msg.isMe, 'other-message': !msg.isMe }">
+             <div class="message-bubble">
+                <div class="message-sender" *ngIf="!msg.isMe">{{ msg.senderName || 'Manager' }}</div>
+                <div class="message-content">{{ msg.message }}</div>
+                <div class="message-timestamp">{{ msg.timestamp | date:'dd/MM HH:mm' }}</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Zone de saisie -->
+        <div class="chat-input">
+          <textarea 
+            [(ngModel)]="newChatMessage" 
+            placeholder="Écrivez votre message ici..." 
+            (keydown.enter)="sendChatMessage(); $event.preventDefault()" 
+            rows="3"></textarea>
+          <button class="btn-send" (click)="sendChatMessage()" [disabled]="!newChatMessage.trim()">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
     </div>
+
   </div>
 </div>
+

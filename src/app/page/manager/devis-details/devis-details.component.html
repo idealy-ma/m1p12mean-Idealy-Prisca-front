@@ -507,11 +507,11 @@
           </div>
           <button 
             class="btn-send" 
-            (click)="sendToClient()"
+            (click)="saveDevis()"
             [disabled]="isSending || devis.status !== 'en_attente'"
           >
             <span *ngIf="!isSending">
-              <i class="fas fa-paper-plane me-2"></i> Envoyer au client
+              <i class="fas fa-paper-plane me-2"></i> Enregistrer les modifications
             </span>
             <span *ngIf="isSending">Envoi en cours...</span>
           </button>
@@ -529,23 +529,34 @@
       <div class="chat-header">
         <h2>Discussion</h2>
         <button class="btn-toggle-chat" (click)="toggleChat()">
-          <i class="fas" [ngClass]="{'fa-chevron-right': !isChatVisible, 'fa-chevron-left': isChatVisible}"></i>
+          <i class="fas fa-times"></i>
         </button>
       </div>
       <div class="chat-container">
-        <div class="chat-messages">
-          <div class="message client" *ngFor="let message of mockMessages">
-            <div class="message-content">
-              {{ message.contenu }}
-            </div>
-            <div class="message-info">
-              <span class="message-time">{{ message.date | date:'HH:mm' }}</span>
+        <div *ngIf="chatError" class="chat-error-message">
+          <i class="fas fa-exclamation-circle"></i> {{ chatError }}
+        </div>
+
+        <div class="chat-messages" #chatMessagesContainer>
+          <div *ngIf="chatMessages.length === 0" class="no-messages">
+            Aucun message pour le moment.
+          </div>
+          <div *ngFor="let msg of chatMessages" class="chat-message" [ngClass]="{ 'my-message': msg.isMe, 'other-message': !msg.isMe }">
+            <div class="message-bubble">
+                <div class="message-sender" *ngIf="!msg.isMe">{{ msg.senderName || 'Interlocuteur' }}</div>
+                <div class="message-content">{{ msg.message }}</div>
+                <div class="message-timestamp">{{ msg.timestamp | date:'dd/MM HH:mm' }}</div>
             </div>
           </div>
         </div>
+        
         <div class="chat-input">
-          <textarea placeholder="Écrivez votre message..."></textarea>
-          <button class="btn-send">
+          <textarea 
+            [(ngModel)]="newChatMessage" 
+            placeholder="Écrivez votre message ici..." 
+            (keydown.enter)="sendChatMessage(); $event.preventDefault()" 
+            rows="3"></textarea>
+          <button class="btn-send" (click)="sendChatMessage()" [disabled]="!newChatMessage.trim()">
             <i class="fas fa-paper-plane"></i>
           </button>
         </div>

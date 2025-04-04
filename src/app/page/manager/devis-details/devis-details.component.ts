@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DevisService } from '../../../services/devis/devis.service';
 import { MecanicienService, Mecanicien } from '../../../services/mecanicien/mecanicien.service';
@@ -6,6 +6,8 @@ import { Devis, DevisItem, ServiceChoisi, PackChoisi } from '../../../models/dev
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Mecanicien as MecanicienModel } from '../../../models/mecanicien.model';
 import { Mecanicien as MecanicienServiceModel } from '../../../services/mecanicien/mecanicien.service';
+import { ChatService, ChatMessage } from '../../../services/chat/chat.service';
+import { Subscription } from 'rxjs';
 
 // Définir l'interface pour les données à envoyer
 interface FinaliserDevisData {
@@ -42,18 +44,20 @@ interface Service {
   prix: number;
 }
 
-interface Message {
-  contenu: string;
-  date: Date;
-  type: 'client' | 'manager';
-}
-
 @Component({
   selector: 'app-devis-details',
   templateUrl: './devis-details.component.html',
   styleUrls: ['./devis-details.component.css']
 })
-export class DevisDetailsComponent implements OnInit {
+export class DevisDetailsComponent implements OnInit, OnDestroy, AfterViewChecked {
+  @ViewChild('chatMessagesContainer') private chatMessagesContainer: ElementRef | undefined;
+  chatMessages: ChatMessage[] = [];
+  newChatMessage: string = '';
+  chatError: string | null = null;
+  private chatSubscription: Subscription | undefined;
+  private errorSubscription: Subscription | undefined;
+  private devisId: string | null = null;
+
   devis: Devis | null = null;
   loading: boolean = true;
   error: string | null = null;
@@ -78,16 +82,7 @@ export class DevisDetailsComponent implements OnInit {
   // Remplacer mockMecaniciens par mecaniciens
   mecaniciens: MecanicienServiceModel[] = [];
 
-  mockMessages: Message[] = [
-    { contenu: 'Bonjour, j\'ai un problème avec mes freins qui font un bruit étrange.', date: new Date('2024-03-20T10:30:00'), type: 'client' },
-    { contenu: 'Bonjour, je vais examiner votre véhicule et vous faire un devis détaillé.', date: new Date('2024-03-20T10:35:00'), type: 'manager' },
-    { contenu: 'D\'accord, merci. Pouvez-vous me dire approximativement combien de temps ça va prendre ?', date: new Date('2024-03-20T10:40:00'), type: 'client' }
-  ];
-
-  // Propriété pour suivre l'élément en cours d'édition
   editingItemIndex: number | null = null;
-
-  // Propriétés pour gérer le mécanicien sélectionné et son taux horaire
   selectedMecanicienId: string | null = null;
   originalHourlyRate: number = 0;
   hourlyRateDiff: number = 0;
@@ -97,7 +92,8 @@ export class DevisDetailsComponent implements OnInit {
     private router: Router,
     private devisService: DevisService,
     private mecanicienService: MecanicienService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private chatService: ChatService
   ) {
     this.elementsForm = this.fb.group({
       elements: this.fb.array([])
@@ -109,10 +105,70 @@ export class DevisDetailsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.loadDevisDetails(id);
+    this.devisId = this.route.snapshot.paramMap.get('id');
+    if (this.devisId) {
+      this.loadDevisDetails(this.devisId);
+      this.setupChat(this.devisId);
+    } else {
+      this.error = "ID de devis manquant dans l'URL.";
+      this.loading = false;
     }
+  }
+
+  ngOnDestroy(): void {
+    this.chatSubscription?.unsubscribe();
+    this.errorSubscription?.unsubscribe();
+    this.chatService.disconnect();
+  }
+  
+  ngAfterViewChecked(): void {
+    this.scrollToBottom();
+  }
+
+  setupChat(devisId: string): void {
+    this.chatService.connect(devisId);
+
+    this.chatService.loadInitialMessages(devisId).subscribe({
+      next: (messages) => {
+        this.chatMessages = messages;
+        this.chatError = null;
+        this.scrollToBottom();
+      },
+      error: (err) => {
+        console.error("Erreur chargement historique chat:", err);
+        this.chatError = "Impossible de charger l'historique du chat.";
+      }
+    });
+
+    this.chatSubscription = this.chatService.getMessages().subscribe((message) => {
+      this.chatMessages.push(message);
+      this.scrollToBottom();
+    });
+
+    this.errorSubscription = this.chatService.chatError$.subscribe(errorMsg => {
+      this.chatError = errorMsg;
+      console.error('Erreur ChatService:', errorMsg);
+    });
+  }
+
+  sendChatMessage(): void {
+    if (this.newChatMessage.trim() && this.devisId) {
+      this.chatService.sendMessage(this.devisId, this.newChatMessage.trim());
+      this.newChatMessage = '';
+      this.chatError = null;
+    } else if (!this.devisId) {
+        this.chatError = "Impossible d'envoyer : ID du devis inconnu.";
+    }
+  }
+  
+  private scrollToBottom(): void {
+    try {
+        if (this.chatMessagesContainer) {
+           this.chatMessagesContainer.nativeElement.scrollTop = this.chatMessagesContainer.nativeElement.scrollHeight;
+        }
+    } catch(err) { 
+        console.error("Erreur lors du défilement du chat:", err);
+    }                 
   }
 
   // Getters pour accéder facilement au FormArray
@@ -331,108 +387,6 @@ export class DevisDetailsComponent implements OnInit {
 
   toggleChat(): void {
     this.isChatVisible = !this.isChatVisible;
-  }
-
-  sendToClient(): void {
-    if (!this.devis || !this.devis._id) {
-      this.error = "Impossible d'envoyer le devis, identifiant manquant";
-      return;
-    }
-    
-    this.isSending = true;
-    
-    // Préparer les données selon le nouveau format attendu
-    const devisData: FinaliserDevisData = {
-      services: [],
-      packs: [],
-      lignesSupplementaires: [],
-      mecaniciens: [],
-      dateIntervention: this.devis.preferredDate || new Date()
-    };
-
-    // Récupérer uniquement les nouvelles lignes (celles qui ne sont pas préselection)
-    const todoItems = this.todoItemsArray.getRawValue();
-    todoItems.forEach(item => {
-      if (item.type === 'service') {
-        const serviceId = item._id || item.nom;
-        if (serviceId) {
-          devisData.services.push({
-            service: serviceId,
-            prix: item.prixUnitaire,
-            note: item.note
-          });
-        }
-      } else if (item.type === 'pack') {
-        // CORRECTION: Utiliser l'ID du pack (probablement stocké dans item.nom via le select)
-        const packId = item._id; // Assumons que le select met l'ID dans 'nom'
-        if (packId) { // N'ajouter que si on a un ID (et non pas 'undefined' ou chaine vide)
-          devisData.packs.push({
-            servicePack: packId,
-            prix: item.prixUnitaire // Le prix est défini par le manager
-            // note: pas de note pour les packs dans le modèle backend
-          });
-        }
-      } else if (item.type === 'main_oeuvre') {
-        // Ajouter le mécanicien UNE SEULE FOIS ici
-        if (item.mecanicienId) { // S'assurer qu'un mécanicien est sélectionné
-          devisData.mecaniciens.push({
-            mecanicien: item.mecanicienId,
-            heureDeTravail: item.quantite // Utiliser quantite comme heureDeTravail
-          });
-        }
-      } else { // Autres types (piece, autre...)
-        devisData.lignesSupplementaires.push({
-          nom: item.nom,
-          prix: item.prixUnitaire, // Utiliser prixUnitaire
-          quantite: item.quantite,
-          type: item.type // Assurer que le type est bien envoyé
-        });
-      }
-    });
-
-    // Appeler le service pour envoyer le devis au client
-    this.devisService.sendDevisToClient(this.devis._id, devisData).subscribe({
-      next: (response: any) => {
-        if (response && response.success) {
-          console.log(response);
-          
-          // Mettre à jour uniquement le statut du devis
-          if (this.devis) {
-            this.devis.status = response.devis.status;
-          }
-          
-          // Afficher un message de succès léger
-          const successMessage = document.createElement('div');
-          successMessage.className = 'success-message';
-          successMessage.textContent = 'Devis envoyé avec succès!';
-          document.body.appendChild(successMessage);
-          
-          // Supprimer le message après 3 secondes
-          setTimeout(() => {
-            successMessage.remove();
-          }, 3000);
-        } else {
-          this.error = response?.message || 'Erreur lors de l\'envoi du devis';
-        }
-        this.isSending = false;
-      },
-      error: (error: Error) => {
-        console.error('Erreur lors de l\'envoi du devis', error);
-        this.error = 'Erreur lors de l\'envoi du devis au client';
-        this.isSending = false;
-      }
-    });
-  }
-
-  // Méthode helper pour obtenir le prix d'un pack
-  private getPrixForPack(pack: PackChoisi): number {
-    // Si le pack a déjà un prix défini, l'utiliser
-    if (pack.servicePack.remise) {
-      // Retourner la remise comme prix (à adapter selon votre logique métier)
-      return pack.servicePack.remise;
-    }
-    // Sinon retourner une valeur par défaut
-    return 0; // À adapter selon votre logique métier
   }
 
   goBack(): void {
@@ -1030,38 +984,30 @@ export class DevisDetailsComponent implements OnInit {
 
   // Méthode pour ouvrir le chat avec un message concernant un service présélectionné
   discuterAvecClient(serviceOuPack: any, isPack: boolean = false): void {
-    // Ouvrir le chat s'il n'est pas déjà visible
-    if (!this.isChatVisible) {
-      this.toggleChat();
-    }
+    console.log("Discuter à propos de:", serviceOuPack, "Est-ce un pack?", isPack);
+    // Ouvrir le chat ou mettre en évidence l'élément dans le chat
+    this.isChatVisible = true;
     
-    // Préparer le message en fonction du type d'objet
-    let message: string;
-    
+    let messageText = '';
     if (isPack) {
-      // Pour un pack
-      message = `Je souhaite discuter avec vous concernant le pack "${serviceOuPack.servicePack.name}" que vous avez sélectionné. Avez-vous des questions ou des besoins spécifiques à ce sujet ?`;
+      messageText = `Parlons du pack: ${serviceOuPack.servicePack.name}`;
     } else {
-      // Pour un service
-      message = `Je souhaite discuter avec vous concernant le service "${serviceOuPack.service.name}" que vous avez sélectionné. Avez-vous des questions ou des besoins spécifiques à ce sujet ?`;
+      messageText = `Parlons du service: ${serviceOuPack.service.name}`;
     }
     
-    // Ajouter le message dans le chat
-    const chatMessage = {
-      contenu: message,
-      date: new Date(),
-      type: 'manager' as 'client' | 'manager'
-    };
+    // Créer un message avec la nouvelle interface ChatMessage
+    // const chatMessage: ChatMessage = {
+    //   senderName: 'Système', // Ou 'Manager'
+    //   message: messageText,
+    //   timestamp: new Date(),
+    //   isMe: true // Indique que c'est un message généré localement
+    // };
     
-    this.mockMessages.push(chatMessage);
+    // Commenter l'ajout direct pour l'instant, car sendChatMessage devrait être utilisé
+    // this.chatMessages.push(chatMessage);
     
-    // Faire défiler jusqu'au dernier message
-    setTimeout(() => {
-      const chatContainer = document.querySelector('.chat-messages');
-      if (chatContainer) {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      }
-    }, 100);
+    // Faire défiler jusqu'au dernier message ou à la zone de saisie
+    setTimeout(() => this.scrollToBottom(), 100);
   }
 
   // Gérer le changement de type dans le formulaire d'édition
@@ -1121,11 +1067,9 @@ export class DevisDetailsComponent implements OnInit {
   formatStatus(status: string): string {
     switch (status) {
       case 'en_attente': return 'En attente';
-      case 'envoye': return 'Envoyé';
       case 'accepte': return 'Accepté';
       case 'refuse': return 'Refusé';
-      case 'en_cours': return 'En cours';
-      case 'termine': return 'Terminé';
+      case 'termine': return 'Terminé'; // Assumer que 'termine' existe
       default: return status;
     }
   }
@@ -1163,10 +1107,16 @@ export class DevisDetailsComponent implements OnInit {
     // Récupérer les packs du devis
     if (this.devis.packsChoisis && this.devis.packsChoisis.length > 0) {
       this.devis.packsChoisis.forEach(pack => {
-        devisData.packs.push({
-          servicePack: pack.servicePack._id || '',
-          prix: this.getPrixForPack(pack)
-        });
+        if (pack.servicePack?._id) {
+          // Trouver le FormGroup correspondant dans todoItemsArray (si on veut utiliser son prix)
+          const itemFormGroup = this.todoItemsArray.controls.find(ctrl => ctrl.value._id === pack._id && ctrl.value.type === 'pack');
+          const prix = itemFormGroup ? itemFormGroup.value.prixUnitaire : this.getPrixPack(pack); // Fallback sur ancienne logique si besoin
+
+          devisData.packs.push({
+            servicePack: pack.servicePack._id,
+            prix: prix // Utiliser le prix du FormGroup ou fallback
+          });
+        }
       });
     }
 
