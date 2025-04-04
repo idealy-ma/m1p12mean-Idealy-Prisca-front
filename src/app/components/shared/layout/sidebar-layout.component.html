@@ -2,7 +2,12 @@
   <div class="sidebar-container">
     <ng-content select="[sidebar]"></ng-content>
   </div>
-  <div class="content-area" [ngStyle]="{'margin-left.px': sidebarWidth}">
-    <router-outlet></router-outlet>
+  <div class="main-panel" [ngStyle]="{'margin-left.px': sidebarWidth}">
+    <div class="header-area">
+      <ng-content select="[header-content]"></ng-content>
+    </div>
+    <div class="content-area">
+      <router-outlet></router-outlet>
+    </div>
   </div>
 </div> 
