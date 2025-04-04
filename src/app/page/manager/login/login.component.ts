@@ -9,8 +9,8 @@ import { TokenService } from '../../../services/token/token.service';
   styleUrls: ['./login.component.css']
 })
 export class ManagerLoginComponent implements OnInit {
-  email: string = '';
-  motDePasse: string = '';
+  email: string = 'manager@example.com';
+  motDePasse: string = 'manager';
   errorMessage: string = '';
   isLoading = false;
 
