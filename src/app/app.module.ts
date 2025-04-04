@@ -52,11 +52,14 @@ import { StatistiqueComponent } from './page/manager/statistique/statistique.com
 import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HistoriqueReparationsComponent } from './page/mecanicien/historique-reparations/historique-reparations/historique-reparations.component';
-
+import { NotificationBellComponent } from './components/shared/notification-bell/notification-bell.component';
+import { NotificationListComponent } from './components/shared/notification-list/notification-list.component';
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
+    NotificationBellComponent,
+    NotificationListComponent,
     InscriptionComponent,
     ManagerLoginComponent,
     MecanicienLoginComponent,

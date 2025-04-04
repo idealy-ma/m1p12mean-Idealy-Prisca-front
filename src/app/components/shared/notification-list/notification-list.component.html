@@ -1,0 +1,47 @@
+<div class="notification-list-wrapper">
+    <div class="list-header">
+        <h4>Notifications</h4>
+        <button class="btn-mark-all" (click)="markAllAsRead()" [disabled]="(notificationService.unreadCount$ | async) === 0">Tout marquer comme lu</button>
+    </div>
+    <div *ngIf="error$ | async as errorMsg" class="list-error">{{ errorMsg }}</div>
+    <div class="list-content">
+    <ng-container *ngIf="notifications$ | async as notifications; else loadingOrEmpty">
+        <div *ngIf="notifications.length > 0; else loadingOrEmpty">
+            <div 
+            *ngFor="let notification of notifications; trackBy: trackById" 
+            class="notification-item" 
+            [class.unread]="!notification.isRead"
+            (click)="onNotificationClick(notification)">
+                
+            <div class="notification-icon">
+                <i class="fas" [ngClass]="getIconClass(notification.type)"></i>
+            </div>
+            <div class="notification-details">
+                <div class="notification-message">{{ notification.message }}</div>
+            <div class="notification-date">{{ notification.createdAt | date:'dd/MM HH:mm' }}</div>
+            </div>
+            <div class="unread-indicator" *ngIf="!notification.isRead"></div>
+        </div>
+        
+        <!-- Bouton Charger plus -->
+        <div class="load-more-container" *ngIf="currentPage < totalPages">
+            <button class="btn-load-more" (click)="loadMore()" [disabled]="isLoading$ | async">
+                {{ (isLoading$ | async) ? 'Chargement...' : 'Charger plus' }}
+            </button>
+        </div>
+      
+    </div>
+  </ng-container>
+  <ng-template #loadingOrEmpty>
+    <div *ngIf="!(isLoading$ | async) && (notifications$ | async)?.length === 0" class="empty-list">
+      <i class="fas fa-bell-slash"></i>
+      <p>Aucune notification pour le moment.</p>
+    </div>
+    <div *ngIf="isLoading$ | async" class="loading-indicator">
+       <div class="spinner-border spinner-border-sm" role="status">
+          <span class="visually-hidden">Chargement...</span>
+       </div>
+    </div>
+  </ng-template>
+</div>
+</div> 

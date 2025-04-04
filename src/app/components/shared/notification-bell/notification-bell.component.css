@@ -1,0 +1,44 @@
+.notification-bell-container {
+  position: relative;
+  display: inline-block; /* Ou block selon votre layout */
+}
+
+.bell-button {
+  background: none;
+  border: none;
+  color: inherit; /* Hériter la couleur du texte du parent (ex: header) */
+  font-size: 1.5rem; /* Taille de l'icône */
+  cursor: pointer;
+  position: relative;
+  padding: 5px; /* Un peu d'espace autour */
+}
+
+.badge {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  line-height: 1;
+  min-width: 18px; /* Assurer une taille minimale */
+  text-align: center;
+  border: 1px solid white; /* Petite bordure pour détacher */
+}
+
+/* Style pour cacher le badge quand le compte est 0 */
+.badge[hidden] {
+  display: none;
+}
+
+/* Positionnement de la liste (sera dans app-notification-list) */
+app-notification-list {
+  position: absolute;
+  top: 100%; /* Juste en dessous de la cloche */
+  right: 0; /* Aligné à droite */
+  z-index: 1050; /* Au-dessus de la plupart des éléments */
+  margin-top: 5px; /* Petit espace */
+} 
