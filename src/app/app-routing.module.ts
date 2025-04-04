@@ -43,6 +43,7 @@ import { ManagerReparationDetailsComponent } from './page/manager/reparations/ma
 // Importer le nouveau composant de liste
 import { ManagerReparationsListComponent } from './page/manager/reparations/manager-reparations-list/manager-reparations-list.component';
 import { HistoriqueReparationsComponent } from './page/mecanicien/historique-reparations/historique-reparations/historique-reparations.component';
+import { StatistiqueComponent } from './page/manager/statistique/statistique.component';
 
 const routes: Routes = [
   // Landing page (page principale)
@@ -100,6 +101,7 @@ const routes: Routes = [
       { path: 'profil', component: UserProfileComponent },
       { path: 'factures', component: ManagerFacturesListComponent },
       { path: 'factures/:id', component: ManagerFactureDetailsComponent },
+      { path: 'statistiques', component: StatistiqueComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },

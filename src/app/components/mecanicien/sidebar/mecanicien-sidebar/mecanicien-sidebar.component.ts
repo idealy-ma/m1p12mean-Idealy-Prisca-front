@@ -29,8 +29,6 @@ export class MecanicienSidebarComponent implements OnInit {
       this.activeRoute = 'dashboard';
     } else if (url.includes('/mecanicien/reparations')) {
       this.activeRoute = 'reparations';
-    } else if (url.includes('/mecanicien/taches')) {
-      this.activeRoute = 'taches';
     } else if (url.includes('/mecanicien/historique')) {
       this.activeRoute = 'historique';
     } else if (url.includes('/mecanicien/profil')) {
