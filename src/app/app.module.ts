@@ -48,6 +48,9 @@ import { ClientFacturesListComponent } from './page/client/factures-list/client-
 import { ClientFactureDetailsComponent } from './page/client/facture-details/client-facture-details/client-facture-details.component';
 import { ManagerReparationDetailsComponent } from './page/manager/reparations/manager-reparation-details/manager-reparation-details.component';
 import { ManagerReparationsListComponent } from './page/manager/reparations/manager-reparations-list/manager-reparations-list.component';
+import { StatistiqueComponent } from './page/manager/statistique/statistique.component';
+import { NgxChartsModule } from '@swimlane/ngx-charts';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HistoriqueReparationsComponent } from './page/mecanicien/historique-reparations/historique-reparations/historique-reparations.component';
 
 @NgModule({
@@ -93,7 +96,8 @@ import { HistoriqueReparationsComponent } from './page/mecanicien/historique-rep
     ClientFactureDetailsComponent,
     ManagerReparationDetailsComponent,
     ManagerReparationsListComponent,
-    HistoriqueReparationsComponent
+    HistoriqueReparationsComponent,
+    StatistiqueComponent
   ],
   imports: [
     BrowserModule,
@@ -101,7 +105,9 @@ import { HistoriqueReparationsComponent } from './page/mecanicien/historique-rep
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
-    CommonModule
+    CommonModule,
+    NgxChartsModule,
+    BrowserAnimationsModule
   ],
   providers: [
     {

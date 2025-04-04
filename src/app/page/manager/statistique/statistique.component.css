@@ -1,0 +1,185 @@
+/* ==========================================
+   Styles Généraux
+   ========================================== */
+.page-title {
+  margin-bottom: 1.5rem;
+  color: var(--dark-color, #333);
+  font-weight: 600;
+  font-size: 1.8rem;
+}
+
+/* ==========================================
+   Indicateur de Chargement & Erreur
+   (Inspiré de manager-reparations-list)
+   ========================================== */
+.loading-indicator {
+  text-align: center;
+  padding: 40px;
+  color: #555;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db; /* Blue from manager list */
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  color: #dc3545; /* Bootstrap danger color */
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.error-message i {
+  margin-right: 8px;
+}
+
+
+/* ==========================================
+   Section Filtres
+   (Inspiré de manager-reparations-list)
+   ========================================== */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f8f9fa; /* Light background */
+  border-radius: 4px;
+  align-items: flex-end; /* Aligner les groupes en bas */
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px; /* Espace entre label et input */
+}
+
+.filter-group label {
+  margin-bottom: 0; /* Annuler marge Bootstrap */
+  font-size: 0.9em;
+  color: #555;
+}
+
+.filter-group input[type="date"] {
+  padding: 8px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  min-width: 150px; /* Largeur minimale */
+  max-width: 180px; /* Limiter largeur */
+}
+
+/* Pas de filter-actions pour l'instant */
+
+/* ==========================================
+   Cartes KPI
+   (Styles spécifiques pour les stats)
+   ========================================== */
+.kpi-card { 
+  border: 1px solid #e0e6ed; /* Ajouter une bordure légère */
+  height: 100%; 
+}
+
+.kpi-card .card-body {
+  padding: 1.5rem 1rem;
+}
+
+.kpi-card .card-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+}
+
+.kpi-card .kpi-value {
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+}
+
+.kpi-card .kpi-subtext {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+/* Couleurs KPI (réutiliser celles déjà définies) */
+.kpi-card .text-success { color: var(--success-color, #198754) !important; }
+/* Utiliser la couleur primaire définie ailleurs ou une couleur spécifique */
+.kpi-card .text-primary { color: var(--primary-color, #007bff) !important; } /* Utilisation du bleu comme dans manager-list? */
+
+/* ==========================================
+   Graphiques (ngx-charts)
+   (Styles spécifiques pour les stats)
+   ========================================== */
+.chart-card {
+  height: 100%;
+  border: 1px solid #e0e6ed; /* Ajouter une bordure légère */
+}
+
+.chart-card .card-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chart-card .card-title {
+   font-size: 1.1rem;
+   font-weight: 500;
+   margin-bottom: 1rem;
+   color: #495057;
+}
+
+.chart-container {
+  flex-grow: 1;
+  min-height: 350px;
+}
+
+.no-data-message {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  min-height: 200px;
+}
+
+.kpi-container {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
+/* Optionnel: Tooltips ngx-charts */
+/*
+:host ::ng-deep .ngx-charts-tooltip-content {
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+}
+*/
+
+/* ==========================================
+   Responsive (Optionnel)
+   ========================================== */
+@media (max-width: 768px) {
+    .filter-bar {
+        align-items: stretch; /* Étirer les groupes sur mobile */
+    }
+    .filter-group input[type="date"] {
+        min-width: 120px; /* Réduire largeur min date sur mobile */
+    }
+}

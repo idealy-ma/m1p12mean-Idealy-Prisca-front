@@ -1,0 +1,130 @@
+<div class="container-fluid mt-4">
+  <h1 class="page-title">Statistiques Manager</h1>
+
+  <!-- Section Filtres Date (Style manager-reparations-list) -->
+  <div class="filter-bar"> 
+    <div class="filter-group">
+      <label for="dateDebut">Du:</label>
+      <input type="date" id="dateDebut" 
+             [(ngModel)]="dateDebut" (ngModelChange)="onDateChange()">
+    </div>
+    <div class="filter-group">
+      <label for="dateFin">Au:</label>
+      <input type="date" id="dateFin" 
+             [(ngModel)]="dateFin" (ngModelChange)="onDateChange()">
+    </div>
+    <!-- Espace pour d'autres filtres ou actions si besoin -->
+  </div>
+
+  <!-- Indicateur de Chargement -->
+  <div *ngIf="isLoading" class="loading-indicator"> <!-- Classe de référence -->
+    <div class="spinner"></div> <!-- Classe de référence -->
+    <p>Chargement des statistiques...</p>
+  </div>
+
+  <!-- Affichage d'Erreur -->
+  <div *ngIf="error && !isLoading" class="error-message"> <!-- Classe de référence -->
+    <p><i class="fas fa-exclamation-triangle"></i> {{ error }}</p>
+  </div>
+
+  <!-- Contenu Principal (KPIs & Graphiques) -->
+  <div *ngIf="!isLoading && !error">
+
+    <!-- Ligne de KPIs -->
+    <div class="row mb-4 g-3 kpi-container">
+      <!-- KPI CA Total -->
+      <div class="col-md-6 col-lg-4">
+        <!-- Ajouter classe kpi-card si des styles spécifiques sont créés -->
+        <div class="card text-center shadow-sm h-100 kpi-card"> 
+          <div class="card-body">
+            <h5 class="card-title text-muted">Chiffre d'Affaires Total</h5>
+            <p class="card-text display-6 fw-bold text-success kpi-value">
+              {{ caTotalData?.totalCA | currency:'EUR':'symbol':'1.2-2' }}
+            </p>
+            <p class="card-text small text-muted mt-2">
+              Montant total TTC des factures (non annulées) émises sur la période sélectionnée.
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- KPI Taux Acceptation Devis -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card text-center shadow-sm h-100 kpi-card">
+          <div class="card-body">
+            <h5 class="card-title text-muted">Taux d'Acceptation Devis</h5>
+            <p class="card-text display-6 fw-bold text-primary kpi-value">
+              {{ statutsDevisDataRaw?.tauxAcceptation | number:'1.1-1' }} %
+            </p>
+             <small class="text-muted kpi-subtext">({{ statutsDevisDataRaw?.devisAcceptes }} / {{ statutsDevisDataRaw?.totalDevis }} devis)</small>
+             <p class="card-text small text-muted mt-2">
+              Pourcentage des devis créés sur la période qui ont été acceptés par les clients.
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- Autres KPIs possibles -->
+    </div>
+
+    <!-- Ligne des Graphiques -->
+    <div class="row g-3">
+      <!-- Graphique CA par Type -->
+      <div class="col-lg-6 .kpi-container">
+        <!-- Ajouter classe chart-card si des styles spécifiques sont créés -->
+        <div class="card shadow-sm h-100 chart-card">
+          <div class="card-body">
+            <h5 class="card-title text-center mb-1">Répartition du CA par Type</h5>
+            <p class="card-subtitle mb-3 text-muted small text-center">
+              Basé sur le type des lignes des factures émises (non annulées) sur la période.
+            </p>
+            <!-- Utiliser classe chart-container -->
+            <div class="chart-container" *ngIf="caParTypeChartData.length > 0; else noCaTypeData">
+              <ngx-charts-pie-chart
+                [results]="caParTypeChartData"
+                [scheme]="caParTypeColorScheme"
+                [labels]="showChartLabels"
+                [doughnut]="doughnut"
+                [explodeSlices]="explodeSlices"
+                (select)="onSelect($event)">
+              </ngx-charts-pie-chart>
+            </div>
+            <ng-template #noCaTypeData>
+               <!-- Utiliser classe no-data-message -->
+              <div class="no-data-message">
+                 <p>Aucune donnée de chiffre d'affaires par type pour cette période.</p>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graphique Statuts Devis -->
+      <div class="col-lg-6">
+         <div class="card shadow-sm h-100 chart-card">
+          <div class="card-body">
+            <h5 class="card-title text-center mb-1">Répartition des Statuts de Devis</h5>
+             <p class="card-subtitle mb-3 text-muted small text-center">
+               Basé sur le statut des devis créés sur la période.
+             </p>
+             <div class="chart-container" *ngIf="statutsDevisChartData.length > 0; else noDevisStatusData">
+              <ngx-charts-pie-chart
+                [results]="statutsDevisChartData"
+                [scheme]="devisColorScheme"
+                [labels]="showChartLabels"
+                [doughnut]="doughnut"
+                [explodeSlices]="explodeSlices"
+                (select)="onSelect($event)">
+              </ngx-charts-pie-chart>
+            </div>
+             <ng-template #noDevisStatusData>
+              <div class="no-data-message">
+                <p>Aucune donnée de statut de devis pour cette période.</p>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- Fin Contenu Principal -->
+
+</div>
