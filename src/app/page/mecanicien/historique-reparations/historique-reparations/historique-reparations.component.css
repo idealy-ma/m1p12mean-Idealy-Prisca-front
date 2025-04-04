@@ -1,0 +1,483 @@
+/* Style pour le titre de la page */
+.page-title {
+  margin-bottom: 1.5rem; /* Ajouter un peu d'espace sous le titre */
+  color: #333; /* Couleur de texte un peu plus foncée */
+  font-weight: 600;
+}
+
+/* Améliorer l'apparence des en-têtes de tableau triables */
+thead th[style*="cursor: pointer"] {
+  user-select: none; /* Empêcher la sélection de texte sur clic */
+  transition: background-color 0.2s ease-in-out; /* Effet de survol doux */
+}
+
+thead th[style*="cursor: pointer"]:hover {
+  background-color: rgba(0, 0, 0, 0.05); /* Léger fond au survol */
+}
+
+/* Assurer que les icônes FontAwesome sont bien alignées verticalement */
+thead th i {
+  vertical-align: middle;
+}
+
+/* Ajustement mineur pour le conteneur de pagination */
+.pagination {
+  margin-top: 0; /* Retirer la marge supérieure par défaut si nécessaire */
+}
+
+/* Style pour le badge du statut (optionnel, Bootstrap gère déjà bien) */
+.badge {
+  font-size: 0.8rem; /* Ajuster la taille de police si besoin */
+  padding: 0.4em 0.6em; /* Ajuster le padding si besoin */
+}
+
+/* Pour s'assurer que la table prend bien la largeur */
+.table-responsive {
+    overflow-x: auto; /* Assure le défilement horizontal sur petits écrans */
+}
+
+/* --- Styles Globaux Inspirés --- */
+.list-container { /* Utiliser un nom différent de .reparations-container */
+  padding: 30px;
+  max-width: 1400px;
+  margin: 20px auto;
+}
+
+.list-header { /* Utiliser un nom différent de .header */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between; /* Garder pour le titre vs. potentiels futurs filtres */
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 20px;
+}
+
+.list-header h1 { /* Renommé de .header h1 */
+  margin: 0;
+  color: var(--dark-color, #333); /* Utiliser variable globale ou fallback */
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+/* --- Styles pour le Chargement et Erreurs (similaires) --- */
+.loading,
+.error,
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary-color, #e63946); /* Utiliser variable globale ou fallback */
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 15px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error p, .error-message { /* Classe pour le message d'erreur */
+  color: var(--error-color, #dc3545); /* Utiliser variable globale ou fallback */
+  font-weight: 500;
+  background-color: rgba(220, 53, 69, 0.1); /* Léger fond rouge */
+  border: 1px solid var(--error-color, #dc3545);
+  border-radius: 6px;
+  padding: 15px;
+  text-align: left; /* Plus lisible pour un message */
+}
+.error-message i {
+    margin-right: 8px;
+}
+
+.no-results p {
+    background-color: rgba(0, 123, 255, 0.05); /* Léger fond bleu */
+    border: 1px solid #b8daff;
+    color: #004085;
+    border-radius: 6px;
+    padding: 15px;
+    text-align: left; /* Plus lisible */
+}
+.no-results i {
+    margin-right: 8px;
+}
+
+
+/* --- Styles pour le Tableau (Inspirés de Bootstrap mais customisés) --- */
+.table-container { /* Ajouté pour ombre et bordure */
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e6ed; /* Subtle border */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06); /* Softer shadow */
+  overflow: hidden; /* Important pour le border-radius sur la table */
+  margin-bottom: 30px; /* Espace avant la pagination */
+}
+
+.table {
+  margin-bottom: 0; /* La marge est sur le conteneur */
+  border-collapse: collapse; /* Assurer que les bordures se touchent */
+  width: 100%;
+}
+
+.table thead th {
+  background-color: #f8f9fa; /* Gris très clair pour l'en-tête */
+  border-bottom: 2px solid #dee2e6; /* Ligne plus épaisse sous l'en-tête */
+  color: #495057; /* Gris foncé pour texte d'en-tête */
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 15px; /* Ajuster padding */
+  vertical-align: middle;
+}
+
+.table tbody td {
+  padding: 12px 15px; /* Cohérent avec l'en-tête */
+  border-top: 1px solid #e0e6ed; /* Ligne subtile entre les lignes */
+  vertical-align: middle;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.02); /* Très léger fond au survol */
+}
+
+/* En-têtes triables (repris et ajusté) */
+.table thead th[style*="cursor: pointer"] {
+  user-select: none;
+  transition: color 0.2s ease-in-out;
+}
+
+.table thead th[style*="cursor: pointer"]:hover {
+  color: var(--primary-color, #e63946); /* Change couleur texte au survol */
+}
+
+.table thead th i {
+  vertical-align: middle;
+  margin-left: 5px;
+  font-size: 0.8em; /* Icône un peu plus petite */
+  color: #adb5bd; /* Icône grise par défaut */
+  transition: color 0.2s ease-in-out;
+}
+.table thead th[style*="cursor: pointer"]:hover i {
+  color: var(--primary-color, #e63946); /* Icône devient rouge au survol */
+}
+.table thead th .fa-sort-up,
+.table thead th .fa-sort-down {
+    color: var(--primary-color, #e63946); /* Icône active est rouge */
+}
+
+/* Statut Badge (Inspiré de reparations-list) */
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  display: inline-block; /* Assurer que le badge prend la taille du texte */
+}
+
+/* Copier les couleurs des badges depuis reparations-list */
+.status-Terminée, .status-Facturée { background-color: #d4edda; color: #155724; border-color: var(--success-color, #28a745); }
+.status-Annulée               { background-color: #f8d7da; color: #721c24; border-color: var(--error-color, #dc3545); }
+.status-Planifiée             { background-color: #d1ecf1; color: #0c5460; border-color: #bee5eb; } /* Info-like */
+.status-En\.attente\.pièces     { background-color: #ffeeba; color: #856404; border-color: #ffe8a1; } /* Warning-like */
+.status-En\.cours              { background-color: #cce5ff; color: #004085; border-color: #b8daff; } /* Primary-like blue */
+.status-unknown               { background-color: #e2e3e5; color: #383d41; border-color: #d6d8db; }
+
+/* Pour les statuts contenant des espaces, échapper les caractères spéciaux ou utiliser une fonction TS */
+
+/* Bouton Détails (Inspiré) */
+.btn-details { /* Classe spécifique pour le bouton */
+  padding: 6px 12px; /* Plus petit que les boutons de pagination */
+  border-radius: 6px;
+  font-size: 0.8rem; /* Plus petit */
+  font-weight: 500;
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  border: 1px solid var(--primary-color, #e63946);
+  background-color: white;
+  color: var(--primary-color, #e63946);
+}
+
+.btn-details:hover {
+  transform: translateY(-1px);
+  background-color: var(--primary-color, #e63946);
+  color: white;
+  box-shadow: 0 2px 5px rgba(230, 57, 70, 0.2);
+}
+.btn-details i {
+    margin-right: 4px;
+}
+
+
+/* --- Styles Pagination (Repris de reparations-list) --- */
+.pagination-container { /* Ajouté pour centrer et espacer */
+    display: flex;
+    justify-content: space-between; /* Pour "Page X sur Y" vs boutons */
+    align-items: center;
+    margin-top: 20px; /* Réduire l'espace */
+    padding: 10px 0;
+    flex-wrap: wrap; /* Pour petits écrans */
+    gap: 15px;
+}
+
+.pagination-info {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.pagination-controls { /* Nouveau conteneur pour les boutons */
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.pagination-button {
+  background-color: white;
+  border: 1px solid #dee2e6;
+  color: #555;
+  padding: 8px 12px;
+  margin: 0 3px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.pagination-button.arrow {
+  padding: 8px 10px;
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f8f9fa;
+}
+
+.pagination-button:not(:disabled):hover {
+  background-color: #f1f4f6;
+  border-color: #cdd5e0;
+}
+
+.pagination-button.active { /* Devrait s'appliquer au numéro de page actif si implémenté */
+  background-color: var(--primary-color, #e63946);
+  border-color: var(--primary-color, #e63946);
+  color: white;
+  font-weight: 600;
+}
+
+.pagination-ellipsis {
+  padding: 8px 5px;
+  color: #6c757d;
+}
+
+/* --- Responsive (Optionnel, mais bonne pratique) --- */
+@media (max-width: 768px) {
+  .list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .list-header h1 {
+      text-align: center;
+      margin-bottom: 15px;
+  }
+  .pagination-container {
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+  }
+  .pagination-controls {
+      justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+    .table thead {
+        display: none; /* Cacher l'en-tête sur très petits écrans */
+    }
+    .table tbody tr {
+        display: block;
+        margin-bottom: 15px;
+        border: 1px solid #e0e6ed;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+     .table tbody td {
+        display: block;
+        text-align: right; /* Aligner le contenu à droite */
+        padding-left: 50%; /* Espace pour le label */
+        position: relative;
+        border: none; /* Retirer bordures internes */
+        border-bottom: 1px solid #f1f4f6; /* Ligne légère entre 'cellules' */
+    }
+    .table tbody td:last-child {
+        border-bottom: none; /* Pas de bordure pour la dernière */
+    }
+    .table tbody td::before {
+        content: attr(data-label); /* Utiliser l'attribut data-label */
+        position: absolute;
+        left: 15px;
+        width: calc(50% - 30px); /* Ajuster largeur label */
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left; /* Aligner le label à gauche */
+        font-weight: 600;
+        color: #495057;
+    }
+    /* Ajuster le padding du bouton détails pour mobile */
+    .table tbody td:last-child {
+        padding-top: 15px;
+        padding-bottom: 15px;
+    }
+    .btn-details {
+        width: auto; /* Ou width: 100% si on veut pleine largeur */
+        display: inline-block;
+    }
+}
+
+/* --- Styles Filtres (Inspirés de reparations-list + Flexbox) --- */
+.filters {
+  /* Le HTML utilise déjà mb-4 p-3 bg-light border rounded shadow-sm */
+  display: flex;
+  flex-wrap: wrap; /* Permettre le passage à la ligne sur petits écrans */
+  align-items: center; /* Aligner verticalement les éléments */
+  gap: 15px; /* Espacement entre les éléments */
+  margin-bottom: 15px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Ne plus forcer width: 100% */
+}
+
+.filter-group label {
+  font-size: 0.9rem;
+  color: #555;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-bottom: 0; /* Annuler marge par défaut si présente */
+}
+
+/* Style de base pour les inputs (inchangé) */
+.filter-group input[type="date"],
+.search-input {
+  padding: 10px 15px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: white;
+  color: var(--dark-color, #333);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  height: auto; 
+  line-height: normal;
+}
+
+/* Focus pour inputs (inchangé) */
+.filter-group input[type="date"]:focus,
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #e63946);
+  box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.2);
+}
+
+.search-box {
+  /* display: flex; */ /* Déjà un flex-group */
+  /* align-items: center; */ /* Hérité du filter-group */
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-grow: 1; /* Permettre à la recherche de prendre plus de place */
+  min-width: 250px; /* Largeur minimale pour la recherche */
+}
+
+.search-input {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  flex-grow: 1;
+  padding: 10px 15px;
+  min-width: 100px; /* Empêcher d'être trop petit */
+}
+
+.search-input:focus {
+  box-shadow: none;
+  border: none;
+}
+
+.search-button {
+  padding: 10px 15px;
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.search-button:hover {
+  color: var(--primary-color, #e63946);
+}
+.search-button i {
+  font-size: 1rem;
+}
+
+/* Style pour les inputs date pour limiter leur largeur */
+.filter-group input[type="date"] {
+    max-width: 180px; /* Limiter la largeur des champs date */
+}
+
+/* Ajustement bouton Effacer (styles existants) */
+.filters .btn-outline-secondary {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    line-height: 1.1;
+    border-color: #6c757d;
+    color: #6c757d;
+}
+.filters .btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+.filters .btn-outline-secondary i {
+    vertical-align: middle;
+    font-size: 0.9em;
+}
+
+/* Ajustement responsive pour les filtres flex */
+@media (max-width: 992px) { /* Adapter le point de rupture si besoin */
+    .search-box {
+        min-width: 200px; /* Réduire largeur min */
+    }
+}
+
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column; /* Empiler verticalement sur mobile */
+        align-items: stretch; /* Étirer les éléments */
+    }
+    .search-box {
+        min-width: auto; /* Annuler largeur min */
+        order: 1; /* Mettre la recherche en premier */
+    }
+    .filter-group {
+       justify-content: space-between; /* Espace entre label et input date */
+       order: 2; /* Dates après la recherche */
+    }
+    .filters .btn-outline-secondary {
+        order: 3; /* Bouton effacer en dernier */
+        align-self: flex-end; /* Aligner à droite */
+        margin-top: 10px;
+    }
+    /* Styles table mobile existants ... */
+}

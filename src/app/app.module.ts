@@ -48,6 +48,7 @@ import { ClientFacturesListComponent } from './page/client/factures-list/client-
 import { ClientFactureDetailsComponent } from './page/client/facture-details/client-facture-details/client-facture-details.component';
 import { ManagerReparationDetailsComponent } from './page/manager/reparations/manager-reparation-details/manager-reparation-details.component';
 import { ManagerReparationsListComponent } from './page/manager/reparations/manager-reparations-list/manager-reparations-list.component';
+import { HistoriqueReparationsComponent } from './page/mecanicien/historique-reparations/historique-reparations/historique-reparations.component';
 
 @NgModule({
   declarations: [
@@ -91,7 +92,8 @@ import { ManagerReparationsListComponent } from './page/manager/reparations/mana
     ClientFacturesListComponent,
     ClientFactureDetailsComponent,
     ManagerReparationDetailsComponent,
-    ManagerReparationsListComponent
+    ManagerReparationsListComponent,
+    HistoriqueReparationsComponent
   ],
   imports: [
     BrowserModule,

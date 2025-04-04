@@ -450,4 +450,65 @@ export class ReparationService {
       catchError(this.handleError) // Utiliser le gestionnaire d'erreurs existant
     );
   }
+
+  /**
+   * Récupère l'historique des réparations (terminées, facturées, annulées) 
+   * assignées au mécanicien connecté (avec pagination ET FILTRES).
+   */
+  getMecanicienHistory(params: {
+    page?: number,
+    limit?: number,
+    sortField?: string,
+    sortOrder?: 'asc' | 'desc',
+    searchTerm?: string,
+    dateDebut?: string,
+    dateFin?: string
+  }): Observable<ApiPaginatedResponse<Reparation>> {
+    const url = `${this.mecanicienApiUrl}/history`;
+    let httpParams = new HttpParams();
+
+    if (params.page) httpParams = httpParams.set('page', params.page.toString());
+    if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
+
+    if (params.sortField && params.sortOrder) {
+      httpParams = httpParams.set('sortField', params.sortField);
+      httpParams = httpParams.set('sortOrder', params.sortOrder);
+    } else {
+      httpParams = httpParams.set('sortField', 'dateFinReelle');
+      httpParams = httpParams.set('sortOrder', 'desc');
+    }
+
+    if (params.searchTerm && params.searchTerm.trim() !== '') {
+      httpParams = httpParams.set('searchTerm', params.searchTerm.trim());
+    }
+    if (params.dateDebut) {
+      httpParams = httpParams.set('dateDebut', params.dateDebut);
+    }
+    if (params.dateFin) {
+      httpParams = httpParams.set('dateFin', params.dateFin);
+    }
+
+    console.log(`ReparationService: fetching mechanic HISTORY from API: ${url} with params`, httpParams);
+
+    return this.http.get<ApiPaginatedResponse<Reparation>>(url, { params: httpParams }).pipe(
+      map(response => {
+        if (response && response.success && Array.isArray(response.data)) {
+          response.data = response.data.map(rep => this.parseDatesInReparation(rep));
+          return response;
+        } else {
+          console.error('ReparationService: Réponse inattendue de l\'API pour getMecanicienHistory:', response);
+          return { 
+            success: false, 
+            count: 0, 
+            total: 0, 
+            pagination: { page: params.page || 1, limit: params.limit || 10, totalPages: 0 }, 
+            data: [],
+            message: response?.message || 'Réponse invalide de l\'API' 
+          };
+        }
+      }),
+      tap(response => console.log(`ReparationService: fetched ${response.data.length}/${response.total} mechanic history reparations from API`)),
+      catchError(this.handleError)
+    );
+  }
 } 
