@@ -59,6 +59,23 @@ export class TokenService {
     return decodedToken?.id || decodedToken?.sub || null;
   }
 
+  // --- AJOUT: Récupérer les informations de l'utilisateur (nom, prénom) ---
+  getUserInfo(): { nom: string | null, prenom: string | null } {
+    if (!this.isTokenValid()) {
+      return { nom: null, prenom: null };
+    }
+    
+    const jwtHelper = new JwtHelperService();
+    const decodedToken = jwtHelper.decodeToken(this.token);
+
+    // Adapter les noms des champs si nécessaire (ex: decodedToken?.firstName)
+    return {
+      nom: decodedToken?.nom || null,
+      prenom: decodedToken?.prenom || null
+    };
+  }
+  // --- FIN AJOUT ---
+
   // Vérifier si l'utilisateur a un rôle spécifique
   hasRole(requiredRole: string): boolean {
     const userRole = this.getUserRole();

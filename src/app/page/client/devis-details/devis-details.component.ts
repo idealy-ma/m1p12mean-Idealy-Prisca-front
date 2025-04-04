@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DevisService } from '../../../services/devis/devis.service';
 import { Devis, PackChoisi } from '../../../models/devis.model';
+import { ChatService, ChatMessage } from '../../../services/chat/chat.service';
+import { Subscription } from 'rxjs';
 
 // Interface Message pour le chat
 interface Message {
@@ -15,7 +17,7 @@ interface Message {
   templateUrl: './devis-details.component.html',
   styleUrls: ['./devis-details.component.css']
 })
-export class ClientDevisDetailsComponent implements OnInit {
+export class ClientDevisDetailsComponent implements OnInit, OnDestroy, AfterViewChecked {
   devis: Devis | null = null;
   loading: boolean = false;
   error: string | null = null;
@@ -23,26 +25,29 @@ export class ClientDevisDetailsComponent implements OnInit {
   isRejecting: boolean = false;
   // Propriétés pour le chat
   isChatVisible = false;
-  mockMessages: Message[] = [
-    { contenu: 'Bonjour, j\'ai un problème avec mes freins qui font un bruit étrange.', date: new Date('2024-03-20T10:30:00'), type: 'client' },
-    { contenu: 'Bonjour, je vais examiner votre véhicule et vous faire un devis détaillé.', date: new Date('2024-03-20T10:35:00'), type: 'manager' },
-    { contenu: 'D\'accord, merci. Pouvez-vous me dire approximativement combien de temps ça va prendre ?', date: new Date('2024-03-20T10:40:00'), type: 'client' }
-  ];
-  messageText: string = '';
+  @ViewChild('chatMessagesContainer') private chatMessagesContainer: ElementRef | undefined;
+  chatMessages: ChatMessage[] = [];
+  newChatMessage: string = '';
+  chatError: string | null = null;
+  private chatSubscription: Subscription | undefined;
+  private errorSubscription: Subscription | undefined;
+  private devisId: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private devisService: DevisService
+    private devisService: DevisService,
+    private chatService: ChatService
   ) {}
 
   ngOnInit(): void {
-    // Récupérer l'ID du devis depuis l'URL
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.loadDevisDetails(id);
+    this.devisId = this.route.snapshot.paramMap.get('id');
+    if (this.devisId) {
+      this.loadDevisDetails(this.devisId);
+      this.setupChat(this.devisId); 
     } else {
       this.error = "ID du devis manquant";
+      this.loading = false;
     }
   }
 
@@ -167,28 +172,6 @@ export class ClientDevisDetailsComponent implements OnInit {
     this.isChatVisible = !this.isChatVisible;
   }
 
-  // Méthode pour envoyer un nouveau message
-  sendMessage(): void {
-    if (!this.messageText.trim()) return;
-    
-    const newMessage: Message = {
-      contenu: this.messageText.trim(),
-      date: new Date(),
-      type: 'client'
-    };
-    
-    this.mockMessages.push(newMessage);
-    this.messageText = '';
-    
-    // Faire défiler jusqu'au dernier message
-    setTimeout(() => {
-      const chatContainer = document.querySelector('.chat-messages');
-      if (chatContainer) {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      }
-    }, 100);
-  }
-
   // Calculer le total des lignes supplémentaires
   calculerTotalLignesSupplementaires(): number {
     if (!this.devis?.lignesSupplementaires?.length) return 0;
@@ -216,4 +199,69 @@ export class ClientDevisDetailsComponent implements OnInit {
            this.calculerTotalLignesSupplementaires() + 
            this.calculerTotalMainOeuvre();
   }
+
+  ngOnDestroy(): void {
+    this.chatSubscription?.unsubscribe();
+    this.errorSubscription?.unsubscribe();
+    this.chatService.disconnect();
+  }
+
+  ngAfterViewChecked(): void {
+    this.scrollToBottom();
+  }
+
+  // --- AJOUT DES MÉTHODES MANQUANTES DU CHAT ---
+  setupChat(devisId: string): void {
+    this.chatService.connect(devisId);
+
+    // Charger l'historique
+    this.chatService.loadInitialMessages(devisId).subscribe({
+      next: (messages) => {
+        this.chatMessages = messages;
+        this.chatError = null;
+        this.scrollToBottom();
+      },
+      error: (err) => {
+        console.error("Erreur chargement historique chat:", err);
+        this.chatError = "Impossible de charger l'historique du chat.";
+      }
+    });
+
+    // S'abonner aux nouveaux messages
+    this.chatSubscription = this.chatService.getMessages().subscribe((message) => {
+      this.chatMessages.push(message);
+      this.scrollToBottom();
+    });
+
+    // S'abonner aux erreurs du chat
+    this.errorSubscription = this.chatService.chatError$.subscribe(errorMsg => {
+      this.chatError = errorMsg;
+      console.error('Erreur ChatService:', errorMsg);
+    });
+  }
+
+  // Nouvelle méthode pour envoyer les messages via le service
+  sendChatMessage(): void {
+    if (this.newChatMessage.trim() && this.devisId) {
+      this.chatService.sendMessage(this.devisId, this.newChatMessage.trim());
+      this.newChatMessage = '';
+      this.chatError = null;
+    } else if (!this.devisId) {
+        this.chatError = "Impossible d'envoyer : ID du devis inconnu.";
+    }
+  }
+  
+  private scrollToBottom(): void {
+    try {
+        // Ajouter un délai pour s'assurer que le DOM est mis à jour
+        setTimeout(() => {
+          if (this.chatMessagesContainer) {
+             this.chatMessagesContainer.nativeElement.scrollTop = this.chatMessagesContainer.nativeElement.scrollHeight;
+          }
+        }, 0);
+    } catch(err) { 
+        console.error("Erreur lors du défilement du chat:", err);
+    }                 
+  }
+  // --- FIN AJOUT DES MÉTHODES CHAT ---
 }
