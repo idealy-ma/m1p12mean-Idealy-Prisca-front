@@ -3,6 +3,8 @@ import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ToastrModule } from 'ngx-toastr';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -50,10 +52,10 @@ import { ManagerReparationDetailsComponent } from './page/manager/reparations/ma
 import { ManagerReparationsListComponent } from './page/manager/reparations/manager-reparations-list/manager-reparations-list.component';
 import { StatistiqueComponent } from './page/manager/statistique/statistique.component';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HistoriqueReparationsComponent } from './page/mecanicien/historique-reparations/historique-reparations/historique-reparations.component';
 import { NotificationBellComponent } from './components/shared/notification-bell/notification-bell.component';
 import { NotificationListComponent } from './components/shared/notification-list/notification-list.component';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -110,7 +112,13 @@ import { NotificationListComponent } from './components/shared/notification-list
     HttpClientModule,
     CommonModule,
     NgxChartsModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    ToastrModule.forRoot({
+      timeOut: 5000, 
+      positionClass: 'toast-top-right', 
+      preventDuplicates: true, 
+      closeButton: true 
+    }),
   ],
   providers: [
     {

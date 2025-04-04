@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, Subject, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { io, Socket } from 'socket.io-client';
+import { ToastrService } from 'ngx-toastr';
 import { environment } from '../../../environments/environment';
 import { TokenService } from '../token/token.service';
 import { Notification } from '../../models/notification.model';
@@ -34,7 +35,8 @@ export class NotificationService {
   constructor(
     private http: HttpClient,
     private tokenService: TokenService,
-    private router: Router
+    private router: Router,
+    private toastr: ToastrService
   ) { }
 
   connectSocket(): void {
@@ -75,12 +77,33 @@ export class NotificationService {
     // Écouter les nouvelles notifications
     this.socket.on('new_notification', (notification: Notification) => {
       console.log('NotificationService: Nouvelle notification reçue:', notification);
+      
       // Ajouter au début de la liste et mettre à jour le compteur
       const currentNotifications = this.notificationsSubject.getValue();
-      this.notificationsSubject.next([notification, ...currentNotifications]);
-      this.unreadCountSubject.next(this.unreadCountSubject.getValue() + 1);
-      this.totalNotifications++;
-      // Optionnel: Afficher un toast
+      // Éviter les duplications si la même notif arrive très vite
+      if (!currentNotifications.some(n => n._id === notification._id)) {
+        this.notificationsSubject.next([notification, ...currentNotifications]);
+        // Mettre à jour le compte SEULEMENT si elle n'est pas déjà lue (évite incrément si reçu après markAsRead)
+        if (!notification.isRead) {
+            this.unreadCountSubject.next(this.unreadCountSubject.getValue() + 1);
+        }
+        this.totalNotifications++;
+        
+        // --- Afficher le Toast --- 
+        const toast = this.toastr.info(notification.message, 'Nouvelle Notification', {
+            tapToDismiss: false, // Empêche la fermeture au clic simple
+            closeButton: true,   // Ajoute un bouton de fermeture
+        });
+
+        // Rendre le toast cliquable pour naviguer
+        toast.onTap.subscribe(() => {
+            console.log(`Toast cliqué, navigation vers: ${notification.link}`);
+            this.navigateToLink(notification.link, notification);
+            // Optionnel: fermer le toast après clic si souhaité
+            this.toastr.clear(toast.toastId);
+        });
+        // --- Fin Afficher le Toast ---
+      }
     });
     
     // Écouter la mise à jour du compteur (reçu après get_unread_count)
